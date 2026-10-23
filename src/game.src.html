@@ -16,6 +16,12 @@ html,body{height:100%;margin:0;background:var(--night);color:var(--ink);overflow
 .hurt{position:fixed;inset:0;pointer-events:none;opacity:0;transition:opacity .25s;box-shadow:inset 0 0 90px 30px rgba(229,72,58,.65)}
 .hurt.on{opacity:1;transition:none}
 .edge{position:fixed;left:0;top:0;width:0;height:0;pointer-events:none;display:none;border:11px solid transparent;border-left:20px solid #ff4a32;filter:drop-shadow(0 0 6px rgba(255,74,50,.8));margin:-11px 0 0 -10px}
+.num{position:fixed;left:0;top:0;pointer-events:none;opacity:0;font-size:14px;font-weight:700;color:#eafff8;white-space:nowrap;font-variant-numeric:tabular-nums;
+  text-shadow:0 1px 2px #000,0 0 6px rgba(127,227,198,.7)}
+.num.go{animation:numUp .7s ease-out forwards}
+.num.c{color:#ffe08a;font-size:20px;text-shadow:0 1px 2px #000,0 0 8px rgba(242,199,92,.9)}
+.num.b{color:#ffcf7a;font-size:17px;text-shadow:0 1px 2px #000,0 0 8px rgba(255,140,60,.8)}
+@keyframes numUp{0%{opacity:0;transform:translate(-50%,-50%) scale(.6)}15%{opacity:1;transform:translate(-50%,-90%) scale(1.15)}100%{opacity:0;transform:translate(-50%,-280%) scale(1)}}
 .edge.boss{border-left-color:#ffb35a;border-width:15px;border-left-width:26px;margin:-15px 0 0 -13px}
 
 /* HUD */
@@ -24,7 +30,7 @@ html,body{height:100%;margin:0;background:var(--night);color:var(--ink);overflow
 .hud[hidden]{display:none}
 .wu{height:5px;border-radius:99px;background:rgba(127,227,198,.12);overflow:hidden}
 .wu i{display:block;height:100%;width:0;background:linear-gradient(90deg,#3fbfa0,#a8ffe6);box-shadow:0 0 8px var(--jade)}
-.row1{display:grid;grid-template-columns:auto 1fr auto auto auto;align-items:center;gap:8px}
+.row1{display:grid;grid-template-columns:auto 1fr auto auto auto auto;align-items:center;gap:8px}
 .night{position:relative;height:16px;border-radius:99px;background:rgba(9,18,19,.7);border:1px solid var(--line);overflow:hidden}
 .night i{position:absolute;inset:0 auto 0 0;width:0;background:linear-gradient(90deg,#1b2f45,#5f6f8f 70%,#f2c27a)}
 .night b{position:absolute;top:50%;width:10px;height:10px;margin:-5px 0 0 -5px;border-radius:50%;background:var(--cinnabar);box-shadow:0 0 6px var(--cinnabar)}
@@ -93,6 +99,7 @@ h2{margin:0;font-size:22px;font-weight:400;letter-spacing:.2em}
 <div class="vig"></div>
 <div class="hurt" id="hurt"></div>
 <div id="edges"></div>
+<div id="nums"></div>
 
 <div class="hud" id="hud" hidden>
   <div class="wu" title="頓悟"><i id="wu"></i></div>
@@ -100,6 +107,7 @@ h2{margin:0;font-size:22px;font-weight:400;letter-spacing:.2em}
     <span class="tag">子時</span>
     <div class="night"><i id="nightBar"></i><b id="bossMark"></b></div>
     <span class="tag" id="clock">雞啼 8:00</span>
+    <button class="pause" id="sfxBtn" aria-label="音效開關">音</button>
     <button class="pause" id="viewBtn" aria-label="切換視角">視</button>
     <button class="pause" id="pauseBtn" aria-label="暫停">❚❚</button>
   </div>
@@ -126,8 +134,8 @@ h2{margin:0;font-size:22px;font-weight:400;letter-spacing:.2em}
 
 <div class="ov" id="cardOv">
   <div class="box">
-    <h2>頓悟</h2>
-    <div class="sub">三選一，只在這一夜有效</div>
+    <h2 id="cardTitle">頓悟</h2>
+    <div class="sub" id="cardSub">三選一，只在這一夜有效</div>
     <div class="cards" id="cards"></div>
     <button class="btn" id="skipCard">不要</button>
   </div>
@@ -214,6 +222,44 @@ const fogTex=ctex(256,256,(x,w,h)=>{for(let i=0;i<40;i++){const px=40+rnd()*176,
 const fogs=[];for(let i=0;i<5;i++){const m=new THREE.Mesh(new THREE.PlaneGeometry(22,22),new THREE.MeshBasicMaterial({map:fogTex,transparent:true,depthWrite:false,opacity:.2}));
   m.rotation.x=-Math.PI/2;m.position.set((rnd()-.5)*30,.05+i*.03,(rnd()-.5)*30);m.userData.s=(rnd()-.5)*.04;scene.add(m);fogs.push(m)}
 const ARENA=22;// the hero stays inside this radius
+
+/* ================= 音效（全部用 WebAudio 即時合成，不用音檔） ================= */
+let simming=false;// true while sim() fast-forwards: no sounds, no floating numbers
+const SFX=(()=>{let ac=null,out=null,nb=null,on=true;const last={};try{on=localStorage.getItem('zk-sfx')!=='0'}catch(e){}
+  function resume(){try{if(!ac){const A=window.AudioContext||window.webkitAudioContext;if(!A)return;ac=new A();out=ac.createGain();out.gain.value=.45;out.connect(ac.destination);
+      nb=ac.createBuffer(1,ac.sampleRate,ac.sampleRate);const d=nb.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1}
+    if(ac.state==='suspended')ac.resume()}catch(e){ac=null}}
+  function tone(f0,f1,dur,type,vol,at=0){const t=ac.currentTime+at,o=ac.createOscillator(),g=ac.createGain();o.type=type;o.frequency.setValueAtTime(f0,t);o.frequency.exponentialRampToValueAtTime(Math.max(20,f1),t+dur);
+    g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(.001,t+dur);o.connect(g);g.connect(out);o.start(t);o.stop(t+dur+.03)}
+  function noise(dur,f,q,vol,type='bandpass',at=0){const t=ac.currentTime+at,src=ac.createBufferSource(),fl=ac.createBiquadFilter(),g=ac.createGain();src.buffer=nb;fl.type=type;fl.frequency.value=f;fl.Q.value=q;
+    g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(.001,t+dur);src.connect(fl);fl.connect(g);g.connect(out);src.start(t,Math.random()*.5);src.stop(t+dur+.03)}
+  const GAP={swing:.08,kill:.045,soul:.05,hurt:.15,boom:.09,thunder:.25};
+  function play(k){if(!on||!ac||simming||ac.state!=='running')return;const now=ac.currentTime;if(GAP[k]&&now-(last[k]||0)<GAP[k])return;last[k]=now;
+    switch(k){
+      case 'swing':noise(.1,2400+Math.random()*900,1.4,.1);break;
+      case 'kill':tone(620+Math.random()*320,170,.09,'triangle',.13);break;
+      case 'soul':tone(1400+Math.random()*400,2300,.05,'sine',.045);break;
+      case 'wu':[523,659,784,1047].forEach((f,i)=>tone(f,f*1.01,.4,'sine',.16,i*.07));break;
+      case 'gold':[523,659,784,1047,1319,1568].forEach((f,i)=>tone(f,f*1.01,.5,'triangle',.15,i*.06));noise(.6,6000,.8,.06,'highpass');break;
+      case 'hurt':tone(170,60,.2,'sawtooth',.2);noise(.12,500,.7,.18,'lowpass');break;
+      case 'boom':noise(.32,800,.6,.3,'lowpass');tone(120,50,.25,'sine',.2);break;
+      case 'thunder':noise(.6,600,.4,.45,'lowpass');tone(80,35,.5,'sawtooth',.16);break;
+      case 'wan':[1568,1319,1047,784].forEach((f,i)=>tone(f,f*.98,.25,'triangle',.1,i*.05));noise(.8,3500,.6,.18,'bandpass');break;
+      case 'bell':tone(880,875,1.4,'sine',.22);tone(1320,1316,.9,'sine',.08);break;
+      case 'boss':tone(110,65,1,'sawtooth',.22);tone(164,80,1,'square',.08);noise(.8,300,.6,.2,'lowpass');break;
+      case 'bossDie':noise(1.2,500,.4,.5,'lowpass');tone(220,40,1.2,'sawtooth',.2);[784,988,1175,1568].forEach((f,i)=>tone(f,f,.5,'triangle',.14,.4+i*.09));break;
+      case 'win':[[600,900],[640,960],[700,1150]].forEach(([a,b],i)=>tone(a,b,.28,'square',.07,i*.32));[392,523,659,784,1047].forEach((f,i)=>tone(f,f,.6,'triangle',.16,1+i*.12));break;
+      case 'lose':[392,330,262].forEach((f,i)=>tone(f,f*.98,.5,'triangle',.14,i*.2));break}}
+  return {resume,play,toggle(){on=!on;try{localStorage.setItem('zk-sfx',on?'1':'0')}catch(e){}return on},get on(){return on}}})();
+const buzz=ms=>{try{if(isTouch&&navigator.vibrate&&!simming)navigator.vibrate(ms)}catch(e){}};
+// floating damage numbers (a small DOM pool; ordinary hits are thinned out so the screen does not drown)
+const numEls=[];for(let i=0;i<28;i++){const d=document.createElement('div');d.className='num';$('#nums').appendChild(d);numEls.push(d)}
+let numI=0;const numP=new THREE.Vector3();
+const numGap={n:70,b:45,c:0},numAt={n:0,b:0,c:0};
+function showNum(x,y,z,v,kind){if(simming)return;const now=performance.now();if(now-numAt[kind]<numGap[kind])return;numAt[kind]=now;
+  numP.set(x,y,z).project(camera);if(numP.z>1||Math.abs(numP.x)>1||Math.abs(numP.y)>1)return;
+  const el=numEls[numI=(numI+1)%numEls.length];el.textContent=v>=1e4?fmt(v):String(Math.round(v));el.className='num '+kind;
+  el.style.left=((numP.x*.5+.5)*innerWidth+(Math.random()-.5)*16)+'px';el.style.top=((-numP.y*.5+.5)*innerHeight)+'px';void el.offsetWidth;el.classList.add('go')}
 
 /* ================= 共用小工具 ================= */
 // merge simple coloured parts into one geometry (for InstancedMesh enemies)
@@ -305,7 +351,7 @@ for(const k in ET){const t=ET[k];t.mesh=new THREE.InstancedMesh(t.geo,paintedMat
   t.mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);t.mesh.frustumCulled=false;
   for(let i=0;i<t.cap;i++)t.mesh.setColorAt(i,new THREE.Color(1,1,1));// r128 sizes instanceColor from .count, so colour first, then empty it
   t.mesh.count=0;scene.add(t.mesh);t.list=[]}
-const CAP=220;let enemies=[];
+const CAP=240;let enemies=[];
 const shadowMesh=new THREE.InstancedMesh(new THREE.PlaneGeometry(1,1).rotateX(-Math.PI/2),new THREE.MeshBasicMaterial({map:glowTex,color:0x000000,transparent:true,opacity:.7,depthWrite:false}),CAP);
 shadowMesh.count=0;shadowMesh.frustumCulled=false;scene.add(shadowMesh);// dark spot under each monster so they read against the ground
 const WHITE=new THREE.Color(1,1,1),FLASH=new THREE.Color(4,4,4),dummy=new THREE.Object3D();
@@ -332,7 +378,7 @@ const swords=[];for(let i=0;i<40;i++){const g=new THREE.Group();g.visible=false;
   part(new THREE.BoxGeometry(.05,.012,.6),swordMat,g,{ol:false});const tp=new THREE.ConeGeometry(.035,.12,4);tp.rotateX(Math.PI/2);part(tp,swordMat,g,{p:[0,0,.36],ol:false});
   const s=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex,color:0x7fffd4,opacity:.6,blending:THREE.AdditiveBlending,depthWrite:false}));s.scale.set(.7,.7,1);g.add(s);
   swords.push({g,on:false,tr:new Trail(10,.07,0x8fffe0),pos:new THREE.Vector3(),vel:new THREE.Vector3(),tgt:null,life:0,pierce:0,hit:new Set()})}
-const orbitBlades=[];for(let i=0;i<6;i++){const g=new THREE.Group();g.visible=false;scene.add(g);
+const orbitBlades=[];for(let i=0;i<8;i++){const g=new THREE.Group();g.visible=false;scene.add(g);
   part(new THREE.BoxGeometry(.06,.014,.7),swordMat,g,{ol:false});const s=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex,color:0x7fffd4,opacity:.55,blending:THREE.AdditiveBlending,depthWrite:false}));s.scale.set(.9,.9,1);g.add(s);
   orbitBlades.push(g)}
 // soul fire pickups
@@ -353,6 +399,19 @@ const bolts=[];function bolt(x,z){if(!G||G.over)return;const pts=[];let px=x,pz=
   const dmg=swordDmg()*3*(G.s.thunderP||1);for(const e of enemies){if(!e.dead&&(e.x-x)**2+(e.z-z)**2<1.3)hurtEnemy(e,dmg,0,0)}if(boss.alive&&(boss.x-x)**2+(boss.z-z)**2<(1.1+boss.r)**2)hurtBoss(dmg)}
 const bellMesh=new THREE.Mesh(new THREE.LatheGeometry(V2([[0,1.9],[.35,1.85],[.5,1.6],[.6,1.1],[.72,.4],[.9,.05],[.92,0]]),24),new THREE.MeshBasicMaterial({color:0xffd65a,transparent:true,opacity:.3,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide}));
 bellMesh.visible=false;scene.add(bellMesh);
+// 萬劍歸宗: giant swords dropping point-first from the sky
+const falls=[];for(let i=0;i<40;i++){const g=new THREE.Group();g.visible=false;scene.add(g);
+  part(new THREE.BoxGeometry(.09,.02,1.3),swordMat,g,{ol:false});const tp=new THREE.ConeGeometry(.06,.22,4);tp.rotateX(Math.PI/2);part(tp,swordMat,g,{p:[0,0,.75],ol:false});
+  const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex,color:0x9fffe6,opacity:.7,blending:THREE.AdditiveBlending,depthWrite:false}));sp.scale.set(1.3,1.3,1);g.add(sp);
+  g.rotation.x=Math.PI/2;falls.push({g,on:false,x:0,z:0,t:0,dmg:0})}
+function wanRain(){const n=16+G.s.wan*6;const tg=enemies.filter(e=>!e.dead&&onScreen(e.x,.4,e.z)).sort((a,b)=>((a.x-HERO.pos.x)**2+(a.z-HERO.pos.z)**2)-((b.x-HERO.pos.x)**2+(b.z-HERO.pos.z)**2)).slice(0,n);
+  const pts=tg.map(e=>[e.x,e.z]);if(boss.alive&&bossOnScreen())for(let i=0;i<4;i++)pts.push([boss.x+(Math.random()-.5)*1.5,boss.z+(Math.random()-.5)*1.5]);
+  if(!pts.length)return;SFX.play('wan');shake=Math.max(shake,.2);
+  pts.forEach(([x,z],j)=>{const f=falls.find(f=>!f.on);if(!f)return;Object.assign(f,{on:true,x,z,t:-j*.035,dmg:swordDmg()*4});f.g.visible=false})}
+function stepFalls(dt){for(const f of falls){if(!f.on)continue;f.t+=dt;if(f.t<0)continue;const k=Math.min(1,f.t/.22);f.g.visible=true;f.g.position.set(f.x,7*(1-k)+.4,f.z);
+  if(k>=1){f.on=false;f.g.visible=false;fx({p:tmp.set(f.x,.3,f.z),col:0xbffff0,add:true,life:.35,s0:.6,s1:2.6,op:1,vy:0});SFX.play('boom');
+    for(const e of enemies){if(!e.dead&&(e.x-f.x)**2+(e.z-f.z)**2<1.1)hurtEnemy(e,f.dmg,(e.x-f.x)*.2,(e.z-f.z)*.2)}
+    if(boss.alive&&(boss.x-f.x)**2+(boss.z-f.z)**2<(1+boss.r)**2)hurtBoss(f.dmg)}}}
 const talTex=ctex(64,128,(x,w,h)=>{x.fillStyle='#f2d04a';x.fillRect(0,0,w,h);x.strokeStyle='#c42a20';x.lineWidth=4;x.strokeRect(5,5,w-10,h-10);x.fillStyle='#c42a20';x.font='bold 40px serif';x.textAlign='center';x.textBaseline='middle';x.fillText('敕',w/2,h*.36);x.fillText('令',w/2,h*.72)});
 const talMat=new THREE.MeshBasicMaterial({map:talTex,side:THREE.DoubleSide});
 function talCard(){const m=new THREE.Mesh(new THREE.PlaneGeometry(.32,.62),talMat);scene.add(m);const gl=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex,color:0xffd65a,opacity:.7,blending:THREE.AdditiveBlending,depthWrite:false}));gl.scale.set(1.1,1.1,1);m.add(gl);return m}
@@ -395,67 +454,78 @@ const realmOf=x=>{const l=Math.min(8,Math.floor(x/LV_NEED));return {name:`煉氣
 let G=null;// the current night
 // one night = NIGHT seconds; the difficulty curve is the 8-'minute' curve squeezed into it (minute() runs 0→8)
 const NIGHT=180;
-function newNight(len){return {nextPill:67,walked:0,moving:false,len,boost:480/len*.75,t:0,over:false,paused:true,kills:0,souls:0,wu:0,wuNeed:6,lv:0,spawnAcc:0,waveAt:60,
+function newNight(len){return {nextPill:67,walked:0,moving:false,len,boost:480/len*.75,t:0,over:false,paused:true,kills:0,souls:0,wu:0,wuNeed:14,lv:0,slow:0,pendingGold:0,spawnAcc:0,waveAt:60,
   hp:150,maxhp:150,iframe:0,regenAcc:0,eliteDone:false,bossDone:false,bossKilled:false,eliteKilled:false,
-  s:{dmg:1,rate:1,count:2,pierce:1,range:5,move:3.2,magnet:1.7,regen:0,orbit:0,talis:0,lamp:0},
+  s:{dmg:1,rate:1,count:2,pierce:1,range:7.5,move:3.2,magnet:1.8,regen:0,orbit:0,talis:0,talisN:0,lamp:0,size:1,crit:.12},
   skills:{},volley:0,orbitHit:new Map(),talisCd:2,lampCd:1.5,stand:0,auto:false}}
 const minute=()=>G.t/G.len*8;// night progress in "minutes" of an 8-minute night
-const hpScale=()=>Math.pow(1+.25*minute(),1.5);
+const hpScale=()=>Math.pow(1+.2*minute(),1.3);
 const killMult=()=>1+.002*G.kills*G.boost+(G.bossKilled?.05:0)+(G.eliteKilled?.05:0);
 const swordDmg=()=>10*G.s.dmg*killMult();
 const fmt=n=>n>=1e8?(n/1e8).toFixed(2)+'億':n>=1e4?(n/1e4).toFixed(n>=1e5?1:2)+'萬':String(Math.round(n));
 
 /* ================= 頓悟卡 ================= */
-// v(r): effect at rarity r (0 凡品, 1 靈品, 2 仙品)
+// v(r): effect at rarity r (0 凡品, 1 靈品, 2 仙品). Every card should be something you can SEE change on screen.
 const CARDS=[
-  {k:'count',ic:'劍',n:'分光劍',d:r=>`飛劍 +${[1,1,2][r]} 把${r===1?'，傷害 +10%':''}`,f:r=>{G.s.count=Math.min(6,G.s.count+[1,1,2][r]);if(r===1)G.s.dmg*=1.1}},
-  {k:'dmg',ic:'鋒',n:'劍氣凝鋒',d:r=>`飛劍傷害 +${[20,35,60][r]}%`,f:r=>{G.s.dmg*=1+[.2,.35,.6][r]}},
-  {k:'rate',ic:'疾',n:'疾風出劍',d:r=>`出劍速度 +${[15,25,40][r]}%`,f:r=>{G.s.rate*=1+[.15,.25,.4][r]}},
-  {k:'pierce',ic:'穿',n:'穿雲',d:r=>`飛劍多穿透 ${[1,1,2][r]} 隻${r===1?'，劍速更快':''}`,f:r=>{G.s.pierce=Math.min(6,G.s.pierce+[1,1,2][r])}},
-  {k:'range',ic:'眼',n:'天眼',d:r=>`索敵範圍 +${[15,25,40][r]}%`,f:r=>{G.s.range=Math.min(8,G.s.range*(1+[.15,.25,.4][r]))}},
-  {k:'move',ic:'步',n:'踏雲步',d:r=>`走路速度 +${[10,15,25][r]}%`,f:r=>{G.s.move*=1+[.1,.15,.25][r]}},
-  {k:'magnet',ic:'攝',n:'攝魂',d:r=>`吸魂火範圍 +${[40,70,120][r]}%`,f:r=>{G.s.magnet=Math.min(7,G.s.magnet*(1+[.4,.7,1.2][r]))}},
-  {k:'heal',ic:'春',n:'回春',d:r=>`立刻回復 ${[30,50,100][r]}% 生命${r===2?'，之後慢慢回血':''}`,f:r=>{G.hp=Math.min(G.maxhp,G.hp+G.maxhp*[.3,.5,1][r]);if(r===2)G.s.regen+=1.5}},
-  {k:'orbit',ic:'陣',n:'劍陣',d:r=>G.s.orbit?`劍陣 +${[1,1,2][r]} 把`:`新招：${[2,3,4][r]} 把飛劍繞身斬妖`,f:r=>{G.s.orbit=Math.min(6,G.s.orbit+(G.s.orbit?[1,1,2][r]:[2,3,4][r]))}},
-  {k:'talis',ic:'符',n:'雷火符',d:r=>G.s.talis?`符籙威力 +${[30,50,90][r]}%`:`新招：每 3 秒丟一張爆炸符籙`,f:r=>{G.s.talis=G.s.talis?G.s.talis*(1+[.3,.5,.9][r]):[1,1.4,2][r]}},
-  {k:'lamp',ic:'燈',n:'燈燈助陣',d:r=>G.s.lamp?`燈燈火球更快更痛 +${[30,50,90][r]}%`:`新招：燈燈會吐火球`,f:r=>{G.s.lamp=G.s.lamp?G.s.lamp*(1+[.3,.5,.9][r]):[1,1.4,2][r]}}];
-CARDS.push(
-  {k:'thunder',ic:'雷',n:'引雷訣',skill:1,d:r=>G.s.thunder?`天雷多劈 ${[1,1,2][r]} 道、更痛`:`新招：每 4 秒天雷劈下 ${[2,3,4][r]} 隻妖（連周圍）`,f:r=>{G.s.thunder=G.s.thunder?Math.min(8,G.s.thunder+[1,1,2][r]):[2,3,4][r];G.s.thunderP=(G.s.thunderP||.8)*1.2}},
-  {k:'bell',ic:'鐘',n:'金鐘罩',skill:1,d:r=>G.s.bell?`金鐘罩回復更快，震開範圍更大`:`新招：金鐘罩擋下一次傷害並震開周圍的妖，${[10,8,6][r]} 秒回復`,f:r=>{G.s.bell=G.s.bell?Math.max(3,G.s.bell*.75):[10,8,6][r];G.bellT=0}});
-['orbit','talis','lamp'].forEach(k=>CARDS.find(c=>c.k===k).skill=1);
+  {k:'count',ic:'劍',n:'分光劍',d:r=>`飛劍 +${[1,2,3][r]} 把`,f:r=>{G.s.count=Math.min(12,G.s.count+[1,2,3][r])},max:()=>G.s.count>=12},
+  {k:'dmg',ic:'鋒',n:'劍氣凝鋒',d:r=>`飛劍傷害 +${[40,60,100][r]}%，劍身變大`,f:r=>{G.s.dmg*=1+[.4,.6,1][r];G.s.size=Math.min(2.2,G.s.size+[.15,.25,.4][r])}},
+  {k:'rate',ic:'疾',n:'疾風出劍',d:r=>`出劍速度 +${[25,40,70][r]}%`,f:r=>{G.s.rate*=1+[.25,.4,.7][r]}},
+  {k:'pierce',ic:'穿',n:'穿雲',d:r=>`每把飛劍多穿透 ${[1,2,3][r]} 隻`,f:r=>{G.s.pierce=Math.min(8,G.s.pierce+[1,2,3][r])},max:()=>G.s.pierce>=8},
+  {k:'magnet',ic:'攝',n:'攝魂',d:r=>`立刻吸光全場魂火，之後吸取範圍 +${[60,100,200][r]}%`,f:r=>{G.s.magnet=Math.min(8,G.s.magnet*(1+[.6,1,2][r]));souls.forEach(s=>{s.pull=true})},max:()=>G.s.magnet>=8},
+  {k:'heal',ic:'春',n:'回春',d:r=>`立刻回復 ${[40,70,100][r]}% 生命${r===2?'，之後慢慢回血':''}`,f:r=>{G.hp=Math.min(G.maxhp,G.hp+G.maxhp*[.4,.7,1][r]);if(r===2)G.s.regen+=1.5},when:()=>G.hp<G.maxhp*.7},
+  {k:'orbit',ic:'陣',n:'劍陣',skill:1,d:r=>G.s.orbit?`劍陣 +${[1,2,3][r]} 把，轉得更快`:`新招：${[3,4,5][r]} 把飛劍繞身斬妖`,f:r=>{G.s.orbit=Math.min(8,G.s.orbit+(G.s.orbit?[1,2,3][r]:[3,4,5][r]))},max:()=>G.s.orbit>=8},
+  {k:'talis',ic:'符',n:'雷火符',skill:1,d:r=>G.s.talis?`符籙威力 +${[40,70,120][r]}%，一次多丟一張`:`新招：每 2.5 秒丟出會爆炸的符籙`,
+    f:r=>{if(G.s.talis){G.s.talis*=1+[.4,.7,1.2][r];G.s.talisN=Math.min(4,G.s.talisN+1)}else{G.s.talis=[1,1.4,2][r];G.s.talisN=1}}},
+  {k:'lamp',ic:'燈',n:'燈燈助陣',skill:1,d:r=>G.s.lamp?`燈燈火球更快更痛 +${[40,70,120][r]}%`:`新招：燈燈會吐火球`,f:r=>{G.s.lamp=G.s.lamp?G.s.lamp*(1+[.4,.7,1.2][r]):[1,1.4,2][r]}},
+  {k:'thunder',ic:'雷',n:'引雷訣',skill:1,d:r=>G.s.thunder?`天雷多劈 ${[1,2,3][r]} 道、更痛`:`新招：每 3 秒天雷劈下 ${[3,4,5][r]} 道`,
+    f:r=>{if(G.s.thunder){G.s.thunder=Math.min(12,G.s.thunder+[1,2,3][r]);G.s.thunderP*=1.25}else{G.s.thunder=[3,4,5][r];G.s.thunderP=1}},max:()=>G.s.thunder>=12},
+  {k:'bell',ic:'鐘',n:'金鐘罩',skill:1,d:r=>G.s.bell?`金鐘罩回復更快，震開範圍更大`:`新招：金鐘罩擋下一次傷害並震開周圍的妖，${[8,6,5][r]} 秒回復`,f:r=>{G.s.bell=G.s.bell?Math.max(3,G.s.bell*.75):[8,6,5][r];G.bellT=0}},
+  // evolution: shows up (always 仙品) once you have 5 swords
+  {k:'wan',ic:'萬',n:'萬劍歸宗',skill:1,evo:1,d:r=>G.s.wan?`萬劍歸宗更快、落下更多劍`:`絕招：每 6 秒萬劍從天而降，斬盡畫面上的妖`,f:r=>{G.s.wan=Math.min(3,(G.s.wan||0)+1)},when:()=>G.s.count>=5,max:()=>G.s.wan>=3}];
 const RAR=['凡品','靈品','仙品'];
 let offer=[];
-function openCards(){G.paused=true;const pool=CARDS.filter(c=>!(c.k==='orbit'&&G.s.orbit>=6)&&!(c.k==='range'&&G.s.range>=8)&&!(c.k==='pierce'&&G.s.pierce>=6)&&!(c.k==='magnet'&&G.s.magnet>=7)&&!(c.k==='count'&&G.s.count>=6)&&!(c.k==='thunder'&&G.s.thunder>=8));offer=[];
-  // keep it varied: while fewer than 4 techniques are known, the first card is always a technique not learned yet
-  const known=['orbit','talis','lamp','thunder','bell'].filter(k=>G.s[k]).length,fresh=pool.filter(c=>c.skill&&!G.s[c.k]);
-  if(known<4&&fresh.length){const c=fresh[Math.floor(Math.random()*fresh.length)];pool.splice(pool.indexOf(c),1);offer.push({c,r:Math.random()<.3?1:0})}
-  while(offer.length<3&&pool.length){const w=pool.map(c=>c.skill?2:1),tot=w.reduce((a,b)=>a+b,0);let x=Math.random()*tot,i=0;while(x>w[i]){x-=w[i];i++}
-    const c=pool.splice(i,1)[0];const y=Math.random();offer.push({c,r:y<.06?2:y<.32?1:0})}
+// gold = 仙緣頓悟 after an elite or the boss: every card is 靈品 or better
+function openCards(gold){if(!G||G.over)return;if($('#cardOv').classList.contains('on')){G.pendingGold=(G.pendingGold||0)+(gold?1:0);return}
+  G.paused=true;const pool=CARDS.filter(c=>(!c.when||c.when())&&!(c.max&&c.max()));offer=[];
+  const rar=c=>c.evo?2:gold?(Math.random()<.5?2:1):(()=>{const y=Math.random();return y<.08?2:y<.36?1:0})();
+  const take=c=>{pool.splice(pool.indexOf(c),1);offer.push({c,r:rar(c)})};
+  // the evolution, when it unlocks, is always offered first
+  const evo=pool.find(c=>c.evo&&!G.s[c.k]);if(evo)take(evo);
+  // keep it varied: while fewer than 3 techniques are known, one card is always a technique not learned yet
+  const known=['orbit','talis','lamp','thunder','bell'].filter(k=>G.s[k]).length,fresh=pool.filter(c=>c.skill&&!c.evo&&!G.s[c.k]);
+  if(known<3&&fresh.length)take(fresh[Math.floor(Math.random()*fresh.length)]);
+  while(offer.length<3&&pool.length){const w=pool.map(c=>c.skill?2:1),tot=w.reduce((a,b)=>a+b,0);let x=Math.random()*tot,i=0;while(x>w[i]){x-=w[i];i++}take(pool[i])}
+  $('#cardTitle').textContent=gold?'仙緣頓悟':'頓悟';$('#cardSub').textContent=gold?'斬了強敵，福至心靈':'三選一，只在這一夜有效';
   const box=$('#cards');box.innerHTML='';
   offer.forEach((o,i)=>{const b=document.createElement('button');b.className='card r'+o.r;b.innerHTML=`<span class="ic">${o.c.ic}</span><b>${o.c.n}<em>${RAR[o.r]}</em></b><span>${o.c.d(o.r)}</span>`;
     b.onclick=()=>pickCard(i);box.appendChild(b)});
-  $('#cardOv').classList.add('on');if(G.auto)setTimeout(()=>pickCard(0),300)}
-function pickCard(i){if(i>=0){const o=offer[i];o.c.f(o.r);G.skills[o.c.k]=(G.skills[o.c.k]||0)+1}$('#cardOv').classList.remove('on');G.paused=false;renderBuffs()}
+  $('#cardOv').classList.add('on');SFX.play(gold?'gold':'wu');if(G.auto)setTimeout(()=>pickCard(0),300)}
+function pickCard(i){if(!$('#cardOv').classList.contains('on'))return;if(i>=0){const o=offer[i];o.c.f(o.r);G.skills[o.c.k]=(G.skills[o.c.k]||0)+1;if(o.c.k==='wan')say('萬劍歸宗！',3)}
+  G.wuLog=(G.wuLog||[]);G.wuLog.push(Math.round(G.t));
+  $('#cardOv').classList.remove('on');G.paused=false;renderBuffs();
+  if(G.pendingGold>0){G.pendingGold--;setTimeout(()=>openCards(true),400)}}
 $('#skipCard').onclick=()=>pickCard(-1);
-function renderBuffs(){const n={count:'劍',dmg:'鋒',rate:'疾',pierce:'穿',range:'眼',move:'步',magnet:'攝',heal:'春',orbit:'陣',talis:'符',lamp:'燈',thunder:'雷',bell:'鐘'};
+function renderBuffs(){const n={count:'劍',dmg:'鋒',rate:'疾',pierce:'穿',magnet:'攝',heal:'春',orbit:'陣',talis:'符',lamp:'燈',thunder:'雷',bell:'鐘',wan:'萬'};
   $('#buffs').textContent=Object.entries(G.skills).map(([k,v])=>n[k]+(v>1?v:'')).join(' ')}
 
 /* ================= 生妖 ================= */
 function spawn(type,x,z,o={}){const t=ET[type];if(enemies.length>=CAP||t.list.length>=t.cap)return null;
-  const e=Object.assign({type,t,x,z,y:0,vx:0,vz:0,hp:t.hp*1.1*hpScale(),r:t.r*t.sc,spd:t.spd*(.9+Math.random()*.2),dmg:t.dmg*(1+.15*minute()),flash:0,ph:Math.random()*6,kb:0,s:1},o);
+  const sp=type!=='ghost'&&Math.random()<specialChance();
+  const e=Object.assign({type,t,x,z,y:0,vx:0,vz:0,hp:t.hp*1.1*hpScale()*(sp?2:1),r:t.r*t.sc*(sp?1.15:1),spd:t.spd*(.9+Math.random()*.2),dmg:t.dmg*(1+.15*minute()),flash:0,ph:Math.random()*6,kb:0,s:sp?1.18:1,special:sp},o);
   e.cd=2+Math.random()*4;e.max=e.hp;enemies.push(e);t.list.push(e);return e}
+const specialChance=()=>minute()<1.5?0:Math.min(.12,.03+.012*minute());
 function spawnRing(type,n,r){for(let i=0;i<n;i++){const a=i/n*Math.PI*2;spawn(type,HERO.pos.x+Math.sin(a)*r,HERO.pos.z+Math.cos(a)*r)}}
-function spawnTick(dt){const m=minute(),rate=.8*(1+1.3*m+.15*m*m);G.spawnAcc+=dt*rate;
+function spawnTick(dt){const m=minute(),rate=1.2*(1+1.2*m+.2*m*m);G.spawnAcc+=dt*rate;
   while(G.spawnAcc>=1){G.spawnAcc-=1;const w=[['ghost',3],['paper',m>.8?2.2:0],['jiang',m>2.8?1.4:0],['lgh',m>4.5?1.2:0]];let tot=w.reduce((a,b)=>a+b[1],0),x=Math.random()*tot,k='ghost';
     for(const [n,v] of w){x-=v;if(x<=0){k=n;break}}
     const a=Math.random()*Math.PI*2,r=11+Math.random()*3;spawn(k,HERO.pos.x+Math.sin(a)*r,HERO.pos.z+Math.cos(a)*r)}
   if(G.t>=G.waveAt*G.len/480&&!G.over){G.waveAt+=60;spawnRing(m>3?'paper':'ghost',16+Math.floor(m*3),10.5)}}
 
 /* ================= 戰鬥 ================= */
-function hurtEnemy(e,dmg,kx=0,kz=0){if(e.hp<=0)return;e.hp-=dmg;e.flash=.1;e.x+=kx;e.z+=kz;if(e.hp<=0)killEnemy(e)}
-function killEnemy(e){G.kills++;e.dead=true;dashLine(e,false);if(G.kills>=G.nextPill){G.nextPill+=100;dropPill(e.x,e.z)}
+function hurtEnemy(e,dmg,kx=0,kz=0,crit=false){if(e.hp<=0)return;e.hp-=dmg;e.flash=.1;e.x+=kx;e.z+=kz;showNum(e.x,1+e.y,e.z,dmg,crit?'c':e.elite?'b':'n');if(e.hp<=0)killEnemy(e)}
+function killEnemy(e){G.kills++;e.dead=true;SFX.play('kill');dashLine(e,false);if(G.kills>=G.nextPill){G.nextPill+=100;dropPill(e.x,e.z)}
   fx({p:tmp.set(e.x,.6,e.z),col:0x0a0d0e,life:.7,s0:.5,s1:1.6,op:.75,vy:.9});fx({p:tmp.set(e.x,.6,e.z),col:0x6fffd0,add:true,life:.35,s0:.8,s1:.2,op:.9,vy:0});
-  dropSoul(e.x,e.z,e.t.soul);if(e.elite){G.eliteKilled=true;for(let i=0;i<14;i++)dropSoul(e.x+(Math.random()-.5)*2,e.z+(Math.random()-.5)*2,1);banner('精英伏誅','殺氣大漲')}
+  dropSoul(e.x,e.z,e.t.soul);if(e.elite){G.eliteKilled=true;for(let i=0;i<14;i++)dropSoul(e.x+(Math.random()-.5)*2,e.z+(Math.random()-.5)*2,1);banner('精英伏誅','殺氣大漲・仙緣頓悟');SFX.play('boss');setTimeout(()=>openCards(true),700)}
   $('#power').classList.add('pop')}
 function dropSoul(x,z,v){if(souls.length>=SOULCAP){souls[0].v+=v;return}
   const r=Math.hypot(x,z),R=ARENA-.6;if(r>R){x*=R/r;z*=R/r}// never outside the village
@@ -468,12 +538,13 @@ function onScreen(x,y,z){ndc.set(x,y,z).project(camera);return Math.abs(ndc.x)<.
 function bossOnScreen(){return boss.alive&&Math.hypot(boss.x-HERO.pos.x,boss.z-HERO.pos.z)<10}
 function nearest(x,z,maxR,skip){let best=null,bd=maxR*maxR;for(const e of enemies){if(e.dead||(skip&&skip.has(e)))continue;const d=(e.x-x)**2+(e.z-z)**2;if(d<bd&&onScreen(e.x,.4,e.z)){bd=d;best=e}}
   if(boss.alive&&!(skip&&skip.has(boss))){const d=(boss.x-x)**2+(boss.z-z)**2;if(d<bd+boss.r*boss.r&&bossOnScreen())best=boss}return best}
-function hurtBoss(dmg){if(!boss.alive)return;boss.hp-=Math.min(dmg,boss.max*.04);boss.flash=.08;if(boss.hp<=0){boss.alive=false;G.bossKilled=true;G.kills+=1;
+function hurtBoss(dmg,crit=false){if(!boss.alive)return;const d=Math.min(dmg,boss.allow);if(d<=0)return;boss.allow-=d;boss.hp-=d;boss.flash=.08;showNum(boss.x,3.2,boss.z,d,crit?'c':'b');if(boss.hp<=0){boss.alive=false;G.bossKilled=true;G.bossT=Math.round(G.t);G.kills+=1;
+  G.slow=.9;SFX.play('bossDie');buzz(120);for(const e of enemies)if(!e.dead&&onScreen(e.x,.4,e.z))killEnemy(e);setTimeout(()=>openCards(true),1300);
   for(let i=0;i<10;i++)fx({p:tmp.set(boss.x+(Math.random()-.5)*2,1+Math.random()*2,boss.z+(Math.random()-.5)*2),col:0x0a0d0e,life:1.2,s0:1,s1:3,op:.8,vy:1});
-  for(let i=0;i<30;i++)dropSoul(boss.x+(Math.random()-.5)*3,boss.z+(Math.random()-.5)*3,2);boss.g.visible=false;$('#bossBox').classList.remove('on');banner('燈籠大王伏誅！','殺氣 +5%');shake=.6}}
+  for(let i=0;i<30;i++)dropSoul(boss.x+(Math.random()-.5)*3,boss.z+(Math.random()-.5)*3,2);boss.g.visible=false;$('#bossBox').classList.remove('on');banner('燈籠大王伏誅！','群妖潰散・殺氣 +5%');shake=.9}}
 function launchVolley(){const n=G.s.count,used=new Set();const bossSeen=boss.alive&&bossOnScreen();const from=tmp2.copy(HERO.pos);from.y+=1.0;
   for(let i=0;i<n;i++){const tg=(bossSeen&&i%2===0)?boss:nearest(HERO.pos.x,HERO.pos.z,G.s.range,used)||nearest(HERO.pos.x,HERO.pos.z,G.s.range);if(!tg)return;used.add(tg);
-    const sw=swords.find(s=>!s.on);if(!sw)return;sw.on=true;sw.g.visible=true;sw.tgt=tg;sw.life=1.4;sw.pierce=G.s.pierce;sw.hit.clear();sw.tr.pts.length=0;
+    const sw=swords.find(s=>!s.on);if(!sw)return;if(i===0)SFX.play('swing');sw.on=true;sw.g.visible=true;sw.g.scale.setScalar(G.s.size);sw.tgt=tg;sw.life=1.4;sw.pierce=G.s.pierce;sw.hit.clear();sw.tr.pts.length=0;
     const a=(i-(n-1)/2)*.5;sw.pos.copy(from).add(tmp3.set(Math.sin(a)*.4,.2,Math.cos(a)*.4));sw.vel.set(Math.sin(a)*3,4,Math.cos(a)*3)}}
 function stepSwords(dt){const spd=15+G.s.pierce*1.5;
   for(const sw of swords){if(!sw.on){sw.tr.build(0);continue}sw.life-=dt;
@@ -482,57 +553,61 @@ function stepSwords(dt){const spd=15+G.s.pierce*1.5;
     sw.pos.addScaledVector(sw.vel,dt);sw.g.position.copy(sw.pos);sw.g.lookAt(tmp.copy(sw.pos).add(sw.vel));
     sw.tr.push(sw.pos);sw.tr.build(.9);
     // hits
-    const hr=.55;const check=e=>{if(e.dead||sw.hit.has(e))return;const rr=(e===boss?boss.r:e.r)+hr*.5;if((e.x-sw.pos.x)**2+(e.z-sw.pos.z)**2<rr*rr){sw.hit.add(e);
-      const k=.18/Math.max(.2,Math.hypot(sw.vel.x,sw.vel.z));if(e===boss)hurtBoss(swordDmg());else hurtEnemy(e,swordDmg(),sw.vel.x*k,sw.vel.z*k);
+    const hr=.55*G.s.size;const check=e=>{if(e.dead||sw.hit.has(e))return;const rr=(e===boss?boss.r:e.r)+hr*.5;if((e.x-sw.pos.x)**2+(e.z-sw.pos.z)**2<rr*rr){sw.hit.add(e);
+      const k=.18/Math.max(.2,Math.hypot(sw.vel.x,sw.vel.z)),cr=Math.random()<G.s.crit,dm=swordDmg()*(cr?2.5:1);if(e===boss)hurtBoss(dm,cr);else hurtEnemy(e,dm,sw.vel.x*k,sw.vel.z*k,cr);
       fx({p:sw.pos,col:0xbffff0,add:true,life:.18,s0:.5,s1:1,op:.9,vy:0});if(--sw.pierce<0)sw.life=0;else sw.tgt=null}};
     for(const e of enemies)check(e);if(boss.alive)check(boss);
     if(sw.life<=0){sw.on=false;sw.g.visible=false}}}
 function stepSkills(dt){
   // 劍陣
-  orbitBlades.forEach((g,i)=>{g.visible=i<G.s.orbit;if(!g.visible)return;const a=G.t*3.2+i*Math.PI*2/G.s.orbit,r=1.35;
+  orbitBlades.forEach((g,i)=>{g.visible=i<G.s.orbit;if(!g.visible)return;const a=G.t*(3+G.s.orbit*.2)+i*Math.PI*2/G.s.orbit,r=1.35;
     g.position.set(HERO.pos.x+Math.cos(a)*r,.8,HERO.pos.z+Math.sin(a)*r);g.lookAt(HERO.pos.x+Math.cos(a+.4)*r,.8,HERO.pos.z+Math.sin(a+.4)*r);
     const hit=e=>{if(e.dead)return;const rr=(e===boss?boss.r:e.r)+.35;if((e.x-g.position.x)**2+(e.z-g.position.z)**2<rr*rr){const last=G.orbitHit.get(e)||-9;if(G.t-last>.35){G.orbitHit.set(e,G.t);
       const d=swordDmg()*.6;if(e===boss)hurtBoss(d);else hurtEnemy(e,d,(e.x-HERO.pos.x)*.08,(e.z-HERO.pos.z)*.08)}}};
     for(const e of enemies)hit(e);if(boss.alive)hit(boss)});
   // 雷火符
-  if(G.s.talis){G.talisCd-=dt;if(G.talisCd<=0){const tg=(boss.alive&&bossOnScreen())?boss:nearest(HERO.pos.x,HERO.pos.z,8);if(tg){G.talisCd=3;
-    shots.push({kind:'talis',pos:tmp.copy(HERO.pos).setY(1.2).clone(),from:HERO.pos.clone().setY(1.2),to:new THREE.Vector3(tg.x,.2,tg.z),t:0,life:.7,aoe:2,dmg:swordDmg()*2.6*G.s.talis,card:talCard()})}}}
+  if(G.s.talis){G.talisCd-=dt;if(G.talisCd<=0){G.talisCd=2.5;const used=new Set();for(let j=0;j<G.s.talisN;j++){const tg=(j===0&&boss.alive&&bossOnScreen())?boss:nearest(HERO.pos.x,HERO.pos.z,8,used);if(!tg)break;used.add(tg);
+    shots.push({kind:'talis',pos:tmp.copy(HERO.pos).setY(1.2).clone(),from:HERO.pos.clone().setY(1.2),to:new THREE.Vector3(tg.x,.2,tg.z),t:j*-.12,life:.7,aoe:2.2,dmg:swordDmg()*2.6*G.s.talis,card:talCard()})}}}
   // 燈燈火球
   if(G.s.lamp){G.lampCd-=dt;if(G.lampCd<=0){const tg=nearest(lantern.position.x,lantern.position.z,9);if(tg){G.lampCd=1.3/Math.sqrt(G.s.lamp);
     shots.push({kind:'fire',pos:lantern.position.clone(),from:lantern.position.clone(),to:new THREE.Vector3(tg.x,.4,tg.z),t:0,life:.45,aoe:1.1,dmg:swordDmg()*1.4*G.s.lamp,
       f:fx({p:lantern.position,col:0xff8a3a,add:true,life:.5,s0:.6,s1:.6,op:1,vy:0})})}}}
   // 引雷訣: bolts from the sky onto monsters on screen, each hits around where it lands
-  if(G.s.thunder){G.thunderCd=(G.thunderCd??1.5)-dt;if(G.thunderCd<=0){G.thunderCd=4;const used=new Set();
+  if(G.s.thunder){G.thunderCd=(G.thunderCd??1.5)-dt;if(G.thunderCd<=0){G.thunderCd=3;SFX.play('thunder');const used=new Set();
     for(let j=0;j<G.s.thunder;j++){const tg=(j===0&&boss.alive&&bossOnScreen())?boss:nearest(HERO.pos.x+(Math.random()-.5)*6,HERO.pos.z+(Math.random()-.5)*6,9,used);if(!tg)break;used.add(tg);setTimeout(()=>bolt(tg.x,tg.z),j*90)}}}
   // 金鐘罩: a golden bell over the hero that soaks one hit
   if(G.s.bell){if(!G.bellOn){G.bellT=(G.bellT||0)+dt;if(G.bellT>=G.s.bell){G.bellOn=true;G.bellT=0}}bellMesh.visible=G.bellOn;bellMesh.position.set(HERO.pos.x,0,HERO.pos.z);bellMesh.rotation.y+=dt;
     bellMesh.material.opacity=.28+Math.sin(G.t*4)*.06}else bellMesh.visible=false;
+  // 萬劍歸宗: a rain of giant swords onto everything on screen
+  if(G.s.wan){G.wanCd=(G.wanCd??1.5)-dt;if(G.wanCd<=0){G.wanCd=Math.max(3.5,6.5-G.s.wan);wanRain()}}
+  stepFalls(dt);
   for(let i=bolts.length-1;i>=0;i--){const b=bolts[i];b.t+=dt;b.m.material.opacity=Math.max(0,1-b.t/.25);if(b.t>.25){scene.remove(b.m);bolts.splice(i,1)}}
-  for(let i=shots.length-1;i>=0;i--){const s=shots[i];s.t+=dt;const k=Math.min(1,s.t/s.life);s.pos.lerpVectors(s.from,s.to,k);s.pos.y+=Math.sin(k*Math.PI)*1.2;
+  for(let i=shots.length-1;i>=0;i--){const s=shots[i];s.t+=dt;const k=Math.max(0,Math.min(1,s.t/s.life));s.pos.lerpVectors(s.from,s.to,k);s.pos.y+=Math.sin(k*Math.PI)*1.2;
     if(s.card){s.card.position.copy(s.pos);s.card.rotation.set(-.6,s.t*14,0)}else{s.f.s.position.copy(s.pos);s.f.t=0}
-    if(k>=1){fx({p:s.pos,col:s.kind==='fire'?0xff7a2a:0xfff0a0,add:true,life:.45,s0:.5,s1:s.aoe*2.6,op:1,vy:0});
+    if(k>=1){if(s.card)SFX.play('boom');fx({p:s.pos,col:s.kind==='fire'?0xff7a2a:0xfff0a0,add:true,life:.45,s0:.5,s1:s.aoe*2.6,op:1,vy:0});
       if(s.card){scene.remove(s.card);fx({p:s.pos,col:0xff5a1a,add:true,life:.6,s0:1,s1:s.aoe*1.8,op:.8,vy:.6});fx({p:s.pos,col:0x1a1210,life:.9,s0:.8,s1:s.aoe*2,op:.6,vy:1});shake=Math.max(shake,.15)}
       else{s.f.on=false;s.f.s.visible=false}
       for(const e of enemies){if(!e.dead&&(e.x-s.to.x)**2+(e.z-s.to.z)**2<s.aoe*s.aoe)hurtEnemy(e,s.dmg,(e.x-s.to.x)*.15,(e.z-s.to.z)*.15)}
       if(boss.alive&&(boss.x-s.to.x)**2+(boss.z-s.to.z)**2<(s.aoe+boss.r)**2)hurtBoss(s.dmg);shots.splice(i,1)}}}
 
 /* ================= 頭目 ================= */
+const ELITE_HP=3200,BOSS_HP=14000;// fixed: a stronger build kills them faster (that is the point of getting stronger)
 function startElite(){G.eliteDone=true;const a=Math.random()*Math.PI*2;const e=spawn('lgh',HERO.pos.x+Math.sin(a)*9,HERO.pos.z+Math.cos(a)*9,{elite:true,s:2.4,r:.6,spd:1.6});
-  if(e){e.hp=e.max=Math.max(ET.lgh.hp*hpScale()*28,(G.dps||0)*12);e.dmg*=1.6}banner('大燈籠鬼','精英來了，斬了牠掉一大把魂火');shake=.3}
+  if(e){e.hp=e.max=ELITE_HP;e.dmg*=1.6}banner('大燈籠鬼','精英來了，斬了牠掉一大把魂火');shake=.3}
 function startBoss(){G.bossDone=true;boss.alive=true;const a=Math.random()*Math.PI*2;boss.x=HERO.pos.x+Math.sin(a)*8;boss.z=HERO.pos.z+Math.cos(a)*8;
   // tough enough for the build the player has by now: about 30 s of full damage, never less than the base
-  boss.max=boss.hp=Math.max(1600*hpScale(),(G.dps||0)*30);boss.cd=3;boss.sum=5;boss.t=0;boss.rage=false;boss.ring=4;boss.g.visible=true;boss.g.position.set(boss.x,0,boss.z);
+  boss.max=boss.hp=BOSS_HP;boss.allow=BOSS_HP/14;SFX.play('boss');buzz(80);boss.cd=3;boss.sum=5;boss.t=0;boss.rage=false;boss.ring=4;boss.g.visible=true;boss.g.position.set(boss.x,0,boss.z);
   $('#bossBox').classList.add('on');banner('燈籠大王：「誰敢在子時點燈——！」','頭目');shake=.8;say('是燈籠大王！它的火球會先畫紅圈，快躲開！',5)}
-function stepBoss(dt){if(!boss.alive)return;boss.t+=dt;
+function stepBoss(dt){if(!boss.alive)return;boss.t+=dt;boss.allow=Math.min(boss.max/14*1.5,boss.allow+boss.max/14*dt);
   const dx=HERO.pos.x-boss.x,dz=HERO.pos.z-boss.z,d=Math.hypot(dx,dz)||1;const sp=d>4?1.7:.6;boss.x+=dx/d*sp*dt;boss.z+=dz/d*sp*dt;
   boss.g.position.set(boss.x,Math.sin(boss.t*1.4)*.25,boss.z);boss.g.rotation.y=Math.atan2(dx,dz);boss.body.rotation.y=-Math.PI/2+Math.sin(boss.t*2)*.1;
   boss.body.material.emissiveIntensity=.8+(boss.flash>0?2:0)+Math.sin(boss.t*6)*.1;boss.flash-=dt;boss.L.intensity=2.2+Math.sin(boss.t*9)*.3;
   boss.cd-=dt;if(boss.cd<=0){boss.cd=Math.max(boss.rage?1.2:1.8,(boss.rage?2.2:3.2)-minute()*.12);const n=3+Math.floor(Math.random()*3);
     for(let i=0;i<n;i++){const a=Math.random()*Math.PI*2,r=i===0?0:1.2+Math.random()*2.8;warn(HERO.pos.x+Math.sin(a)*r+HERO.vel.x*.5,HERO.pos.z+Math.cos(a)*r+HERO.vel.z*.5,1.1,1.25,14)}}
   if(!boss.rage&&boss.hp<boss.max*.5){boss.rage=true;banner('燈籠大王：「你惹火我了——！」','狂暴');shake=.6;boss.cd=.5}
-  if(boss.rage){boss.ring-=dt;if(boss.ring<=0){boss.ring=4.5;for(let j=0;j<14;j++){const a=j/14*Math.PI*2+boss.t;enemyShot(boss.x,1.2,boss.z,Math.sin(a),Math.cos(a),3.4,14)}}
+  if(boss.rage){boss.ring-=dt;if(boss.ring<=0){boss.ring=5;for(let j=0;j<10;j++){const a=j/10*Math.PI*2+boss.t;enemyShot(boss.x,1.2,boss.z,Math.sin(a),Math.cos(a),3,14)}}
     boss.body.scale.setScalar(3.4*(1+Math.sin(boss.t*10)*.03))}
-  boss.sum-=dt;if(boss.sum<=0){boss.sum=6;for(let i=0;i<4;i++){const a=i/4*Math.PI*2;spawn('lgh',boss.x+Math.sin(a)*1.6,boss.z+Math.cos(a)*1.6)}}
+  boss.sum-=dt;if(boss.sum<=0){boss.sum=6;for(let i=0;i<6;i++){const a=i/6*Math.PI*2;spawn('ghost',boss.x+Math.sin(a)*1.8,boss.z+Math.cos(a)*1.8)}}
   if(d<boss.r+.4)hurtHero(boss.dmg,dx/d,dz/d);
   $('#bossHp').style.width=(100*Math.max(0,boss.hp/boss.max))+'%'}
 function stepWarns(dt){for(const w of warnPool){if(!w.on)continue;w.t+=dt;const k=Math.min(1,w.t/w.delay);w.f.scale.setScalar(Math.max(.01,w.r*k));w.m.material.opacity=.5+.5*Math.sin(w.t*18);
@@ -542,8 +617,8 @@ function stepWarns(dt){for(const w of warnPool){if(!w.on)continue;w.t+=dt;const 
 /* ================= 主角受傷 ================= */
 let shake=0;
 function hurtHero(dmg,kx,kz){if(G.iframe>0||G.over)return;
-  if(G.bellOn){G.bellOn=false;G.iframe=.5;shake=Math.max(shake,.2);fx({p:tmp.set(HERO.pos.x,1,HERO.pos.z),col:0xffd65a,add:true,life:.5,s0:1.5,s1:4,op:.9,vy:0});
-    for(const e of enemies){const dx=e.x-HERO.pos.x,dz=e.z-HERO.pos.z,d=Math.hypot(dx,dz);if(d<2.8){e.x+=dx/(d||1)*2;e.z+=dz/(d||1)*2;hurtEnemy(e,swordDmg()*1.5)}}return}G.hp-=dmg;G.iframe=.85;shake=Math.max(shake,.25);const h=$('#hurt');h.classList.add('on');setTimeout(()=>h.classList.remove('on'),60);
+  if(G.bellOn){G.bellOn=false;G.iframe=.5;SFX.play('bell');shake=Math.max(shake,.2);fx({p:tmp.set(HERO.pos.x,1,HERO.pos.z),col:0xffd65a,add:true,life:.5,s0:1.5,s1:4,op:.9,vy:0});
+    for(const e of enemies){const dx=e.x-HERO.pos.x,dz=e.z-HERO.pos.z,d=Math.hypot(dx,dz);if(d<2.8){e.x+=dx/(d||1)*2;e.z+=dz/(d||1)*2;hurtEnemy(e,swordDmg()*1.5)}}return}G.hp-=dmg;G.iframe=.85;shake=Math.max(shake,.25);SFX.play('hurt');buzz(30);const h=$('#hurt');h.classList.add('on');setTimeout(()=>h.classList.remove('on'),60);
   if(G.hp<=0){G.hp=0;endNight(false)}}
 
 /* ================= 操作：全畫面拖曳 ================= */
@@ -570,22 +645,23 @@ let sayT=0;function say(t,s=4){const b=$('#bubble');b.textContent=t;b.classList.
 let tipShown=false;function hideTip(){if(!tipShown){tipShown=true;sayT=Math.min(sayT,1.2)}}
 function togglePause(){if(!G||G.over)return;if($('#cardOv').classList.contains('on'))return;const on=!$('#pauseOv').classList.contains('on');$('#pauseOv').classList.toggle('on',on);G.paused=on;
   if(on)$('#pauseInfo').textContent=`已斬 ${G.kills} 隻妖，離雞啼還有 ${clockText()}`}
-$('#viewBtn').onclick=()=>setCam(camIdx+1);$('#pauseBtn').onclick=togglePause;$('#resume').onclick=togglePause;$('#giveUp').onclick=()=>{$('#pauseOv').classList.remove('on');endNight(false,true)};
+$('#viewBtn').onclick=()=>setCam(camIdx+1);$('#sfxBtn').onclick=()=>{SFX.resume();const on=SFX.toggle();$('#sfxBtn').textContent=on?'音':'靜'};$('#sfxBtn').textContent=SFX.on?'音':'靜';$('#pauseBtn').onclick=togglePause;$('#resume').onclick=togglePause;$('#giveUp').onclick=()=>{$('#pauseOv').classList.remove('on');endNight(false,true)};
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&G&&!G.paused&&!G.over)togglePause()});
 const clockText=()=>{const s=Math.max(0,Math.ceil(G.len-G.t)),m=Math.floor(s/60);return `${m}:${String(s%60).padStart(2,'0')}`};
 function renderRealm(id,bar){const r=realmOf(save.xiuwei);$(id).textContent=`${r.name}・修為 ${Math.floor(save.xiuwei)}`;$(bar).style.width=(r.frac*100)+'%'}
 function pickChar(c){if(c!==who){useChar(c);applyFace({g:1,x:1});applyBody();buildHair();try{localStorage.setItem('zk-who',String(c))}catch(e){}}
   $$('[data-who]').forEach(b=>b.setAttribute('aria-pressed',String(+b.dataset.who===who)))}
 $$('[data-who]').forEach(b=>b.onclick=()=>pickChar(+b.dataset.who));pickChar(who);
-function startNight(len){resetWorld();G=newNight(len);G.paused=false;$('#startOv').classList.remove('on');$('#endOv').classList.remove('on');$('#hud').hidden=false;
-  $('#bossMark').style.left=(.85*100)+'%';spawnRing('ghost',8,7.5);// an opening ring so the first monsters are seen walking inrenderBuffs();tipShown=false;say('拖著畫面走路：每走幾步放一圈劍罡、被撞只受一半傷；放開站樁：出劍更快！',7);
+function startNight(len){SFX.resume();resetWorld();G=newNight(len);G.paused=false;$('#startOv').classList.remove('on');$('#endOv').classList.remove('on');$('#hud').hidden=false;
+  $('#bossMark').style.left='67%';spawnRing('ghost',8,7.5);// an opening ring so the first monsters are seen walking in
+  renderBuffs();tipShown=false;say('拖著畫面走路：每走幾步放一圈劍罡、被撞只受一半傷；放開站樁：出劍更快！',7);
   setTimeout(()=>{if(G&&!G.over&&G.kills<3)say('吸青色的魂火可以頓悟喔！',4)},9000)}
 $('#startNight').onclick=()=>startNight(NIGHT);
 $('#again').onclick=()=>startNight(NIGHT);$('#toTitle').onclick=()=>{$('#endOv').classList.remove('on');$('#startOv').classList.add('on');$('#hud').hidden=true;renderRealm('#realmText','#realmBar');resetWorld();G=null};
 function resetWorld(){for(const e of enemies)e.dead=true;enemies=[];for(const k in ET)ET[k].list=[];souls=[];shots.length=0;
   swords.forEach(s=>{s.on=false;s.g.visible=false;s.tr.build(0)});warnPool.forEach(w=>{w.on=false;w.m.visible=w.f.visible=false});fxPool.forEach(f=>{f.on=false;f.s.visible=false});
   for(const k in ET)ET[k].mesh.count=0;soulMesh.count=0;shadowMesh.count=0;ebs=[];ebMesh.count=ebGlow.count=0;dashPool.forEach(l=>{l.e=null;l.m.visible=false});
-  bolts.forEach(b=>scene.remove(b.m));bolts.length=0;bellMesh.visible=false;shots.forEach(s=>{if(s.card)scene.remove(s.card)});
+  bolts.forEach(b=>scene.remove(b.m));bolts.length=0;falls.forEach(f=>{f.on=false;f.g.visible=false});bellMesh.visible=false;shots.forEach(s=>{if(s.card)scene.remove(s.card)});
   pills.forEach(p=>scene.remove(p.g));pills.length=0;qiRings.forEach(q=>scene.remove(q.m));qiRings.length=0;
   boss.alive=false;boss.g.visible=false;$('#bossBox').classList.remove('on');orbitBlades.forEach(g=>g.visible=false);root.position.set(0,0,0);
   scene.fog.color.copy(NIGHT_FOG);scene.background.copy(NIGHT_FOG);hemi.intensity=.55}
@@ -598,6 +674,7 @@ function endNight(win,gaveUp=false){if(G.over)return;G.over=true;G.paused=true;
     :'戰利品打五折帶回；修為和境界都不會掉。';
   $('#endStat').innerHTML=`<dt>斬妖</dt><dd>${G.kills} 隻</dd><dt>最高戰力</dt><dd>${fmt(G.peak||0)}</dd><dt>頓悟</dt><dd>${G.lv} 次</dd><dt>帶回修為</dt><dd>+${xw}${win?'':'（打五折）'}</dd>`;
   renderRealm('#realmText2','#realmBar2');setTimeout(()=>$('#endOv').classList.add('on'),win?1600:900);
+  SFX.play(win?'win':'lose');
   if(win){banner('喔喔喔——！','雞啼');$('#bossBox').classList.remove('on')}}
 renderRealm('#realmText','#realmBar');
 
@@ -609,7 +686,7 @@ let last=performance.now();const camT=new THREE.Vector3(),bubP=new THREE.Vector3
 mode='idle';
 function frame(now){requestAnimationFrame(frame);let dt=Math.min(.05,(now-last)/1000);last=now;clock+=dt;
   const live=G&&!G.paused;
-  if(live){G.t+=dt;stepGame(dt)}
+  if(live){let d=dt;if(G.slow>0){G.slow-=dt;d*=.3}G.t+=d;stepGame(d)}
   else if(G&&G.over){mode='idle'}
   else if(!G){root.rotation.y+=dt*.25;mode='idle'}
   animateHero(dt);
@@ -655,8 +732,8 @@ function stepGame(dt){const g=G;
   // walking pulls souls from further away
   const mg=g.s.magnet*(moving?1.5:1);for(let i=souls.length-1;i>=0;i--){const s=souls[i];s.t+=dt;const dx=HERO.pos.x-s.x,dz=HERO.pos.z-s.z,d=Math.hypot(dx,dz);
     if(d<mg||s.pull||s.t>5){s.pull=true;const v=4+s.t*6;s.x+=dx/d*Math.min(d,v*dt);s.z+=dz/d*Math.min(d,v*dt)}
-    if(d<.45){g.souls+=s.v;g.wu+=s.v*g.boost;souls.splice(i,1)}}
-  if(g.wu>=g.wuNeed&&!g.over){g.wu-=g.wuNeed;g.lv++;g.wuNeed=Math.round(5+g.lv*3+g.lv*g.lv*.35);openCards()}
+    if(d<.45){g.souls+=s.v;g.wu+=s.v;SFX.play('soul');souls.splice(i,1)}}
+  if(g.wu>=g.wuNeed&&!g.over){g.wu-=g.wuNeed;g.lv++;g.wuNeed=Math.round(14*Math.pow(1.7,g.lv));openCards()}
   // hero upkeep
   g.iframe=Math.max(0,g.iframe-dt);if(g.s.regen)g.hp=Math.min(g.maxhp,g.hp+g.s.regen*dt);
   // fx
@@ -681,15 +758,15 @@ function stepEnemies(dt){grid.clear();for(const e of enemies){if(e.dead)continue
     if(t.float)e.y=.15+Math.sin(e.ph*2.4)*.1;
     if(e.elite)e.cd=Math.min(e.cd,9);
     // 燈籠鬼: keep at range and spit a slow fireball (it glows and swells first)
-    if(t.ranged){if(d<4.5)mv*=-.6;else if(d<7)mv*=.15;
+    if(t.ranged&&(e.special||e.elite)){if(d<4.5)mv*=-.6;else if(d<7)mv*=.15;
       if(e.cd<.6&&d<9){e.flash=Math.max(e.flash,.03);e.squash=-(.6-e.cd)*.6}
       if(e.cd<=0&&d<9){e.cd=3.2+Math.random()*1.5;const n=e.elite?5:1;for(let j=0;j<n;j++){const a=Math.atan2(dx,dz)+(j-(n-1)/2)*.28;enemyShot(e.x,.75*e.s,e.z,Math.sin(a),Math.cos(a),e.elite?4.4:3.6,e.dmg)}}}
     // 紙人: stops, flutters (red line on the ground), then dashes straight through
-    if(t.dash){if(e.dashT>0){e.dashT-=dt;mv=9;mx=e.dx;mz=e.dz;if(e.dashT<=0)e.cd=4+Math.random()*3}
+    if(t.dash&&e.special){if(e.dashT>0){e.dashT-=dt;mv=9;mx=e.dx;mz=e.dz;if(e.dashT<=0)e.cd=4+Math.random()*3}
       else if(e.wind>0){e.wind-=dt;mv=0;e.lunge=1;if(e.wind<=0){e.dashT=.38;e.lunge=0;dashLine(e,false)}}
       else if(e.cd<=0&&d<5.5&&d>1.2){e.wind=.65;e.dx=mx;e.dz=mz;dashLine(e,true)}}
     // 跳跳殭屍: crouches, then leaps onto the spot where the hero is (red circle), landing hurts
-    if(t.leap){if(e.leapT>0){e.leapT-=dt;const k=1-e.leapT/.7;e.x=e.lx0+(e.lx1-e.lx0)*k;e.z=e.lz0+(e.lz1-e.lz0)*k;e.y=Math.sin(k*Math.PI)*1.6;mv=0;
+    if(t.leap&&e.special){if(e.leapT>0){e.leapT-=dt;const k=1-e.leapT/.7;e.x=e.lx0+(e.lx1-e.lx0)*k;e.z=e.lz0+(e.lz1-e.lz0)*k;e.y=Math.sin(k*Math.PI)*1.6;mv=0;
         if(e.leapT<=0){e.leapT=0;e.y=0;e.squash=1;e.cd=5+Math.random()*3;shake=Math.max(shake,.12);fx({p:tmp.set(e.x,.2,e.z),col:0x6a7a5a,life:.5,s0:.6,s1:2.2,op:.7,vy:.2})}}
       else if(e.cd<=0&&d<6&&d>1.5){e.leapT=.7;e.lx0=e.x;e.lz0=e.z;e.lx1=HERO.pos.x;e.lz1=HERO.pos.z;warn(e.lx1,e.lz1,1,.7,e.dmg*1.5)}}
     if(!e.leapT){e.x+=mx*mv*dt;e.z+=mz*mv*dt}
@@ -705,7 +782,7 @@ function writeInstances(){const lean=-.45*Math.max(0,Math.min(1,(camP-.45)/.45))
     for(const e of t.list){dummy.position.set(e.x,e.y,e.z);const fy=Math.atan2(HERO.pos.x-e.x,HERO.pos.z-e.z);
       dummy.rotation.set(lean+(e.lunge>0?.35:0)+(t.float?.12:0),fy,t.sway?Math.sin(e.ph*5)*.14:t.float?Math.sin(e.ph*1.7)*.08:0,'YXZ');
       const sq=e.squash||0;dummy.scale.set(e.s*t.sc*(1+sq*.25),e.s*t.sc*(1-sq*.3),e.s*t.sc*(1+sq*.25));dummy.updateMatrix();
-      t.mesh.setMatrixAt(i,dummy.matrix);t.mesh.setColorAt(i,e.flash>0?FLASH:e.elite?ELITE:WHITE);i++}
+      t.mesh.setMatrixAt(i,dummy.matrix);t.mesh.setColorAt(i,e.flash>0?FLASH:e.elite?ELITE:e.special?SPECIAL:WHITE);i++}
     t.mesh.count=i;t.mesh.instanceMatrix.needsUpdate=true;if(t.mesh.instanceColor)t.mesh.instanceColor.needsUpdate=true}
   {let j=0;for(const e of enemies){if(e.dead)continue;dummy.position.set(e.x,.02,e.z);dummy.rotation.set(0,0,0);dummy.scale.setScalar(e.r*3.2);dummy.updateMatrix();shadowMesh.setMatrixAt(j++,dummy.matrix)}
    shadowMesh.count=j;shadowMesh.instanceMatrix.needsUpdate=true}
@@ -715,13 +792,13 @@ function writeInstances(){const lean=-.45*Math.max(0,Math.min(1,(camP-.45)/.45))
     dummy.quaternion.copy(camera.quaternion);dummy.scale.setScalar(.75*pul);dummy.updateMatrix();ebGlow.setMatrixAt(i++,dummy.matrix)}
   ebMesh.count=ebGlow.count=i;ebMesh.instanceMatrix.needsUpdate=ebGlow.instanceMatrix.needsUpdate=true;
   for(const L of dashPool)if(L.e){L.m.position.set(L.e.x,.03,L.e.z);L.m.material.opacity=.25+.25*Math.sin(G.t*30)}}
-const ELITE=new THREE.Color(1.6,.8,.6);
+const ELITE=new THREE.Color(1.6,.8,.6),SPECIAL=new THREE.Color(1.5,.75,.7);
 // off-screen danger: red arrows on the screen edge for fireballs / winding-up monsters nearby, orange for the boss
 const edgeEls=[];for(let i=0;i<8;i++){const d=document.createElement('div');d.className='edge';$('#edges').appendChild(d);edgeEls.push(d)}
 const ep=new THREE.Vector3();
 function updateEdges(){const th=[];if(G&&!G.paused&&!G.over){if(boss.alive)th.push([boss.x,1.5,boss.z,1]);
     for(const b of ebs)if((b.x-HERO.pos.x)**2+(b.z-HERO.pos.z)**2<64)th.push([b.x,b.y,b.z,0]);
-    for(const e of enemies)if((e.wind>0||e.leapT>0||(e.t.ranged&&e.cd<.8))&&(e.x-HERO.pos.x)**2+(e.z-HERO.pos.z)**2<64)th.push([e.x,.6,e.z,0])}
+    for(const e of enemies)if((e.wind>0||e.leapT>0||(e.t.ranged&&(e.special||e.elite)&&e.cd<.8))&&(e.x-HERO.pos.x)**2+(e.z-HERO.pos.z)**2<64)th.push([e.x,.6,e.z,0])}
   let n=0;const W=innerWidth,H=innerHeight;
   for(const [x,y,z,isB] of th){if(n>=edgeEls.length)break;ep.set(x,y,z).project(camera);if(ep.z>1){ep.x=-ep.x;ep.y=-ep.y}
     if(Math.abs(ep.x)<.97&&Math.abs(ep.y)<.97&&ep.z<1)continue;
@@ -733,7 +810,8 @@ requestAnimationFrame(t=>{last=t;frame(t)});
 
 // test hooks (Playwright)
 // fast-forward without rendering (tests / balance bots): advances the night by `sec` in 1/30 s steps
-function sim(sec){const n=Math.round(sec*30);for(let i=0;i<n&&G&&!G.over;i++){if(G.paused){if($('#cardOv').classList.contains('on'))pickCard(0);else break}
+function sim(sec){simming=true;try{return simRun(sec)}finally{simming=false}}
+function simRun(sec){const n=Math.round(sec*30);for(let i=0;i<n&&G&&!G.over;i++){if(G.paused){if($('#cardOv').classList.contains('on'))pickCard(0);else break}
   G.t+=1/30;stepGame(1/30);HERO.pos.copy(root.position);updateCamera(1/30,true)}return G&&{t:Math.round(G.t),kills:G.kills,lv:G.lv,hp:Math.round(G.hp),en:enemies.length,boss:boss.alive?Math.round(boss.hp/boss.max*100)+'%':G.bossKilled?'killed':'-',over:G.over}}
 window.__game={setCam:i=>{setCam(i)},ic:()=>{const m=ET.paper.mesh;return {cnt:m.count,ic:[...m.instanceColor.array.slice(0,9)],attr:Object.keys(m.geometry.attributes),vc:m.material.vertexColors,prog:renderer.info.programs.map(p=>p.name)}},cols:k=>{const a=ET[k].geo.attributes.color.array,u=new Set();for(let i=0;i<a.length;i+=3)u.add(a[i].toFixed(2)+','+a[i+1].toFixed(2)+','+a[i+2].toFixed(2));return [...u].concat([ET[k].mesh.material.vertexColors,!!ET[k].mesh.instanceColor])},gallery:()=>{G.paused=true;resetWorld();G.paused=true;['ghost','paper','jiang','lgh'].forEach((k,i)=>{const e=spawn(k,-1.35+i*.9,0);e.cd=99});root.position.set(0,0,-2.5);root.rotation.y=Math.PI;HERO.pos.set(0,0,3);root.rotation.y=0;writeInstances()},camD:d=>{camOverride=d},start:()=>startNight(NIGHT),get G(){return G},setT:s=>{if(G)G.t=s},auto:v=>{if(G)G.auto=v},pick:i=>pickCard(i),god:()=>{if(G){G.maxhp=G.hp=1e9}},
   spawnRing,setWho:pickChar,sim,mat:k=>[...ET[k].mesh.instanceMatrix.array.slice(0,16)].map(v=>+v.toFixed(3)).concat(ET[k].list.slice(0,3).map(e=>[e.x,e.y,e.z,e.s,e.flash])),bdbg:()=>({n:(ndc.set(boss.x,1.5,boss.z).project(camera),[ndc.x,ndc.y,ndc.z].map(v=>+v.toFixed(2))),bx:[boss.x,boss.z],cam:camera.position.toArray().map(v=>+v.toFixed(1)),d:Math.hypot(boss.x-HERO.pos.x,boss.z-HERO.pos.z),on:bossOnScreen(),hp:boss.hp,max:boss.max,dps:G.dps,sw:swords.filter(s=>s.on&&s.tgt===boss).length}),dbg:()=>({cnt:Object.keys(ET).map(k=>k+':'+ET[k].mesh.count+(ET[k].mesh.instanceColor?'c':'')+(ET[k].mesh.visible?'v':'')),pr:renderer.getPixelRatio(),gl2:renderer.capabilities.isWebGL2,prog:renderer.info.programs.length,en:enemies.length,near:enemies.filter(e=>Math.hypot(e.x-HERO.pos.x,e.z-HERO.pos.z)<6.5).length,sw:swords.filter(s=>s.on).length,hero:[HERO.pos.x,HERO.pos.z],e0:enemies[0]&&[enemies[0].x,enemies[0].z,enemies[0].hp],vol:G&&G.volley})};
