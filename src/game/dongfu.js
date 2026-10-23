@@ -18,7 +18,7 @@ save.inv=Object.assign({stone:0,seed:{ning:3,chi:1,shen:0},herb:{ning:0,chi:0,sh
 save.garden=save.garden||[null,null,null,null];save.won=save.won||{};save.ults=save.ults||['wan'];save.ult=save.ult||'wan';save.lastSeen=save.lastSeen||Date.now();
 const chUnlocked=i=>i===0||(i===11?!!save.ending:false)||i!==11&&[0,1,2].some(n=>save.won[`${i-1}-${n}`]);
 const DF=(()=>{let tab='go',tick=0,lookTab=0,lt=0,ld={g:0,x:0,b:0,h:0};
-  const TABS=[['go','出戰'],['med','靜室'],['garden','藥園'],['alch','丹房'],['look','造型'],['lib','藏經閣'],['shop','坊市']];
+  const TABS=[['go','出戰'],['med','靜室'],['garden','藥園'],['alch','丹房'],['look','造型'],['lib','藏經閣'],['shop','坊市'],['duel','鬥法台']];
   const el=$('#dfBody');
   function head(){$('#dfRealm').textContent=REALMS[save.realm];$('#dfStone').textContent=`靈石 ${fmt(save.inv.stone)}・妖丹 ${save.inv.yaodan}`}
   function tabs(){$('#dfTabs').innerHTML=TABS.map(([k,n])=>`<button data-tab="${k}" aria-pressed="${k===tab}">${n}${k==='med'&&canBreak(false)?'<i class="dot"></i>':''}${k==='garden'&&save.garden.some(p=>p&&ripe(p))?'<i class="dot"></i>':''}</button>`).join('');
@@ -30,6 +30,7 @@ const DF=(()=>{let tab='go',tick=0,lookTab=0,lt=0,ld={g:0,x:0,b:0,h:0};
     if(tab==='go'){el.innerHTML=CH.map((c,i)=>{const open=chUnlocked(i),ready=i<CH_READY;
         return `<div class="chrow${open&&ready?'':' lock'}"><div class="chn"><b>${c.n}</b><span>${c.p}</span><small>推薦 ${REALMS[c.rec]}</small></div><div class="chnights">${NIGHTS.map((n,j)=>
           `<button class="nb${save.won[`${i}-${j}`]?' won':''}" data-ch="${i}" data-n="${j}" ${open&&ready?'':'disabled'}>${n}${save.won[`${i}-${j}`]?' ✓':''}</button>`).join('')}</div>${!ready?'<em>製作中</em>':!open?'<em>打贏上一章任一夜開放</em>':''}</div>`}).join('');
+      if(save.ending&&save.board&&save.board.length)el.innerHTML+=`<div class="dfsec"><h3>無盡之夜排行（本機前 5）</h3><ul class="reqs">${save.board.map((r,i)=>`<li><span>${i+1}. ${r.d}</span><b>斬妖 ${r.k}${r.b?'・斬魔王':''}</b></li>`).join('')}</ul></div>`;
       $$('#dfBody [data-ch]').forEach(b=>b.onclick=()=>go(+b.dataset.ch,+b.dataset.n))}
     else if(tab==='med'){const off=offline(),can=canBreak(false);
       el.innerHTML=`<div class="dfsec"><h3>${REALMS[save.realm]}${reqs()?` → ${REALMS[save.realm+1]}`:''}</h3><ul class="reqs">${reqHTML(false)}</ul>
@@ -67,6 +68,10 @@ const DF=(()=>{let tab='go',tick=0,lookTab=0,lt=0,ld={g:0,x:0,b:0,h:0};
     else if(tab==='lib'){el.innerHTML=ULTS.map(u=>{const has=save.ults.includes(u.k);
         return `<button class="ultpick${save.ult===u.k?' on':''}" data-ult="${u.k}" ${has?'':'disabled'}><b>${u.n}</b><span>${has?u.d:`打贏${CH[u.ch].n}解鎖`}</span></button>`}).join('');
       $$('#dfBody [data-ult]').forEach(b=>b.onclick=()=>{save.ult=b.dataset.ult;writeSave();SFX.play('ready');render()})}
+    else if(tab==='duel'){const ok=save.realm>=15;el.innerHTML=`<div class="dfsec"><h3>鬥法台</h3><p class="tag">${ok?'三局兩勝，公平鬥法（兩邊一樣強）：護體靈光 → 肉身 → 元嬰。飛劍自動瞄準，閃身瞬間無敵。':'成嬰（元嬰初期）之後開放。'}</p>
+        <button class="btn gold" id="duelAI" ${ok?'':'disabled'}>對電腦（贏下來算修行勝場：${save.st.duel} 場）</button>
+        <button class="btn" id="duel2P" ${ok?'':'disabled'}>雙人同機（左右各一人）</button></div>`;
+      $('#duelAI').onclick=()=>DUEL.open('ai');$('#duel2P').onclick=()=>DUEL.open('2p')}
     else if(tab==='shop'){const items=[...Object.entries(HERBS).map(([k,h])=>({id:'seed-'+k,n:`${h.n}種子`,d:`種下 ${h.min>=60?h.min/60+' 小時':h.min+' 分'}收成兩株`,p:h.price,buy:()=>{inv.seed[k]++}})),
         {id:'paper',n:'替身紙人',d:'夜裡倒下時替你擋一次，原地復活',p:100,buy:()=>{inv.paper++}},{id:'hui',n:'回春丹',d:'夜裡回 40% 生命',p:60,buy:()=>{inv.pill.hui++}}];
       el.innerHTML=items.map(it=>`<div class="recipe"><div><b>${it.n}</b><span class="tag">${it.d}</span></div><button class="btn${inv.stone>=it.p?' go':''}" data-buy="${it.id}" ${inv.stone>=it.p?'':'disabled'}>${it.p} 靈石</button></div>`).join('')+
