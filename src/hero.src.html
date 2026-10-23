@@ -292,17 +292,17 @@ const FACE_SPEC=[
  {tab:'臉型',items:[
   {k:'headH',n:'頭高（短↔長）',min:0.635,max:0.875,step:.005,span:0.24,def:0.755,t:'s'},
   {k:'headS',n:'頭大小',min:0.97,max:1.27,step:.005,span:0.3,def:1.12,t:'s'},
-  {k:'faceW',n:'臉寬',min:0.5,max:0.8,step:.005,span:0.3,def:0.64,t:'s'},
+  {k:'faceW',n:'臉寬',min:0.49,max:0.79,step:.005,span:0.3,def:0.64,t:'s'},
   {k:'foreW',n:'額頭寬',min:-0.015,max:0.105,step:.005,span:0.12,def:0.045,t:'g'},
   {k:'cheekW',n:'顴骨寬',min:-0.185,max:0.215,step:.005,span:0.4,def:0.015,t:'g'},
   {k:'jawW',n:'下頜寬',min:-0.065,max:0.375,step:.005,span:0.44,def:0.155,t:'g'},
   {k:'chinW',n:'下巴（尖↔圓）',min:-0.91,max:-0.27,step:.01,span:0.64,def:-0.59,t:'g'},
   {k:'chinR',n:'整個下巴圓潤',min:0.5,max:1.5,step:.05,span:1,def:1,t:'g'},
-  {k:'lowerLen',n:'下巴長',min:-0.1,max:0.12,step:.005,span:0.22,def:-0.015,t:'g'},
-  {k:'flat',n:'臉平度',min:0,max:0.68,step:.02,span:0.7,def:0.16,t:'g'},
+  {k:'lowerLen',n:'下巴長',min:-0.125,max:0.095,step:.005,span:0.22,def:-0.015,t:'g'},
+  {k:'flat',n:'臉平度',min:0,max:0.32,step:.02,span:0.7,def:0.16,t:'g'},
   {k:'cheekFull',n:'臉頰飽滿',min:-3,max:-1,step:.05,span:2,def:-2,t:'g'},
   {k:'cheekLow',n:'兩頰寬',min:-0.14,max:0.16,step:.005,span:.3,def:0.01,t:'g'},
-  {k:'cheekHollow',n:'兩頰凹陷',min:-0.6,max:2.4,step:.1,span:3,def:0.9,t:'g'},
+  {k:'cheekHollow',n:'兩頰凹陷',min:0,max:1.8,step:.1,span:3,def:0.9,t:'g'},
   {k:'cheekApple',n:'蘋果肌',min:-0.95,max:1.05,step:.05,span:2,def:0.05,t:'g'},
   {k:'browBone',n:'眉骨',min:0.95,max:2.95,step:.05,span:2,def:1.95,t:'g'}]},
  {tab:'眼睛',items:[
@@ -322,11 +322,11 @@ const FACE_SPEC=[
   {k:'browThick',n:'眉粗細',min:2.6,max:6.8,step:.1,span:4.2,def:4.7,t:'x'},
   {k:'browArch',n:'眉弧度',min:1.5,max:12.5,step:.5,span:11,def:7,t:'x'},
   {k:'browTail',n:'眉尾上揚',min:-18,max:0,step:.5,span:18,def:-9,t:'x'},
-  {k:'browDark',n:'眉色濃淡',min:0.1,max:1.8,step:.05,span:1.7,def:0.7,t:'x'}]},
+  {k:'browDark',n:'眉色濃淡',min:0.1,max:1.3,step:.05,span:1.7,def:0.7,t:'x'}]},
  {tab:'鼻子',items:[
   {k:'noseUp',n:'鼻頭位置',min:-6,max:10,step:1,span:16,def:2,t:'gx'},
-  {k:'noseH',n:'鼻樑高度',min:0,max:3.7,step:.05,span:3.7,def:1.35,t:'g'},
-  {k:'noseTipP',n:'鼻頭突出',min:0,max:4,step:.1,span:4,def:0.9,t:'g'},
+  {k:'noseH',n:'鼻樑高度',min:0,max:2.7,step:.05,span:3.7,def:1.35,t:'g'},
+  {k:'noseTipP',n:'鼻頭突出',min:0,max:1.8,step:.1,span:4,def:0.9,t:'g'},
   {k:'noseW',n:'鼻翼寬',min:0.85,max:2.35,step:.05,span:1.5,def:1.6,t:'gx'}]},
  {tab:'嘴唇',items:[
   {k:'lipUp',n:'唇位置',min:-21,max:5,step:1,span:26,def:-8,t:'gx'},
@@ -339,7 +339,7 @@ const FACE_SPEC=[
  {tab:'膚妝',items:[
   {k:'skin',n:'膚色',opts:['自然','瓷白','暖玉','小麥'],def:2,t:'x'},
   {k:'blush',n:'腮紅',min:2.5,max:6.5,step:.1,span:4,def:4.5,t:'x'},
-  {k:'contour',n:'輪廓陰影',min:0,max:3,step:.1,span:3,def:1.1,t:'x'},
+  {k:'contour',n:'輪廓陰影',min:0,max:2.2,step:.1,span:3,def:1.1,t:'x'},
   {k:'mark',n:'額間印記',opts:['無','青','朱'],def:0,t:'x'}]},
  {tab:'髮型',items:[
   {k:'hairStyle',n:'髮型',opts:['道冠垂髮','高馬尾','雙髻','披髮','束髮'],def:0,t:'h'},
@@ -347,16 +347,16 @@ const FACE_SPEC=[
  {tab:'身形',cam:'body',items:[
   {k:'height',n:'整體身高',min:0.52,max:0.82,step:.005,span:0.3,def:0.67,t:'b'},
   {k:'legLen',n:'下半身長',min:0.495,max:0.955,step:.005,span:0.46,def:0.725,t:'b'},
-  {k:'torsoLen',n:'上身長',min:0.4,max:0.8,step:.005,span:0.4,def:0.56,t:'b'},
-  {k:'neckLen',n:'脖子長',min:0.2,max:1,step:.01,span:0.8,def:0.49,t:'b'},
+  {k:'torsoLen',n:'上身長',min:0.36,max:0.76,step:.005,span:0.4,def:0.56,t:'b'},
+  {k:'neckLen',n:'脖子長',min:0.09,max:0.89,step:.01,span:0.8,def:0.49,t:'b'},
   {k:'shoulderW',n:'肩寬',min:0.655,max:1.155,step:.005,span:0.5,def:0.905,t:'b'},
-  {k:'shoulderDrop',n:'溜肩',min:0,max:1,step:.05,span:1,def:0.4,t:'b'},
+  {k:'shoulderDrop',n:'溜肩',min:0,max:0.8,step:.05,span:1,def:0.4,t:'b'},
   {k:'bodyW',n:'身材胖瘦',min:0.45,max:1.05,step:.005,span:0.6,def:0.75,t:'b'},
   {k:'handS',n:'手大小',min:1,max:1.8,step:.01,span:.8,def:1.4,t:'b'},
   {k:'armLen',n:'手臂長',min:0.7,max:1,step:.005,span:0.3,def:0.85,t:'b'}]}];
 // t: b=身形（applyBody 重排身體各部件）
 // 角色: FACE_SPEC holds the 女主角 ranges/defaults; MALE overrides them per key as [min,max,def] (tools/set_face.py writes both)
-const MALE={"headH":[0.78,1.02,0.9],"headS":[0.85,1.15,1.0],"faceW":[0.65,0.95,0.8],"foreW":[0.0,0.12,0.06],"cheekW":[-0.08,0.32,0.12],"jawW":[0.04,0.48,0.26],"chinW":[-0.42,0.22,-0.1],"chinR":[-0.2,0.8,0.3],"lowerLen":[-0.01,0.21,0.1],"flat":[0,0.68,0.2],"cheekFull":[-2.0,0.0,-1],"cheekLow":[-0.13,0.17,0.02],"cheekHollow":[0.0,3.0,1.5],"cheekApple":[-1.3,0.7,-0.3],"browBone":[1.2,3.2,2.2],"eyeSp":[51.0,71.0,61],"eyeUp":[-22.0,10.0,-6],"eyeSize":[0.68,1.32,1.0],"eyeOpen":[0.5,1.3,0.88],"eyeTilt":[-12.0,22.0,5],"irisS":[0.65,1.35,1.0],"iris":[0,0,1],"lashes":[-0.7,1.3,0.3],"lash":[0.9,4.3,2.6],"shadow":[0,2.4,0.5],"browUp":[-17.0,5.0,-6],"browLen":[0.9,1.8,1.35],"browThick":[3.4,7.6,5.5],"browArch":[0,11.0,3],"browTail":[-4.0,14.0,5],"browDark":[0.45,2.15,1.3],"noseUp":[-8.0,8.0,0],"noseH":[0.05,3.75,1.9],"noseTipP":[0,4.0,0.8],"noseW":[0.55,2.05,1.3],"lipUp":[-21.0,5.0,-8],"lipW":[1.66,3.34,2.5],"lipThick":[0.3,2.7,1.2],"lipCorner":[-7.0,9.0,1],"lipStyle":[0,0,4],"expr":[0,0,0],"lipC":[0,0,3],"skin":[0,0,2],"blush":[0,4.0,0.6],"contour":[0.1,3.1,1.6],"mark":[0,0,0],"hairStyle":[0,0,4],"bangs":[0,0,3],"height":[0.61,0.91,0.76],"legLen":[0.53,0.99,0.76],"torsoLen":[0.46,0.86,0.66],"neckLen":[0.32,1.12,0.72],"shoulderW":[0.75,1.25,1.0],"shoulderDrop":[0,1.0,0.2],"bodyW":[0.54,1.14,0.84],"handS":[1.05,1.85,1.45],"armLen":[0.75,1.05,0.9]};
+const MALE={"headH":[0.78,1.02,0.9],"headS":[0.85,1.15,1.0],"faceW":[0.65,0.95,0.8],"foreW":[0.0,0.12,0.06],"cheekW":[-0.08,0.32,0.12],"jawW":[0.04,0.48,0.26],"chinW":[-0.42,0.22,-0.1],"chinR":[-0.2,0.8,0.3],"lowerLen":[-0.01,0.21,0.1],"flat":[0.0,0.4,0.2],"cheekFull":[-2.0,0.0,-1],"cheekLow":[-0.13,0.17,0.02],"cheekHollow":[0.0,3.0,1.5],"cheekApple":[-1.3,0.7,-0.3],"browBone":[1.2,3.2,2.2],"eyeSp":[51.0,71.0,61],"eyeUp":[-22.0,10.0,-6],"eyeSize":[0.68,1.32,1.0],"eyeOpen":[0.5,1.26,0.88],"eyeTilt":[-12.0,22.0,5],"irisS":[0.65,1.35,1.0],"iris":[0.0,0.0,1],"lashes":[0.0,0.6,0.3],"lash":[0.9,4.3,2.6],"shadow":[0.0,1.0,0.5],"browUp":[-17.0,5.0,-6],"browLen":[0.9,1.8,1.35],"browThick":[3.4,7.6,5.5],"browArch":[0.0,6.0,3],"browTail":[-4.0,14.0,5],"browDark":[0.45,2.15,1.3],"noseUp":[-8.0,8.0,0],"noseH":[0.05,3.75,1.9],"noseTipP":[0.0,1.6,0.8],"noseW":[0.55,2.05,1.3],"lipUp":[-21.0,5.0,-8],"lipW":[1.66,3.34,2.5],"lipThick":[0.3,2.1,1.2],"lipCorner":[-7.0,9.0,1],"lipStyle":[0.0,0.0,4],"expr":[0.0,0.0,0],"lipC":[0.0,0.0,3],"skin":[0.0,0.0,2],"blush":[0.0,1.2,0.6],"contour":[0.1,3.1,1.6],"mark":[0.0,0.0,0],"hairStyle":[0.0,0.0,4],"bangs":[0.0,0.0,3],"height":[0.61,0.91,0.76],"legLen":[0.53,0.99,0.76],"torsoLen":[0.46,0.86,0.66],"neckLen":[0.32,1.12,0.72],"shoulderW":[0.75,1.25,1.0],"shoulderDrop":[0.0,0.4,0.2],"bodyW":[0.54,1.14,0.84],"handS":[1.05,1.85,1.45],"armLen":[0.75,1.05,0.9]};
 const CHARS=[{n:'女主角',key:'zk-face-v1'},{n:'男主角',key:'zk-face-m1',ov:MALE}];
 const SPEC0={};FACE_SPEC.forEach(s=>s.items.forEach(i=>{SPEC0[i.k]=[i.min,i.max,i.def]}));
 const FACE_DEF={},F={};let FACE_HASH='',FACE_KEY='',who=0;

@@ -3,16 +3,17 @@
 Usage: python3 tools/set_face.py '午夜來斬妖・捏臉設定 {...}'   (or no argument: just re-centre)
 The pasted text carries "who": 0 = 女主角 (defaults live in FACE_SPEC), 1 = 男主角 (defaults live in MALE).
 Each slider keeps its full width (`span`, recorded on the first run); the window is moved so that `def` sits in the middle,
-except where that would cross a floor in HARD (sizes, strengths): then the window starts at the floor.
+except where that would cross a floor in HARD (sizes, strengths): then the window is narrowed so def stays centred
+(only for this round; span itself never changes), or starts at the floor if def is right on it.
 Edits src/hero.src.html in place; then run tools/build.py.
 """
 import json, math, os, re, sys
 
 SRC = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'src', 'hero.src.html')
 HARD = {'noseTipP': 0, 'blush': 0, 'contour': 0, 'shadow': 0, 'flat': 0, 'lash': .5, 'shoulderDrop': 0, 'browDark': .1,
-        'browBone': 0, 'browArch': 0, 'headS': .5, 'faceW': .5, 'headH': .5, 'eyeSize': .5, 'eyeOpen': .5, 'irisS': .5,
+        'browBone': 0, 'browArch': 0, 'headS': .5, 'faceW': .3, 'headH': .5, 'eyeSize': .5, 'eyeOpen': .5, 'irisS': .5,
         'browLen': .3, 'browThick': .3, 'noseH': 0, 'noseW': .3, 'lipW': .3, 'lipThick': .3, 'height': .5, 'legLen': .4,
-        'torsoLen': .4, 'shoulderW': .4, 'bodyW': .4, 'armLen': .5, 'neckLen': .2, 'lowerLen': -.1}
+        'torsoLen': .3, 'shoulderW': .4, 'bodyW': .4, 'armLen': .5, 'neckLen': .05, 'lashes': 0, 'handS': .5, 'cheekHollow': 0, 'lowerLen': -.3}
 
 
 def num(v):
@@ -24,10 +25,13 @@ def window(item, d):
     """min/max for default d: keep the slider's full width (span), centred on d unless a floor in HARD is in the way."""
     k, st, span = item['k'], item['step'], item['span']
     h = math.floor(round(span / 2 / st, 6)) * st
-    lo = d - h
-    if k in HARD and lo < HARD[k]:
-        lo = HARD[k]
-    return lo, lo + 2 * h
+    if k in HARD and d - h < HARD[k]:
+        room = math.floor(round((d - HARD[k]) / st, 6)) * st
+        if room >= span / 8:  # narrow the window so the default stays in the middle (span is kept, so this never accumulates)
+            h = room
+        else:  # default sits (almost) on the floor: start at the floor instead
+            return HARD[k], HARD[k] + 2 * h
+    return d - h, d + h
 
 
 def main():
@@ -69,7 +73,7 @@ def main():
             if d is None:
                 continue
             lo, hi = window(item, d) if item else (0, 0)
-            male[k] = [round(lo, 4), round(hi, 4), d]
+            male[k] = [round(lo, 4) + 0.0, round(hi, 4) + 0.0, d]
         s = s[:m.start(1)] + json.dumps(male, separators=(',', ':'), ensure_ascii=False) + s[m.end(1):]
     open(SRC, 'w', encoding='utf-8').write(s)
     unknown = [k for k in vals if k not in items]
