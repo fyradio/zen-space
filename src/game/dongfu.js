@@ -26,7 +26,7 @@ const DF=(()=>{let tab='go',tick=0,lookTab=0,lt=0,ld={g:0,x:0,b:0,h:0};
   const ripe=p=>Date.now()-p.t0>=HERBS[p.h].min*60000;
   const left=p=>{const m=Math.max(0,HERBS[p.h].min*60000-(Date.now()-p.t0))/60000;return m>=60?`${Math.floor(m/60)} 小時 ${Math.ceil(m%60)} 分`:`${Math.ceil(m)} 分`};
   const offline=()=>{const h=Math.min(8,(Date.now()-save.lastSeen)/3600000);return Math.floor(h*(6+4*save.realm))};
-  function body(){const inv=save.inv;
+  function body(){const inv=save.inv;lookCam=tab==='look'?(FACE_SPEC[lookTab].cam==='body'?'body':'face'):null;
     if(tab==='go'){el.innerHTML=CH.map((c,i)=>{const open=chUnlocked(i),ready=i<CH_READY;
         return `<div class="chrow${open&&ready?'':' lock'}"><div class="chn"><b>${c.n}</b><span>${c.p}</span><small>推薦 ${REALMS[c.rec]}</small></div><div class="chnights">${NIGHTS.map((n,j)=>
           `<button class="nb${save.won[`${i}-${j}`]?' won':''}" data-ch="${i}" data-n="${j}" ${open&&ready?'':'disabled'}>${n}${save.won[`${i}-${j}`]?' ✓':''}</button>`).join('')}</div>${!ready?'<em>製作中</em>':!open?'<em>打贏上一章任一夜開放</em>':''}</div>`}).join('');

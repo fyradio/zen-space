@@ -142,6 +142,7 @@ h2{margin:0;font-size:22px;font-weight:400;letter-spacing:.2em}
 .dftabs{display:flex;gap:5px;flex-wrap:wrap}
 .dftabs button{all:unset;cursor:pointer;position:relative;padding:6px 12px;border-radius:999px;border:1px solid var(--line);background:rgba(9,18,19,.75);font-size:14px;letter-spacing:.1em}
 .dftabs button[aria-pressed="true"]{border-color:var(--jade);color:var(--jade);background:rgba(127,227,198,.12)}
+#lkTabs{gap:3px}#lkTabs button{padding:3px 9px;font-size:12px;letter-spacing:.04em}
 .dftabs .dot{position:absolute;right:2px;top:2px;width:8px;height:8px;border-radius:50%;background:#f2c75c;box-shadow:0 0 6px #f2c75c}
 .dfbody{overflow-y:auto;-webkit-overflow-scrolling:touch;touch-action:pan-y;min-height:0;padding-bottom:12px;display:grid;gap:6px;align-content:start;padding-right:4px;overscroll-behavior:contain}
 .chrow{display:grid;grid-template-columns:7.5em 1fr;gap:4px 8px;align-items:center;padding:6px 8px;border-radius:10px;border:1px solid var(--line);background:rgba(9,18,19,.7)}
@@ -2225,7 +2226,7 @@ function frame(now){requestAnimationFrame(frame);let dt=Math.min(.05,(now-last)/
   const live=G&&!G.paused;
   if(live){POWER.tick(dt);let d=dt;if(G.slow>0){G.slow-=dt;d*=.3}G.t+=d;stepGame(d)}
   else if(G&&G.over){mode='idle'}
-  else if(!G){if(med)stepMed(dt);else{root.rotation.y+=dt*.25;mode='idle'}}
+  else if(!G){if(med)stepMed(dt);else if(lookCam){root.rotation.y=angLerp(root.rotation.y,0,1-Math.exp(-dt*5));mode='idle'}else{root.rotation.y+=dt*.25;mode='idle'}}
   animateHero(dt);
   fogs.forEach((m,i)=>{m.rotation.z+=m.userData.s*dt});
   updateCamera(dt,false);
@@ -2240,11 +2241,12 @@ function frame(now){requestAnimationFrame(frame);let dt=Math.min(.05,(now-last)/
 const CAMS=[{n:'俯視',P:.95,D:11},{n:'斜視',P:.68,D:9.5},{n:'追尾',P:.45,D:6.8,follow:1}];
 let camIdx=0,camYaw=0,camP=CAMS[0].P,camD=CAMS[0].D;try{camIdx=+localStorage.getItem('zk-cam')||0}catch(e){}
 function setCam(i){camIdx=i%CAMS.length;try{localStorage.setItem('zk-cam',String(camIdx))}catch(e){}if(G&&!G.over)banner(CAMS[camIdx].n,'視角')}
-let camOverride=0;
+let camOverride=0,lookCam=null;// lookCam: 'face' | 'body' while the 洞府 造型 tab is open (close-up, figure held still)
 function updateCamera(dt,snap){const C=CAMS[camIdx],zoom=G?1:.45;let D=(camOverride||C.D*(isTouch?1:.96))*zoom,P=camOverride?.35:G?C.P:.42;
+  let lookTy=null;if(!G&&lookCam){const tot=(bodyY(HY)+.15)*F.height;if(lookCam==='body'){D=tot*2.9;lookTy=tot*.54}else{D=1.2*F.height;lookTy=1.43+bodyY(HY)*F.height-HY}P=.08}
   const k=snap?1:1-Math.exp(-dt*4);camP=lerp(camP,P,k);camD=lerp(camD,D,k);
   const wantYaw=C.follow&&G?root.rotation.y+Math.PI:0;camYaw=angLerp(camYaw,wantYaw,snap?1:1-Math.exp(-dt*(C.follow?1.8:5)));
-  if(camOverride)tmp.set(0,.5,0);else tmp.set(HERO.pos.x,HERO.pos.y+(G?.4+(.92-camP)*.8:1),HERO.pos.z);if(snap)camT.copy(tmp);else camT.lerp(tmp,1-Math.exp(-dt*6));
+  if(camOverride)tmp.set(0,.5,0);else tmp.set(HERO.pos.x,HERO.pos.y+(lookTy!==null?lookTy:G?.4+(.92-camP)*.8:1),HERO.pos.z);if(snap)camT.copy(tmp);else camT.lerp(tmp,1-Math.exp(-dt*6));
   const sx=shake>0?(Math.random()-.5)*shake*.5:0,sz=shake>0?(Math.random()-.5)*shake*.5:0;shake=Math.max(0,shake-dt*1.6);
   camera.position.set(camT.x+Math.sin(camYaw)*Math.cos(camP)*camD+sx,camT.y+Math.sin(camP)*camD,camT.z+Math.cos(camYaw)*Math.cos(camP)*camD+sz);camera.lookAt(camT);camera.updateMatrixWorld();sky.position.copy(camera.position)}
 function stepGame(dt){const g=G;
@@ -2390,7 +2392,7 @@ const DF=(()=>{let tab='go',tick=0,lookTab=0,lt=0,ld={g:0,x:0,b:0,h:0};
   const ripe=p=>Date.now()-p.t0>=HERBS[p.h].min*60000;
   const left=p=>{const m=Math.max(0,HERBS[p.h].min*60000-(Date.now()-p.t0))/60000;return m>=60?`${Math.floor(m/60)} 小時 ${Math.ceil(m%60)} 分`:`${Math.ceil(m)} 分`};
   const offline=()=>{const h=Math.min(8,(Date.now()-save.lastSeen)/3600000);return Math.floor(h*(6+4*save.realm))};
-  function body(){const inv=save.inv;
+  function body(){const inv=save.inv;lookCam=tab==='look'?(FACE_SPEC[lookTab].cam==='body'?'body':'face'):null;
     if(tab==='go'){el.innerHTML=CH.map((c,i)=>{const open=chUnlocked(i),ready=i<CH_READY;
         return `<div class="chrow${open&&ready?'':' lock'}"><div class="chn"><b>${c.n}</b><span>${c.p}</span><small>推薦 ${REALMS[c.rec]}</small></div><div class="chnights">${NIGHTS.map((n,j)=>
           `<button class="nb${save.won[`${i}-${j}`]?' won':''}" data-ch="${i}" data-n="${j}" ${open&&ready?'':'disabled'}>${n}${save.won[`${i}-${j}`]?' ✓':''}</button>`).join('')}</div>${!ready?'<em>製作中</em>':!open?'<em>打贏上一章任一夜開放</em>':''}</div>`}).join('');
