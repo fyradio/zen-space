@@ -1,0 +1,695 @@
+// Shared hero: scene + lights, the procedural 3D hero (face, body, hair, cloth), 捏臉 parameters and per-frame animation.
+// Included by tools/build.py into src/hero.src.html and src/game.src.html (inside their IIFE, after LC/renderer).
+/* ---------- scene, fog, sky ---------- */
+const FOGHEX=0x203735,FOG=LC(FOGHEX), FOGD=0.05;
+const scene=new THREE.Scene();
+scene.fog=new THREE.FogExp2(FOG.getHex(),FOGD);scene.fog.color.copy(FOG);
+scene.background=FOG.clone();
+const camera=new THREE.PerspectiveCamera(38,1,0.05,300);
+
+const sky=new THREE.Mesh(new THREE.SphereGeometry(120,32,16),new THREE.ShaderMaterial({
+  side:THREE.BackSide,depthWrite:false,fog:false,
+  uniforms:{top:{value:LC(0x060c15)},mid:{value:LC(0x10212a)},bot:{value:FOG.clone()}},
+  vertexShader:'varying vec3 vP;void main(){vP=normalize(position);gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}',
+  fragmentShader:'uniform vec3 top;uniform vec3 mid;uniform vec3 bot;varying vec3 vP;void main(){float h=vP.y;vec3 c=h>0.1?mix(mid,top,smoothstep(0.1,0.75,h)):mix(bot,mid,smoothstep(-0.04,0.1,h));gl_FragColor=vec4(c,1.0);\n#include <tonemapping_fragment>\n#include <encodings_fragment>\n}'
+}));
+sky.renderOrder=-10;scene.add(sky);
+
+/* ---------- helpers ---------- */
+function ctex(w,h,draw){const c=document.createElement('canvas');c.width=w;c.height=h;const x=c.getContext('2d');draw(x,w,h);const t=new THREE.CanvasTexture(c);t.anisotropy=4;t.encoding=THREE.sRGBEncoding;t.userData={c,x,draw};return t}
+function redraw(t,draw){const {c,x}=t.userData;x.save();x.setTransform(1,0,0,1,0,0);x.clearRect(0,0,c.width,c.height);draw(x,c.width,c.height);x.restore();t.needsUpdate=true}
+const glowTex=ctex(128,128,(x,w,h)=>{const g=x.createRadialGradient(64,64,0,64,64,64);g.addColorStop(0,'rgba(255,255,255,1)');g.addColorStop(.25,'rgba(255,255,255,.55)');g.addColorStop(.6,'rgba(255,255,255,.12)');g.addColorStop(1,'rgba(255,255,255,0)');x.fillStyle=g;x.fillRect(0,0,w,h)});
+const grad=new THREE.DataTexture(new Uint8Array([110,110,110,255,182,182,182,255,255,255,255,255]),3,1,THREE.RGBAFormat);
+grad.minFilter=grad.magFilter=THREE.NearestFilter;grad.generateMipmaps=false;grad.needsUpdate=true;
+const gradSkin=new THREE.DataTexture(new Uint8Array([214,214,214,255,236,236,236,255,255,255,255,255]),3,1,THREE.RGBAFormat);
+gradSkin.minFilter=gradSkin.magFilter=THREE.NearestFilter;gradSkin.generateMipmaps=false;gradSkin.needsUpdate=true;
+const toon=(c,o={})=>{const r=Object.assign({roughness:.8,metalness:0},o);delete r.gradientMap;if(r.emissive!==undefined)r.emissive=LC(r.emissive);const m=new THREE.MeshStandardMaterial(r);m.color.copy(LC(c));return m};
+const OUT=new THREE.ShaderMaterial({side:THREE.BackSide,
+  uniforms:{w:{value:0.0055},col:{value:new THREE.Color(0x061010)},fc:{value:FOG},fd:{value:FOGD}},
+  vertexShader:'uniform float w;varying float vD;void main(){vec4 mv=modelViewMatrix*vec4(position+normal*w,1.0);vD=-mv.z;gl_Position=projectionMatrix*mv;}',
+  fragmentShader:'uniform vec3 col;uniform vec3 fc;uniform float fd;varying float vD;void main(){float f=1.0-exp(-fd*fd*vD*vD);gl_FragColor=vec4(mix(col,fc,clamp(f,0.0,1.0)),1.0);}'});
+function part(geo,mat,parent,o={}){const m=new THREE.Mesh(geo,mat);if(o.p)m.position.set(o.p[0],o.p[1],o.p[2]);if(o.r)m.rotation.set(o.r[0],o.r[1],o.r[2],o.ro||'XYZ');if(o.s)m.scale.set(o.s[0],o.s[1],o.s[2]);parent.add(m);if(o.ol===true)m.add(new THREE.Mesh(geo,OUT));return m}
+const V=(x,y,z)=>new THREE.Vector3(x,y,z);
+let seed=7;const rnd=()=>(seed=(seed*16807)%2147483647)/2147483647;
+
+/* ---------- lights ---------- */
+const hemi=new THREE.HemisphereLight(0x9fbccb,0x6a4436,0.55);scene.add(hemi);
+const keyL=new THREE.DirectionalLight(0xfff0e2,1.9);keyL.position.set(-4.5,5,3.5);scene.add(keyL);
+const rimA=new THREE.DirectionalLight(0x7fe8d0,1.25);rimA.position.set(4,3,-5);scene.add(rimA);
+const rimB=new THREE.DirectionalLight(0xa8c0ff,.8);rimB.position.set(-5,4,-4);scene.add(rimB);
+const warmFill=new THREE.DirectionalLight(0xffc9a8,.35);warmFill.position.set(4,1.5,5);scene.add(warmFill);
+
+const woodM=toon(0x1a2421);
+
+/* ---------- palettes ---------- */
+const PALS=[
+  {outer:'#82b3a8',inner:'#eef2ee',trim:'#2c675e',belt:'#26354a',ribbon:'#a3e6d2',cloud:'#5f948a'},
+  {outer:'#2d313c',inner:'#e4ddcf',trim:'#a8352c',belt:'#121318',ribbon:'#c8463a',cloud:'#4b5161'},
+  {outer:'#8f2c2c',inner:'#f2e6d2',trim:'#d9ad52',belt:'#1c1a1f',ribbon:'#e8c066',cloud:'#b4544a'}];
+let pal=PALS[0];
+
+/* ---------- procedural textures ---------- */
+// soft cloth folds as a normal map (vertical folds along the garment)
+const foldTex=(()=>{const W=256,H=256,c=document.createElement('canvas');c.width=W;c.height=H;const x=c.getContext('2d'),im=x.createImageData(W,H);
+  const hgt=(u,v)=>Math.sin(u*Math.PI*2*7+Math.sin(v*5.1)*.9)*.6+Math.sin(u*Math.PI*2*13+v*3.3+1.7)*.3+Math.sin(u*Math.PI*2*3-v*2)*.5;
+  for(let j=0;j<H;j++)for(let i=0;i<W;i++){const u=i/W,v=j/H,e=1/W;const dx=(hgt(u+e,v)-hgt(u-e,v))/(2*e)*.012;const dy=(hgt(u,v+e)-hgt(u,v-e))/(2*e)*.004;
+    let nx=-dx,ny=-dy,nz=1;const l=Math.hypot(nx,ny,nz);const k=(j*W+i)*4;im.data[k]=(nx/l*.5+.5)*255;im.data[k+1]=(ny/l*.5+.5)*255;im.data[k+2]=(nz/l*.5+.5)*255;im.data[k+3]=255}
+  x.putImageData(im,0,0);const t=new THREE.CanvasTexture(c);t.wrapS=t.wrapT=THREE.RepeatWrapping;return t})();
+const hairTex=ctex(128,512,(x,w,h)=>{const g=x.createLinearGradient(0,0,0,h);g.addColorStop(0,'#141318');g.addColorStop(.5,'#1a1920');g.addColorStop(1,'#0f0e13');x.fillStyle=g;x.fillRect(0,0,w,h);
+  for(let i=0;i<70;i++){const px=rnd()*w;x.strokeStyle=rnd()<.5?'rgba(56,54,68,.38)':'rgba(6,6,10,.5)';x.lineWidth=.6+rnd()*1.6;x.beginPath();x.moveTo(px,0);x.bezierCurveTo(px+(rnd()-.5)*10,h*.3,px+(rnd()-.5)*12,h*.7,px+(rnd()-.5)*8,h);x.stroke()}
+  const s=x.createLinearGradient(0,h*.12,0,h*.34);s.addColorStop(0,'rgba(130,150,175,0)');s.addColorStop(.5,'rgba(120,135,160,.16)');s.addColorStop(1,'rgba(130,150,175,0)');x.fillStyle=s;x.fillRect(0,h*.12,w,h*.22);
+  x.fillStyle='rgba(0,0,0,.35)';x.fillRect(0,0,6,h);x.fillRect(w-6,0,6,h)});
+function drawTorso(x,w,h){const cx=w*.5;x.fillStyle=pal.inner;x.fillRect(0,0,w,h);
+  x.strokeStyle=pal.trim;x.lineCap='round';x.lineWidth=14;x.beginPath();x.moveTo(cx-30,-4);x.lineTo(cx-4,h*.32);x.stroke();
+  x.lineWidth=16;x.beginPath();x.moveTo(cx+30,-6);x.quadraticCurveTo(cx-14,h*.34,cx-70,h*.66);x.stroke();
+  x.strokeStyle='rgba(255,255,255,.7)';x.lineWidth=2;x.beginPath();x.moveTo(cx+22,-6);x.quadraticCurveTo(cx-21,h*.33,cx-76,h*.64);x.stroke();
+  x.fillStyle=pal.trim;x.fillRect(0,0,w,h*.07)}
+function drawSkirt(x,w,h){x.fillStyle=pal.inner;x.fillRect(0,0,w,h);x.fillStyle=pal.trim;x.fillRect(0,h*.965,w,h*.035)}
+function drawCoat(x,w,h){x.fillStyle=pal.outer;x.fillRect(0,0,w,h);
+  x.strokeStyle=pal.cloud;x.lineWidth=2.4;x.globalAlpha=.8;
+  for(let i=0;i<10;i++){const px=i*w/10+30,py=h*.9;x.beginPath();x.arc(px,py,8,Math.PI*.2,Math.PI*1.8);x.stroke();x.beginPath();x.arc(px+14,py-5,6,Math.PI,Math.PI*2.6);x.stroke();x.beginPath();x.moveTo(px-9,py+7);x.quadraticCurveTo(px+9,py+14,px+27,py+3);x.stroke()}
+  x.globalAlpha=1;
+  // front edges and hem: trim band with a fine key-fret line
+  const band=(x0,y0,bw,bh)=>{x.fillStyle=pal.trim;x.fillRect(x0,y0,bw,bh)};
+  band(0,0,22,h);band(w-22,0,22,h);band(0,h*.955,w,h*.045);
+  x.strokeStyle='rgba(255,236,190,.55)';x.lineWidth=1.2;
+  for(const ex of [11,w-11]){x.beginPath();for(let y=0;y<h;y+=10){x.lineTo(ex-4,y);x.lineTo(ex-4,y+5);x.lineTo(ex+4,y+5);x.lineTo(ex+4,y+10)}x.stroke()}}
+function drawBelt(x,w,h){x.fillStyle=pal.belt;x.fillRect(0,0,w,h);x.fillStyle='#c9a24e';x.fillRect(0,h*.18,w,2);x.fillRect(0,h*.78,w,2)}
+const torsoTex=ctex(512,256,drawTorso),skirtTex=ctex(256,256,drawSkirt),coatTex=ctex(512,512,drawCoat),beltTex=ctex(256,32,drawBelt);
+
+/* ---------- face parameters (捏臉): defaults are the current look; sliders edit F, 「複製設定」 exports it ---------- */
+const IRIS=[['#2a1812','#5b3624','#8e6235','#3a2418','#1d120e'],['#0c0a0b','#1d1618','#33262a','#1b1315','#0b0809'],['#0e2a2a','#1f5a58','#3f9a8e','#18403c','#0b1c1c'],['#3a1f0a','#8a4f1c','#d49a3c','#5a3312','#2a1608'],['#1c1230','#3d2a6b','#7a62b8','#2a1d4a','#150e26']];
+const LIP_STYLES=[{w:1,up:1,lo:1,bow:1,corner:0,gloss:1},{w:.74,up:1.1,lo:1.3,bow:1.4,corner:0,gloss:1.5},{w:1,up:1.3,lo:1.15,bow:1.9,corner:.6,gloss:1},
+  {w:1.06,up:.9,lo:.95,bow:1,corner:3,gloss:.9},{w:1.06,up:.55,lo:.62,bow:.6,corner:0,gloss:.5},{w:.92,up:1,lo:1.05,bow:1.1,corner:0,gloss:1.2,bite:1}];
+// 表情 平常/喜/怒/哀/樂/吶喊. Mouth (lip-local px): open = lower lip drop, w = width, corner = corner lift, lift = upper lip raise.
+// Brows (texture px, + = down): bIn at the head of the brow, bOut at the tail. eo = eye opening; happy = closed ^ ^ eyes; furrow, tear.
+const EXPRS=[{open:0,w:1,corner:0,lift:0,bIn:0,bOut:0,eo:1},
+  {open:3,w:1.15,corner:6,lift:.5,bIn:-3,bOut:0,eo:.8},
+  {open:2.5,w:.92,corner:-5,lift:.8,bIn:13,bOut:-5,eo:.78,furrow:1},
+  {open:0,w:.86,corner:-5,lift:0,bIn:-12,bOut:6,eo:.86,tear:1},
+  {open:6,w:1.2,corner:5,lift:1,bIn:-3,bOut:0,eo:1,happy:1},
+  {open:15,w:1.3,corner:-1.5,lift:2.5,bIn:9,bOut:-4,eo:1.12,furrow:1}];
+let exprForce=null;// 施法 forces 吶喊 without touching the saved setting
+const LIPS=[['#cf8a80','#df9f95'],['#d9a49c','#e7b8af'],['#b5584f','#c77067'],['#d49b8c','#e0b0a2']];
+const SKINS=[['#f2cdb3','#eec5aa'],['#f7dfcf','#f3d6c3'],['#ebc09f','#e5b793'],['#d9a67f','#d29c74']];
+const MARKS=[null,'rgba(120,190,200,.45)','rgba(196,52,44,.8)'];
+// t: s=只改頭部縮放, g=頭型幾何, x=臉部貼圖（g/x 可併用）
+const FACE_SPEC=[
+ {tab:'臉型',items:[
+  {k:'headH',n:'頭高（短↔長）',min:0.635,max:0.875,step:.005,span:0.24,def:0.755,t:'s'},
+  {k:'headS',n:'頭大小',min:0.97,max:1.27,step:.005,span:0.3,def:1.12,t:'s'},
+  {k:'faceW',n:'臉寬',min:0.49,max:0.79,step:.005,span:0.3,def:0.64,t:'s'},
+  {k:'foreW',n:'額頭寬',min:-0.015,max:0.105,step:.005,span:0.12,def:0.045,t:'g'},
+  {k:'cheekW',n:'顴骨寬',min:-0.185,max:0.215,step:.005,span:0.4,def:0.015,t:'g'},
+  {k:'jawW',n:'下頜寬',min:-0.065,max:0.375,step:.005,span:0.44,def:0.155,t:'g'},
+  {k:'chinW',n:'下巴（尖↔圓）',min:-0.91,max:-0.27,step:.01,span:0.64,def:-0.59,t:'g'},
+  {k:'chinR',n:'整個下巴圓潤',min:0.5,max:1.5,step:.05,span:1,def:1,t:'g'},
+  {k:'lowerLen',n:'下巴長',min:-0.125,max:0.095,step:.005,span:0.22,def:-0.015,t:'g'},
+  {k:'flat',n:'臉平度',min:0,max:0.32,step:.02,span:0.7,def:0.16,t:'g'},
+  {k:'cheekFull',n:'臉頰飽滿',min:-3,max:-1,step:.05,span:2,def:-2,t:'g'},
+  {k:'cheekLow',n:'兩頰寬',min:-0.14,max:0.16,step:.005,span:.3,def:0.01,t:'g'},
+  {k:'cheekHollow',n:'兩頰凹陷',min:0,max:1.8,step:.1,span:3,def:0.9,t:'g'},
+  {k:'cheekApple',n:'蘋果肌',min:-0.95,max:1.05,step:.05,span:2,def:0.05,t:'g'},
+  {k:'browBone',n:'眉骨',min:0.95,max:2.95,step:.05,span:2,def:1.95,t:'g'}]},
+ {tab:'眼睛',items:[
+  {k:'eyeSp',n:'眼距',min:51,max:71,step:1,span:20,def:61,t:'gx'},
+  {k:'eyeUp',n:'眼位高低',min:-19,max:13,step:1,span:32,def:-3,t:'gx'},
+  {k:'eyeSize',n:'眼睛大小',min:0.89,max:1.53,step:.01,span:0.65,def:1.21,t:'gx'},
+  {k:'eyeOpen',n:'眼睛開合',min:0.7,max:1.5,step:.01,span:0.8,def:1.1,t:'x'},
+  {k:'eyeTilt',n:'眼尾上揚',min:-19.5,max:14.5,step:.5,span:34,def:-2.5,t:'x'},
+  {k:'irisS',n:'瞳孔大小',min:0.73,max:1.43,step:.01,span:0.7,def:1.08,t:'x'},
+  {k:'iris',n:'瞳色',opts:['墨褐','墨黑','青碧','琥珀','紫霧'],def:1,t:'x'},
+  {k:'lashes',n:'睫毛量',min:0,max:2,step:.05,span:2,def:1,t:'x'},
+  {k:'lash',n:'上眼線粗細',min:0.6,max:4,step:.1,span:3.5,def:2.3,t:'x'},
+  {k:'shadow',n:'眼影',min:1.2,max:3.6,step:.1,span:2.5,def:2.4,t:'x'}]},
+ {tab:'眉毛',items:[
+  {k:'browUp',n:'眉位高低',min:-24,max:-2,step:1,span:22,def:-13,t:'x'},
+  {k:'browLen',n:'眉長',min:0.88,max:1.78,step:.01,span:0.9,def:1.33,t:'x'},
+  {k:'browThick',n:'眉粗細',min:2.6,max:6.8,step:.1,span:4.2,def:4.7,t:'x'},
+  {k:'browArch',n:'眉弧度',min:1.5,max:12.5,step:.5,span:11,def:7,t:'x'},
+  {k:'browTail',n:'眉尾上揚',min:-18,max:0,step:.5,span:18,def:-9,t:'x'},
+  {k:'browDark',n:'眉色濃淡',min:0.1,max:1.3,step:.05,span:1.7,def:0.7,t:'x'}]},
+ {tab:'鼻子',items:[
+  {k:'noseUp',n:'鼻頭位置',min:-6,max:10,step:1,span:16,def:2,t:'gx'},
+  {k:'noseH',n:'鼻樑高度',min:0,max:2.7,step:.05,span:3.7,def:1.35,t:'g'},
+  {k:'noseTipP',n:'鼻頭突出',min:0,max:1.8,step:.1,span:4,def:0.9,t:'g'},
+  {k:'noseW',n:'鼻翼寬',min:0.85,max:2.35,step:.05,span:1.5,def:1.6,t:'gx'}]},
+ {tab:'嘴唇',items:[
+  {k:'lipUp',n:'唇位置',min:-21,max:5,step:1,span:26,def:-8,t:'gx'},
+  {k:'lipW',n:'唇寬',min:2.64,max:4.32,step:.02,span:1.7,def:3.48,t:'gx'},
+  {k:'lipThick',n:'唇厚',min:0.6,max:3,step:.05,span:2.4,def:1.8,t:'gx'},
+  {k:'lipCorner',n:'嘴角上揚',min:-2.5,max:13.5,step:.5,span:16,def:5.5,t:'x'},
+  {k:'lipStyle',n:'唇形',opts:['自然','櫻桃','花瓣','微笑','薄唇','咬唇'],def:3,t:'gx'},
+  {k:'expr',n:'表情',opts:['平常','喜','怒','哀','樂','吶喊'],def:0,t:'x'},
+  {k:'lipC',n:'唇色',opts:['朱砂','淡櫻','絳紅','裸粉'],def:0,t:'x'}]},
+ {tab:'膚妝',items:[
+  {k:'skin',n:'膚色',opts:['自然','瓷白','暖玉','小麥'],def:2,t:'x'},
+  {k:'blush',n:'腮紅',min:2.5,max:6.5,step:.1,span:4,def:4.5,t:'x'},
+  {k:'contour',n:'輪廓陰影',min:0,max:2.2,step:.1,span:3,def:1.1,t:'x'},
+  {k:'mark',n:'額間印記',opts:['無','青','朱'],def:0,t:'x'}]},
+ {tab:'髮型',items:[
+  {k:'hairStyle',n:'髮型',opts:['髮髻垂髮','高馬尾','雙髻','披髮','束髮','道髻長髮'],def:0,t:'h'},
+  {k:'orn',n:'髮飾',opts:['金冠','木簪','玉簪','髮帶','無'],def:0,t:'h'},
+  {k:'bangs',n:'瀏海',opts:['中分','齊瀏海','側分','無'],def:0,t:'h'}]},
+ {tab:'身形',cam:'body',items:[
+  {k:'height',n:'整體身高',min:0.52,max:0.82,step:.005,span:0.3,def:0.67,t:'b'},
+  {k:'legLen',n:'下半身長',min:0.495,max:0.955,step:.005,span:0.46,def:0.725,t:'b'},
+  {k:'torsoLen',n:'上身長',min:0.36,max:0.76,step:.005,span:0.4,def:0.56,t:'b'},
+  {k:'neckLen',n:'脖子長',min:0.09,max:0.89,step:.01,span:0.8,def:0.49,t:'b'},
+  {k:'shoulderW',n:'肩寬',min:0.655,max:1.155,step:.005,span:0.5,def:0.905,t:'b'},
+  {k:'shoulderDrop',n:'溜肩',min:0,max:0.8,step:.05,span:1,def:0.4,t:'b'},
+  {k:'bodyW',n:'身材胖瘦',min:0.45,max:1.05,step:.005,span:0.6,def:0.75,t:'b'},
+  {k:'handS',n:'手大小',min:1,max:1.8,step:.01,span:.8,def:1.4,t:'b'},
+  {k:'armLen',n:'手臂長',min:0.7,max:1,step:.005,span:0.3,def:0.85,t:'b'}]}];
+// t: b=身形（applyBody 重排身體各部件）
+// 角色: FACE_SPEC holds the 女主角 ranges/defaults; MALE overrides them per key as [min,max,def] (tools/set_face.py writes both)
+const MALE={"headH":[0.78,1.02,0.9],"headS":[0.85,1.15,1.0],"faceW":[0.65,0.95,0.8],"foreW":[0.0,0.12,0.06],"cheekW":[-0.08,0.32,0.12],"jawW":[0.04,0.48,0.26],"chinW":[-0.42,0.22,-0.1],"chinR":[-0.2,0.8,0.3],"lowerLen":[-0.01,0.21,0.1],"flat":[0.0,0.4,0.2],"cheekFull":[-2.0,0.0,-1],"cheekLow":[-0.13,0.17,0.02],"cheekHollow":[0.0,3.0,1.5],"cheekApple":[-1.3,0.7,-0.3],"browBone":[1.2,3.2,2.2],"eyeSp":[51.0,71.0,61],"eyeUp":[-22.0,10.0,-6],"eyeSize":[0.68,1.32,1.0],"eyeOpen":[0.5,1.26,0.88],"eyeTilt":[-12.0,22.0,5],"irisS":[0.65,1.35,1.0],"iris":[0.0,0.0,1],"lashes":[0.0,0.6,0.3],"lash":[0.9,4.3,2.6],"shadow":[0.0,1.0,0.5],"browUp":[-17.0,5.0,-6],"browLen":[0.9,1.8,1.35],"browThick":[3.4,7.6,5.5],"browArch":[0.0,6.0,3],"browTail":[-4.0,14.0,5],"browDark":[0.45,2.15,1.3],"noseUp":[-8.0,8.0,0],"noseH":[0.05,3.75,1.9],"noseTipP":[0.0,1.6,0.8],"noseW":[0.55,2.05,1.3],"lipUp":[-21.0,5.0,-8],"lipW":[1.66,3.34,2.5],"lipThick":[0.3,2.1,1.2],"lipCorner":[-7.0,9.0,1],"lipStyle":[0.0,0.0,4],"expr":[0.0,0.0,0],"lipC":[0.0,0.0,3],"skin":[0.0,0.0,2],"blush":[0.0,1.2,0.6],"contour":[0.1,3.1,1.6],"mark":[0.0,0.0,0],"hairStyle":[0.0,0.0,5],"bangs":[0.0,0.0,3],"height":[0.61,0.91,0.76],"legLen":[0.53,0.99,0.76],"torsoLen":[0.46,0.86,0.66],"neckLen":[0.32,1.12,0.72],"shoulderW":[0.75,1.25,1.0],"shoulderDrop":[0.0,0.4,0.2],"bodyW":[0.54,1.14,0.84],"handS":[1.05,1.85,1.45],"armLen":[0.75,1.05,0.9],"orn":[0.0,0.0,1]};
+const CHARS=[{n:'女主角',key:'zk-face-v1'},{n:'男主角',key:'zk-face-m1',ov:MALE}];
+const SPEC0={};FACE_SPEC.forEach(s=>s.items.forEach(i=>{SPEC0[i.k]=[i.min,i.max,i.def]}));
+const FACE_DEF={},F={};let FACE_HASH='',FACE_KEY='',who=0;
+try{who=+localStorage.getItem('zk-who')===1?1:0}catch(e){}
+function useChar(c){who=c;const ov=CHARS[c].ov||{};
+  FACE_SPEC.forEach(s=>s.items.forEach(i=>{const v=ov[i.k]||SPEC0[i.k];if(!i.opts){i.min=v[0];i.max=v[1]}i.def=v[2];FACE_DEF[i.k]=v[2]}));
+  FACE_HASH=JSON.stringify(FACE_DEF);FACE_KEY=CHARS[c].key;Object.assign(F,FACE_DEF);
+  try{const s=JSON.parse(localStorage.getItem(FACE_KEY)||'null');if(s&&s.h===FACE_HASH&&s.f)Object.keys(FACE_DEF).forEach(k=>{if(typeof s.f[k]==='number')F[k]=s.f[k]})}catch(e){}}
+useChar(who);
+
+// face: painted at 2x resolution on the head's UV (front of the head is u=.25)
+const drawFace=(x,w,h)=>{x.scale(2,2);
+  const sk=SKINS[F.skin],ct=F.contour,nu=F.noseUp,nw=F.noseW;
+  x.fillStyle=sk[0];x.fillRect(0,0,1024,512);
+  const cx=256,rg=(px,py,r,c0,c1)=>{const g=x.createRadialGradient(px,py,0,px,py,r);g.addColorStop(0,c0);g.addColorStop(1,c1);x.fillStyle=g;x.fillRect(px-r,py-r,r*2,r*2)};
+  const R=(px,py,r,rgb,a)=>rg(px,py,r,`rgba(${rgb},${Math.min(1,a)})`,`rgba(${rgb},0)`);
+  R(cx-118,300,70,'206,160,140',.35*ct);R(cx+118,300,70,'206,160,140',.35*ct);
+  [-1,1].forEach(d=>R(cx+d*62,306,30,'236,140,130',.28*F.blush));
+  // painted contour: temples, under cheekbones, along the jaw (kept off the mouth so it doesn't read as a muzzle), nose sides
+  [-1,1].forEach(d=>{R(cx+d*94,316,46,'170,110,95',.2*ct);R(cx+d*112,392,46,'160,100,88',.16*ct);R(cx+d*15*nw,272-nu,13,'168,108,92',.26*ct*Math.sqrt(F.noseH))});
+  R(cx,232,40,'255,240,228',.18);R(cx-14,302-nu,18,'255,240,228',.14);
+  // nose: bridge light, tip highlight, shade under the tip and in the alar grooves, nostrils
+  x.strokeStyle='rgba(255,246,236,.32)';x.lineWidth=4;x.lineCap='round';x.beginPath();x.moveTo(cx-1,254);x.lineTo(cx-1.5,296-nu);x.stroke();
+  R(cx-2,300-nu,6,'255,250,244',.5);R(cx,311-nu,11*nw,'170,104,92',.3*ct);
+  [-1,1].forEach(d=>{x.strokeStyle='rgba(160,98,84,.3)';x.lineWidth=1.6;x.beginPath();x.moveTo(cx+d*9*nw,301-nu);x.quadraticCurveTo(cx+d*12.5*nw,306-nu,cx+d*9.5*nw,310-nu);x.stroke()});
+  x.fillStyle='rgba(120,62,54,.6)';[-1,1].forEach(d=>{x.beginPath();x.ellipse(cx+d*4.6*nw,310.6-nu,2.4*nw,1.1,d*.35,0,7);x.fill()});
+  // philtrum: two faint ridges with a shade between, running from the nose to the lip
+  const ly=336-F.lipUp,pt=311-nu;
+  R(cx,(pt+ly)/2-2,5,'190,128,112',.22*ct);
+  x.strokeStyle='rgba(255,240,230,.25)';x.lineWidth=1;[-1,1].forEach(d=>{x.beginPath();x.moveTo(cx+d*2.4,pt+3);x.lineTo(cx+d*3.6,ly-6);x.stroke()});
+  // lips (drawn at default size, then scaled about the mouth line): cupid's bow, fuller lower lip, dark parting line, corners
+  const lc=LIPS[F.lipC],LS=LIP_STYLES[F.lipStyle]||LIP_STYLES[0],E=EXPRS[exprForce??F.expr]||EXPRS[0],o=E.open,L=E.lift,kc=(F.lipCorner+LS.corner+E.corner)/1.3;
+  const U=y=>336+(y-336)*LS.up,D=y=>336+(y-336)*LS.lo,dip=U(329.5+1.8*LS.bow);// upper/lower lip heights; dip = centre of the cupid's bow
+  x.save();x.translate(cx,ly);x.scale(11/15*F.lipW*LS.w*E.w,10/15*F.lipThick);x.translate(-cx,-336);
+  x.save();x.translate(0,-L);
+  x.fillStyle=lc[0];x.beginPath();x.moveTo(cx-15,336-kc);x.bezierCurveTo(cx-10,U(333),cx-6,U(329.5),cx-2.5,U(330));x.quadraticCurveTo(cx,dip,cx+2.5,U(330));x.bezierCurveTo(cx+6,U(329.5),cx+10,U(333),cx+15,336-kc);x.quadraticCurveTo(cx,334.6,cx-15,336-kc);x.fill();
+  const ud=x.createLinearGradient(0,U(329),0,336);ud.addColorStop(0,'rgba(90,30,30,0)');ud.addColorStop(1,'rgba(90,30,30,.18)');x.fillStyle=ud;x.fill();x.restore();
+  if(o>0){// open mouth: dark inside, upper teeth, tongue
+    x.save();x.beginPath();x.moveTo(cx-14,336-kc);x.quadraticCurveTo(cx,337.2-L*2,cx+14,336-kc);x.quadraticCurveTo(cx,336+o*2,cx-14,336-kc);
+    const mg=x.createLinearGradient(0,336-L,0,336+o);mg.addColorStop(0,'#2a0a0d');mg.addColorStop(1,'#5e1b20');x.fillStyle=mg;x.fill();x.clip();
+    x.fillStyle='rgba(248,242,236,.95)';x.fillRect(cx-11,330,22,336.6-L+Math.min(2.2,o*.3)-330);
+    if(o>4){x.fillStyle='#b9545a';x.beginPath();x.ellipse(cx,336+o*.95,8,o*.32,0,0,7);x.fill()}
+    x.restore()}
+  x.fillStyle=lc[1];x.beginPath();x.moveTo(cx-13.5,336.4-kc);x.quadraticCurveTo(cx,335.4+o*2,cx+13.5,336.4-kc);x.bezierCurveTo(cx+10,D(343)+o,cx+4,D(345)+o,cx,D(345)+o);x.bezierCurveTo(cx-4,D(345)+o,cx-10,D(343)+o,cx-13.5,336.4-kc);x.fill();
+  const ld=x.createLinearGradient(0,336+o,0,D(345)+o);ld.addColorStop(0,'rgba(90,30,30,.2)');ld.addColorStop(.45,'rgba(90,30,30,0)');x.fillStyle=ld;x.fill();
+  if(LS.bite){// 咬唇: colour concentrated at the centre, fading out to the corners
+    x.save();x.globalCompositeOperation='source-atop';const bg=x.createRadialGradient(cx,336,0,cx,336,15);bg.addColorStop(0,'rgba(170,40,50,.55)');bg.addColorStop(.55,'rgba(170,40,50,.18)');bg.addColorStop(1,'rgba(242,214,200,.35)');
+    x.fillStyle=bg;x.fillRect(cx-20,325,40,25);x.restore()}
+  R(cx,D(348.5)+o,9,'170,104,92',.22*ct);
+  if(!o){x.strokeStyle='rgba(98,44,42,.85)';x.lineWidth=1.1;x.beginPath();x.moveTo(cx-15.5,335.8-kc);x.bezierCurveTo(cx-8,335.6,cx-3,337.2,cx,336.3);x.bezierCurveTo(cx+3,337.2,cx+8,335.6,cx+15.5,335.8-kc);x.stroke()}
+  [-1,1].forEach(d=>{x.strokeStyle='rgba(120,60,54,.45)';x.lineWidth=1;x.beginPath();x.moveTo(cx+d*15,335.4-kc);x.quadraticCurveTo(cx+d*17,335.8-kc,cx+d*17.5,334.4-kc*1.3);x.stroke()});
+  x.fillStyle=`rgba(255,236,230,${Math.min(.8,.35*LS.gloss)})`;x.beginPath();x.ellipse(cx+1.5,D(340.5)+o,3.6,.9*LS.lo,0,0,7);x.fill();
+  x.fillStyle=`rgba(255,236,230,${Math.min(.8,.3*LS.gloss)})`;x.beginPath();x.ellipse(cx-5,U(332.2),2.4,.7,-.2,0,7);x.fill();
+  x.restore();
+  function eye(ex,ey,d){
+    R(ex+d*2,ey-8,26,'184,116,104',.26*F.shadow);
+    R(ex-d*24,ey-14,16,'160,100,90',.28*ct);R(ex+d*6,ey-24,22,'180,120,108',.16*ct);R(ex,ey+20,18,'255,242,232',.16);
+    x.save();x.translate(ex,ey);x.rotate(-d*F.eyeTilt*Math.PI/180);x.scale(1.4*F.eyeSize,1.4*F.eyeSize*F.eyeOpen*E.eo);
+    const ir=F.irisS,ic=IRIS[F.iris];
+    const lid=()=>{x.moveTo(-d*19,2);x.bezierCurveTo(-d*10,-9.5,d*10,-10.5,d*21,-4)};
+    if(E.happy){// 樂: eyes closed into upward arcs
+      x.strokeStyle='#1a1013';x.lineCap='round';x.lineWidth=F.lash*1.1;x.beginPath();x.moveTo(-d*18,3);x.quadraticCurveTo(d*1,-9,d*20,1);x.stroke();
+      x.lineWidth=.9;for(let k=0;k<4;k++){const px=d*(6+k*4);x.beginPath();x.moveTo(px,-3.5+k*1.1);x.lineTo(px+d*(2+k*.6),-6.5+k*.6);x.stroke()}
+      x.restore();}else{
+    x.save();x.beginPath();lid();x.bezierCurveTo(d*12,6.5,-d*6,8.5,-d*19,2);x.closePath();x.fillStyle='#f4eee7';x.fill();x.clip();
+    const ig=x.createRadialGradient(d*1,1.5,.5,d*1,1.5,11.5*ir);ig.addColorStop(0,ic[0]);ig.addColorStop(.35,ic[1]);ig.addColorStop(.75,ic[2]);ig.addColorStop(.92,ic[3]);ig.addColorStop(1,ic[4]);
+    x.fillStyle=ig;x.beginPath();x.ellipse(d*1,1.5,10.5*ir,11.5*ir,0,0,7);x.fill();
+    x.strokeStyle='rgba(225,180,120,.35)';x.lineWidth=.5;for(let k=0;k<24;k++){const an=k/24*Math.PI*2;x.beginPath();x.moveTo(d*1+Math.cos(an)*4.5*ir,1.5+Math.sin(an)*5*ir);x.lineTo(d*1+Math.cos(an)*9.5*ir,1.5+Math.sin(an)*10.5*ir);x.stroke()}
+    x.fillStyle='#0a0607';x.beginPath();x.ellipse(d*1,2,3.8*ir,4.6*ir,0,0,7);x.fill();
+    const sh=x.createLinearGradient(0,-12,0,0);sh.addColorStop(0,'rgba(40,20,20,.55)');sh.addColorStop(1,'rgba(40,20,20,0)');x.fillStyle=sh;x.fillRect(-30,-14,60,14);
+    x.fillStyle='rgba(255,255,255,.95)';x.beginPath();x.ellipse(-d*3.5,-2,2.6,2,-.3,0,7);x.fill();
+    x.fillStyle='rgba(255,255,255,.6)';x.beginPath();x.arc(d*4.5,5.5,1.1,0,7);x.fill();
+    x.restore();
+    x.fillStyle='rgba(214,140,136,.6)';x.beginPath();x.ellipse(-d*18.5,2.5,1.6,1.2,0,0,7);x.fill();
+    x.strokeStyle='#1a1013';x.lineCap='round';x.lineJoin='round';x.lineWidth=F.lash;x.beginPath();lid();const wl=Math.min(1,F.lashes);x.quadraticCurveTo(d*(21+4*wl),-4-2*wl,d*(21+7.5*wl),-4-4.5*wl);x.stroke();
+    x.lineWidth=.9;const la=F.lashes;for(let k=0;k<6&&la>.05;k++){const t=.45+k*.1,px=d*(-19+40*t),py=-9.5+Math.pow(2*t-1,2)*6;x.beginPath();x.moveTo(px,py);x.lineTo(px+d*(2+k*.7)*la,py-(3.2+k*.3)*la);x.stroke()}
+    x.strokeStyle='rgba(100,56,50,.5)';x.lineWidth=1;x.beginPath();x.moveTo(-d*13,-11.5);x.bezierCurveTo(-d*2,-16.5,d*12,-15.5,d*22,-10.5);x.stroke();
+    x.strokeStyle='rgba(70,36,34,.4)';x.lineWidth=.9;x.beginPath();x.moveTo(-d*8,7.6);x.quadraticCurveTo(d*8,8.4,d*19,2.5);x.stroke();
+    for(let k=0;k<3&&la>.05;k++){const px=d*(8+k*4);x.beginPath();x.moveTo(px,7.2-k*1.2);x.lineTo(px+d*1.2*la,7.2-k*1.2+2.2*la);x.stroke()}
+    if(E.tear){x.fillStyle='rgba(200,230,255,.55)';x.beginPath();x.ellipse(-d*8,10.5,5,1.2,d*.1,0,7);x.fill()}
+    x.restore()}
+    x.lineCap='round';
+    // brows: tapered soft base, then two layers of hair strokes (rising at the head, sweeping out along the tail)
+    const bk=F.browThick/4,by=t=>ey-44-F.browUp-Math.sin(t*Math.PI*.92)*F.browArch+t*2-F.browTail*t+E.bIn*Math.pow(1-t,1.5)+E.bOut*t*t,bw=t=>bk*(7.5*(1-t)+1.6*t-3*Math.pow(1-t,6)),bx=t=>ex+d*(-20+58*F.browLen*t);
+    const bd=a=>Math.min(1,a*F.browDark);
+    x.fillStyle=`rgba(52,36,34,${bd(.45)})`;x.beginPath();for(let k=0;k<=20;k++){const t=k/20;x.lineTo(bx(t),by(t)-bw(t)*.55)}for(let k=20;k>=0;k--){const t=k/20;x.lineTo(bx(t),by(t)+bw(t)*.45)}x.fill();
+    let bs=5;const br=()=>(bs=bs*16807%2147483647)/2147483647;// own seed: redrawing the face must not shift the scene's rnd()
+    for(let k=0;k<110;k++){const t=k/109,px=bx(t)+(br()-.5)*1.4,py=by(t)+(br()-.5)*bw(t)*.8,lean=t<.18?.4:1;
+      x.strokeStyle=`rgba(${t<.2?60:38},${t<.2?42:28},${t<.2?38:28},${bd(.3+.45*(1-Math.abs(t-.4)))})`;x.lineWidth=(.8+.6*(1-t))*Math.sqrt(bk);
+      x.beginPath();x.moveTo(px,py+1.8);x.lineTo(px+d*4.2*lean,py-1.8+t*1.2);x.stroke()}}
+  eye(cx-F.eyeSp,268-F.eyeUp,-1);eye(cx+F.eyeSp,268-F.eyeUp,1);
+  if(E.furrow){x.strokeStyle='rgba(150,96,84,.35)';x.lineWidth=1.2;[-1,1].forEach(d=>{x.beginPath();x.moveTo(cx+d*5,232-F.eyeUp-F.browUp);x.quadraticCurveTo(cx+d*3.5,238-F.eyeUp-F.browUp,cx+d*4.5,244-F.eyeUp-F.browUp);x.stroke()})}
+  if(MARKS[F.mark]){x.fillStyle=MARKS[F.mark];x.beginPath();x.moveTo(cx,200);x.quadraticCurveTo(cx+3,207,cx,214);x.quadraticCurveTo(cx-3,207,cx,200);x.fill()}};
+const faceTex=ctex(2048,1024,drawFace);
+
+/* ---------- materials ---------- */
+const M={
+  inner:toon(pal.inner,{roughness:.55}),innerT:toon('#ffffff',{map:torsoTex,roughness:.55,normalMap:foldTex,normalScale:new THREE.Vector2(.25,.25)}),
+  innerS:toon('#ffffff',{map:skirtTex,side:THREE.DoubleSide,roughness:.55,normalMap:foldTex,normalScale:new THREE.Vector2(.6,.6)}),
+  coat:toon('#ffffff',{map:coatTex,side:THREE.DoubleSide,roughness:.58,normalMap:foldTex,normalScale:new THREE.Vector2(.7,.7)}),
+  outer:toon(pal.outer,{roughness:.58}),outerDS:toon(pal.outer,{side:THREE.DoubleSide,roughness:.58,normalMap:foldTex,normalScale:new THREE.Vector2(.5,.5)}),
+  trim:toon(pal.trim,{roughness:.5}),belt:toon('#ffffff',{map:beltTex,side:THREE.DoubleSide,roughness:.5}),ribbon:toon(pal.ribbon,{side:THREE.DoubleSide,roughness:.45}),
+  hair:toon('#1b1a21',{roughness:.45}),hairDS:toon('#1b1a21',{side:THREE.DoubleSide,roughness:.45}),hairCard:toon('#ffffff',{map:hairTex,side:THREE.DoubleSide,roughness:.4}),
+  hairLong:toon('#8e8c99',{map:hairTex,side:THREE.DoubleSide,roughness:.6}),// hanging hair: dimmer so the back rim light doesn't turn it grey-blue
+  skin:toon('#eec5aa',{roughness:.62,emissive:'#26120c'}),face:toon('#ffffff',{map:faceTex,roughness:.6,emissive:'#26120c'}),
+  gold:toon('#c79a4a',{roughness:.32,metalness:.75}),bronze:toon('#80683c',{roughness:.45,metalness:.5}),jade:toon('#74dcb9',{roughness:.22,emissive:'#0b3328'}),
+  boot:toon('#17181d',{roughness:.6}),scab:toon('#1f1c27',{roughness:.4}),wrap:toon('#2c2232'),wood:toon('#6e4a2c',{roughness:.55}),red:toon('#c9372d',{side:THREE.DoubleSide,roughness:.5})};
+function applyPal(i){pal=PALS[i];M.inner.color.copy(LC(pal.inner));M.outer.color.copy(LC(pal.outer));M.outerDS.color.copy(LC(pal.outer));M.trim.color.copy(LC(pal.trim));M.ribbon.color.copy(LC(pal.ribbon));
+  redraw(torsoTex,drawTorso);redraw(skirtTex,drawSkirt);redraw(coatTex,drawCoat);redraw(beltTex,drawBelt)}
+
+/* ---------- the hero ---------- */
+const K=.86,SH=1.415*K,HY=SH+.215;// body height factor, shoulder line, head centre
+const root=new THREE.Group();scene.add(root);
+const body=new THREE.Group();root.add(body);
+const A={};// anchors
+const anchor=(name,parent,x,y,z)=>{const o=new THREE.Object3D();o.position.set(x,y,z);parent.add(o);A[name]=o;return o};
+
+// inner robe (lower) and open outer coat — both deformed every frame
+const skirtPts=[[.262,.03],[.252,.18],[.226,.38],[.196,.56],[.168,.72],[.148,.86],[.136,.96],[.133,1.03]].map(p=>new THREE.Vector2(p[0],p[1]*K));
+const skirtGeo=new THREE.LatheGeometry(skirtPts,48,Math.PI,Math.PI*2);skirtGeo.scale(1,1,.84);skirtGeo.computeVertexNormals();
+const skirtBase=skirtGeo.attributes.position.array.slice(),skirt0=skirtBase.slice();
+part(skirtGeo,M.innerS,body);
+const coatPts=[[.268,.27],[.24,.42],[.212,.56],[.184,.72],[.164,.86],[.152,.96],[.148,1.0],[.152,1.06],[.161,1.14],[.172,1.22],[.179,1.3],[.18,1.37],[.166,1.42],[.134,1.455]].map(p=>new THREE.Vector2(p[0],p[1]*K));
+const coatGeo=new THREE.LatheGeometry(coatPts,56,.5,Math.PI*2-1.0);coatGeo.scale(1,1,.86);coatGeo.computeVertexNormals();
+const coatBase=coatGeo.attributes.position.array.slice(),coat0=coatBase.slice();
+part(coatGeo,M.coat,body);
+// boots
+const bootL=part(new THREE.SphereGeometry(1,14,10),M.boot,body,{p:[.07,.035,.03],s:[.045,.034,.085]});
+const bootR=part(new THREE.SphereGeometry(1,14,10),M.boot,body,{p:[-.07,.035,.03],s:[.045,.034,.085]});
+// inner robe (upper)
+const torsoPts=[[.131,.98],[.136,1.06],[.146,1.14],[.158,1.22],[.165,1.3],[.166,1.37],[.153,1.42],[.118,1.46],[.056,1.49]].map(p=>new THREE.Vector2(p[0],p[1]*K));
+const torsoGeo=new THREE.LatheGeometry(torsoPts,40,Math.PI,Math.PI*2);torsoGeo.scale(1,1,.78);torsoGeo.computeVertexNormals();
+const torso=part(torsoGeo,M.innerT,body);
+// belt + jade
+part(new THREE.CylinderGeometry(.139,.136,.075,32,1,true),M.belt,body,{p:[0,1.0*K,0],s:[1.02,1,.8]});
+part(new THREE.BoxGeometry(.05,.042,.014),M.jade,body,{p:[0,1.0*K,.114]});
+part(new THREE.CylinderGeometry(.003,.003,.12,4),M.red,body,{p:[.07,.93*K,.106]});
+part(new THREE.CylinderGeometry(.026,.026,.009,16),M.jade,body,{p:[.07,.865*K,.108],r:[Math.PI/2,0,0]});
+anchor('tassel',body,.07,.84*K,.108);
+anchor('sashL',body,.112,.99*K,-.07);anchor('sashR',body,-.112,.99*K,-.07);
+// neck & shoulders
+const neck=part(new THREE.CylinderGeometry(.041,.048,.13,16),M.skin,body,{p:[0,SH+.085,0]});
+const pads=[part(new THREE.SphereGeometry(.074,18,12),M.outer,body,{p:[.152,SH-.008,0],s:[1,.82,.92]}),
+  part(new THREE.SphereGeometry(.074,18,12),M.outer,body,{p:[-.152,SH-.008,0],s:[1,.82,.92]})];
+
+// arms
+function makeArm(side){const sh=new THREE.Group();sh.position.set(side*.168,SH,0);body.add(sh);
+  part(new THREE.CylinderGeometry(.06,.068,.25,18),M.outer,sh,{p:[0,-.115,0]});
+  const el=new THREE.Group();el.position.y=-.24;sh.add(el);
+  part(new THREE.CylinderGeometry(.066,.094,.24,18,1,true),M.outerDS,el,{p:[0,-.11,0]});
+  part(new THREE.CylinderGeometry(.096,.096,.03,18,1,true),M.trim,el,{p:[0,-.222,0]});
+  part(new THREE.CylinderGeometry(.06,.07,.05,16,1,true),M.inner,el,{p:[0,-.235,0]});
+  const hand=new THREE.Group();hand.position.y=-.25;el.add(hand);// wrist pivot, scaled by 手大小
+  part(new THREE.SphereGeometry(1,14,12),M.skin,hand,{p:[0,-.012,0],s:[.026,.034,.021]});
+  part(new THREE.SphereGeometry(1,10,8),M.skin,hand,{p:[side*.018,-.014,.012],s:[.008,.016,.008],r:[0,0,side*.5]});// thumb
+  const fing=new THREE.Group();fing.position.y=-.032;hand.add(fing);
+  part(new THREE.CylinderGeometry(.0068,.0078,.07,8),M.skin,fing,{p:[.0068,-.035,0]});
+  part(new THREE.CylinderGeometry(.0068,.0078,.067,8),M.skin,fing,{p:[-.0068,-.0335,0]});
+  const pins=[];for(let i=0;i<4;i++)pins.push(anchor(`sl${side}_${i}`,el,0,-.03-i*.075,-.01));
+  return {sh,el,hand,fing,pins}}
+const armL=makeArm(1),armR=makeArm(-1);
+
+// head: sculpted sphere (brow, sockets, nose, cheekbones, lips, chin); shapeHead() rebuilds it from the 捏臉 parameters F
+const headG=new THREE.Group();headG.position.y=HY+.004;headG.scale.set(F.headS*F.faceW,F.headS*F.headH,F.headS);body.add(headG);
+// dense enough that lips, alae and lids are wider than one face of the mesh
+const headGeo=new THREE.SphereGeometry(.118,192,144);
+const headBase=headGeo.attributes.position.array.slice();
+const pyN=py=>Math.cos(py/512*Math.PI),pxN=(px,py)=>Math.sin(px/1024*Math.PI*2)*Math.sin(py/512*Math.PI);// face texture pixel -> head-sphere coordinates
+function shapeHead(){
+ const p=headGeo.attributes.position,g=(u,s)=>Math.exp(-(u*u)/(s*s)),sm=(a,b,v)=>{const t=Math.min(1,Math.max(0,(v-a)/(b-a)));return t*t*(3-2*t)};
+ // face width by height: forehead, cheekbones, jaw angle, chin (V-line)
+ const WT=[[1,.9],[.3,.92+F.foreW],[0,.9+F.foreW],[-.2,.87+F.cheekW],[-.45,.8+F.cheekW+F.cheekLow],[-.65,.68+F.cheekLow*.5+F.jawW+(.78-.68-F.jawW)*F.chinR*.6],[-.82,.53+F.jawW+(.76-.53-F.jawW)*F.chinR],[-.95,.42+F.chinW+(.66-.42-F.chinW)*F.chinR],[-1,.38+F.chinW+(.5-.38-F.chinW)*F.chinR]];
+ const wAt=y=>{for(let i=1;i<WT.length;i++){const [y0,w0]=WT[i-1],[y1,w1]=WT[i];if(y<=y0&&y>=y1)return w0+(w1-w0)*(y0-y)/(y0-y1)}return .2};
+ const eyeY=268-F.eyeUp,eNy=-.07+pyN(eyeY)-pyN(268),eNx=.33+pxN(F.eyeSp,eyeY)-pxN(55,268);
+ const nTip=-.32+pyN(309-F.noseUp)-pyN(309),lipD=pyN(334-F.lipUp)-pyN(334);
+ for(let i=0;i<p.count;i++){let nx=headBase[i*3]/.118,ny=headBase[i*3+1]/.118,nz=headBase[i*3+2]/.118;let d=0;
+  // features as small bumps along the surface normal
+  if(nz>0){const ax=Math.abs(nx),dn=nTip+.32,nEnd=-.29+dn,t=Math.min(1,Math.max(0,(-.01-ny)/(-.01-nEnd))),nw=F.noseW,LS=LIP_STYLES[F.lipStyle]||LIP_STYLES[0],lw=F.lipW*LS.w,lt=Math.sqrt(F.lipThick*(LS.up+LS.lo)/2);// thick lips are mostly painted; sqrt keeps them from pouting forward
+    // nose: narrow bridge rising to a rounded tip, alar wings with a groove behind them
+    d+=(.005+.051*F.noseH*Math.pow(t,1.8))*g(nx,(.026+.018*t)*nw)*(ny>nEnd-.01?1:g(ny-(nEnd-.01),.022));
+    d+=.007*F.noseH*g(nx,.038*nw)*g(ny-(nEnd+.005),.03);
+    d+=.0065*g(ax-.056*nw,.018*nw)*g(ny-(nEnd-.022),.02);
+    d+=.035*F.noseTipP*g(nx,.05*nw)*g(ny-(nTip+.012),.04);
+    d-=.003*g(ax-.08*nw,.012)*g(ny-(nEnd-.01),.035);
+    // forehead and brow ridge over the eyes
+    d+=.012*F.browBone*g(ny-.1,.07)*g(nx,.45);
+    d+=.007*F.browBone*g(ax-.27,.13)*g(ny-.13,.04);
+    // eye sockets with the eyeball and lids filling them
+    d-=.028*g(ax-eNx,.1*F.eyeSize)*g(ny-eNy-.01,.075*F.eyeSize);
+    d+=.009*g(ax-eNx-.005,.07*F.eyeSize)*g(ny-eNy,.042*F.eyeSize);
+    d-=.004*g(ax-.17,.035)*g(ny+.04,.05);
+    // cheekbones, soft hollow below
+    d+=.01*g(ax-.47,.12)*g(ny+.19,.08)+F.cheekFull*.012*g(ax-.45,.16)*g(ny+.3,.14);
+    d-=.004*F.cheekHollow*g(ax-.52,.12)*g(ny+.42,.1);
+    d+=.01*F.cheekApple*g(ax-.36,.1)*g(ny+.2,.07);
+    // mouth: philtrum, upper lip, parting line, lower lip, corners
+    d-=.002*g(nx,.011)*g(ny+.39-lipD,.035);
+    d+=.003*lt*g(nx,.1*lw)*g(ny+.452-lipD,.018*lt);
+    d-=.0025*g(nx,.11*lw)*g(ny+.472-lipD,.009);
+    d+=.004*lt*g(nx,.085*lw)*g(ny+.497-lipD,.02*lt);
+    d-=.003*g(ax-.105*lw,.018)*g(ny+.47-lipD,.02);
+    // dip under the lower lip, then the chin
+    d-=.003*g(nx,.07)*g(ny+.56-lipD*.5,.03);
+    d+=.008*g(nx,.11)*g(ny+.74,.08);
+    d*=Math.min(1,nz*2.5)}
+  let x=nx*(1+d),y=ny*(1+d),z=nz*(1+d);
+  // flatter face plane, narrower and longer lower face, rounder skull at the back
+  const f0=sm(-.65,.6,nz),lo=sm(-.15,-.55,ny),front=f0+(1-f0)*lo;
+  if(z>0){const amt=F.flat*(1-sm(-.45,-.85,ny));z=(z+amt*z*(1-z))*(1-.04*front)}
+  x*=.97+(wAt(Math.max(-1,Math.min(1,ny)))-.97)*front;
+  if(ny<0){y*=1+F.lowerLen*Math.min(1,-ny*1.6);if(z<0)z*=1-.18*(-ny)}
+  p.setXYZ(i,x*.118*.93,y*.118,z*.118*.95)}
+ p.needsUpdate=true;headGeo.computeVertexNormals();headGeo.computeBoundingSphere()}
+shapeHead();
+part(headGeo,M.face,headG);
+part(new THREE.SphereGeometry(1,12,10),M.skin,headG,{p:[.103,-.008,-.004],s:[.012,.024,.018]});
+part(new THREE.SphereGeometry(1,12,10),M.skin,headG,{p:[-.103,-.008,-.004],s:[.012,.024,.018]});
+// hair underlayer (shells)
+const HR=.1275,HS=[.91,1.04,.98];
+const capGeo=new THREE.SphereGeometry(HR,48,24,0,Math.PI*2,0,Math.PI*.24);capGeo.scale(...HS);
+part(capGeo,M.hairDS,headG,{p:[0,.006,-.004]});
+const backGeo=new THREE.SphereGeometry(HR,40,20,Math.PI/2+.95,Math.PI*2-1.9,Math.PI*.2,Math.PI*.68);backGeo.scale(...HS);
+part(backGeo,M.hairDS,headG,{p:[0,.006,-.004]});
+function fringeGeo(R,sx,sy,sz){const W=18,H=8,ph0=Math.PI/2-1.42,phL=2.84,th0=Math.PI*.2,pos=[],idx=[];
+  for(let iy=0;iy<=H;iy++)for(let ix=0;ix<=W;ix++){const u=ix/W,e=Math.pow(2*u-1,2);const thB=Math.PI*(.35+.26*Math.pow(e,1.15));
+    const th=th0+(thB-th0)*iy/H,r=R*(1+.04*Math.pow(iy/H,1.3)),ph=ph0+phL*u;pos.push(-Math.cos(ph)*Math.sin(th)*r*sx,Math.cos(th)*r*sy,Math.sin(ph)*Math.sin(th)*r*sz)}
+  for(let iy=0;iy<H;iy++)for(let ix=0;ix<W;ix++){const a=iy*(W+1)+ix;idx.push(a,a+W+1,a+1,a+1,a+W+1,a+W+2)}
+  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));g.setIndex(idx);g.computeVertexNormals();return g}
+part(fringeGeo(HR,...HS),M.hairDS,headG,{p:[0,.006,-.002]});
+// hair strands: layered ribbon cards with strand texture
+const onHead=(pol,a,rr=1)=>V(Math.sin(a)*Math.sin(pol*Math.PI)*HR*rr*HS[0],Math.cos(pol*Math.PI)*HR*rr*HS[1]+.006,Math.cos(a)*Math.sin(pol*Math.PI)*HR*rr*HS[2]);
+let strandTo=null;// hair parts that change with 髮型 go into hairVar
+function strand(pts,w0,w1){const c=new THREE.CatmullRomCurve3(pts),N=22,pos=[],uv=[],idx=[],tg=new THREE.Vector3(),nr=new THREE.Vector3(),sd=new THREE.Vector3();
+  for(let i=0;i<=N;i++){const t=i/N,p=c.getPoint(t);c.getTangent(t,tg);nr.copy(p).sub(V(0,-.01,-.01)).normalize();sd.crossVectors(tg,nr).normalize();
+    const w=(w0+(w1-w0)*Math.pow(t,1.3))*.5;pos.push(p.x-sd.x*w,p.y-sd.y*w,p.z-sd.z*w,p.x+sd.x*w,p.y+sd.y*w,p.z+sd.z*w);uv.push(0,1-t,1,1-t)}
+  for(let i=0;i<N;i++){const a=i*2;idx.push(a,a+2,a+1,a+1,a+2,a+3)}
+  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));g.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));g.setIndex(idx);g.computeVertexNormals();
+  (strandTo||headG).add(new THREE.Mesh(g,M.hairCard))}
+const knot=V(0,.122,-.04);
+for(let k=0;k<20;k++){const a=-1.45+2.9*k/19;strand([onHead(.29,a,1.02),onHead(.2,a*.8,1.045),onHead(.11,a*.5,1.06),knot],.05,.026)}
+for(let k=0;k<14;k++){const a=Math.PI+(-1.25+2.5*k/13);strand([onHead(.62,a,1.03),onHead(.45,a,1.05),onHead(.27,a*.95+Math.PI*.05,1.06),knot],.055,.028)}
+// 髮型: what sits on top, whether long hair hangs down (long = width factor), ponytail, side locks (count, length)
+// knot: shape of the gathered hair on top (髮飾 F.orn sits on it); tie = ponytail tie, dao = tall 道髻
+const HAIRS=[{long:1,locks:8,lockLen:1},{knot:'tie',pony:1,locks:4,lockLen:.8},{knot:'buns',locks:4,lockLen:.7,buns:1},
+  {long:1.35,locks:10,lockLen:1.6},{locks:2,lockLen:.6},{knot:'dao',long:1.15,locks:4,lockLen:1.3}];
+const hairVar=new THREE.Group();headG.add(hairVar);
+function buildHair(){
+  hairVar.traverse(o=>{if(o.geometry)o.geometry.dispose()});hairVar.clear();strandTo=hairVar;
+  const H=HAIRS[F.hairStyle]||HAIRS[0];
+  // bangs
+  if(F.bangs===0)[-1,1].forEach(d=>{for(let j=0;j<5;j++)strand([onHead(.19,d*.03,1.05),onHead(.31,d*(.18+.12*j),1.07),onHead(.43+.03*j,d*(.45+.17*j),1.085),onHead(.53+.04*j,d*(.72+.16*j),1.07)],.05-.004*j,.012)});
+  if(F.bangs===1)for(let j=0;j<11;j++){const a=-.62+1.24*j/10,l=.38+.012*Math.sin(j*2.1);strand([onHead(.15,a*.4,1.05),onHead(.27,a*.85,1.075),onHead(l,a,1.085)],.07,.03)}
+  if(F.bangs===2)for(let j=0;j<7;j++){const a0=.32,a=.25-.16*j;strand([onHead(.17,a0,1.05),onHead(.29,a0-.25-.08*j,1.075),onHead(.41+.02*j,a-.25,1.085),onHead(.5+.03*j,a-.55-.06*j,1.07)],.055-.003*j,.012)}
+  // side locks: thin tapered strands, staggered lengths, curving in along the cheek and flicking out at the tips
+  [-1,1].forEach(d=>{for(let j=0;j<H.locks;j++){const a=d*(.96+.6*j/Math.max(1,H.locks-1)),w=Math.sin(j*2.3+d),len=(.12+.035*(j%3)+.01*w)*H.lockLen,s0=onHead(.4+.012*(j%2),a,1.05),s1=onHead(.56,a+d*.05,1.065);
+    strand([s0,s1,V(s1.x-d*(.008+.003*w),s1.y-len*.45,s1.z+.006),V(s1.x-d*.006,s1.y-len*.8,s1.z-.002-j*.002),V(s1.x+d*(.006+.004*(j%2)),s1.y-len,s1.z-.008-j*.003)],.032-.0015*(j%3),.004)}});
+  strandTo=null;
+  // top: the knot, then the 髮飾 on it
+  const kn=H.knot,K=kn==='tie'?[0,.15,-.06]:kn==='dao'?[0,.145,-.035]:[0,.128,-.035],yC=kn==='dao'?K[1]+.03:K[1]+.024,orn=H.buns?-1:F.orn;
+  part(new THREE.SphereGeometry(H.buns?.018:.05,20,16),M.hair,hairVar,{p:[0,.122,-.035]});
+  if(kn==='tie')part(new THREE.SphereGeometry(.046,18,14),M.hair,hairVar,{p:K,s:[1,.9,1.1]});
+  if(kn==='dao')part(new THREE.SphereGeometry(.042,18,16),M.hair,hairVar,{p:K,s:[.95,1.45,.95]});
+  if(orn===0){part(new THREE.CylinderGeometry(.036,.047,.046,18),M.gold,hairVar,{p:[K[0],yC,K[2]],r:[-.2,0,0]});
+    part(new THREE.BoxGeometry(.03,.034,.01),M.jade,hairVar,{p:[K[0],yC+.006,K[2]+.035],r:[-.2,0,0]});
+    part(new THREE.CylinderGeometry(.006,.006,.2,8),M.gold,hairVar,{p:[K[0],yC+.003,K[2]],r:[0,0,Math.PI/2]});
+    part(new THREE.SphereGeometry(.011,10,8),M.jade,hairVar,{p:[K[0]+.1,yC+.003,K[2]]})}
+  if(orn===1){// 木簪: plain wooden pin slanted through the knot, round head
+    part(new THREE.CylinderGeometry(.0042,.0032,.18,8),M.wood,hairVar,{p:[K[0],yC,K[2]],r:[0,0,Math.PI/2-.35]});
+    part(new THREE.SphereGeometry(.0085,10,8),M.wood,hairVar,{p:[K[0]+.085*Math.cos(.35),yC+.085*Math.sin(.35),K[2]]})}
+  if(orn===2){// 玉簪: slim jade pin with a gold-capped bead
+    part(new THREE.CylinderGeometry(.0035,.0025,.16,8),M.jade,hairVar,{p:[K[0],yC,K[2]],r:[0,0,Math.PI/2-.3]});
+    const ex=K[0]+.078*Math.cos(.3),ey=yC+.078*Math.sin(.3);
+    part(new THREE.SphereGeometry(.011,12,10),M.jade,hairVar,{p:[ex,ey,K[2]]});part(new THREE.CylinderGeometry(.006,.008,.006,10),M.gold,hairVar,{p:[ex-.009,ey-.003,K[2]],r:[0,0,Math.PI/2-.3]})}
+  if(orn===3)part(new THREE.TorusGeometry(kn==='dao'?.034:.03,.009,8,20),M.ribbon,hairVar,{p:[K[0],K[1]-.01,K[2]-(kn==='tie'?.04:0)],r:[kn==='tie'?.3:Math.PI/2,0,0]});
+  if(H.buns)[-1,1].forEach(d=>{part(new THREE.SphereGeometry(.042,18,14),M.hair,hairVar,{p:[d*.072,.112,-.03]});
+    part(new THREE.TorusGeometry(.03,.007,8,20),M.ribbon,hairVar,{p:[d*.072,.1,-.03],r:[Math.PI/2+.4,d*.5,0]})});
+  const hb=orn===0||orn===3;
+  // which hanging ropes are live
+  if(typeof ropes!=='undefined')for(const r of ropes){const k=r.hairRole;if(!k)continue;
+    r.off=!(k==='long'&&H.long||k==='pony'&&H.pony||k==='hb'&&hb||k==='bun'&&H.buns);r.mesh.visible=!r.off;r.ok=false;r.styleW=k==='long'?H.long||1:1}
+  scaleRopes()}
+anchor('hb1',headG,.04,.15,-.06);anchor('hb2',headG,-.04,.15,-.06);
+anchor('pony',headG,0,.14,-.11);anchor('bunL',headG,.072,.08,-.05);anchor('bunR',headG,-.072,.08,-.05);
+anchor('hairA',headG,.03,.0,-.11);anchor('hairB',headG,-.03,.0,-.11);anchor('hairC',headG,.06,-.04,-.095);anchor('hairD',headG,-.06,-.04,-.095);anchor('hairE',headG,0,-.06,-.1);
+
+// sword on the back
+const swordBack=new THREE.Group();swordBack.position.set(0,1.18*K,-.145);swordBack.rotation.set(.12,0,.55);swordBack.scale.setScalar(.88);body.add(swordBack);
+part(new THREE.BoxGeometry(.05,.82,.024),M.scab,swordBack,{p:[0,-.04,0]});
+part(new THREE.BoxGeometry(.056,.05,.03),M.bronze,swordBack,{p:[0,.35,0]});
+part(new THREE.BoxGeometry(.056,.05,.03),M.bronze,swordBack,{p:[0,-.43,0]});
+part(new THREE.BoxGeometry(.085,.018,.03),M.bronze,swordBack,{p:[0,.39,0]});
+part(new THREE.CylinderGeometry(.015,.017,.16,8),M.wrap,swordBack,{p:[0,.48,0]});
+part(new THREE.SphereGeometry(.018,10,8),M.bronze,swordBack,{p:[0,.565,0]});
+anchor('pommel',swordBack,0,.57,0);
+
+/* ---------- flying sword under the feet (御劍) ---------- */
+const bladeGlow=new THREE.MeshBasicMaterial({color:0x9ff5dc,transparent:true,opacity:.9,blending:THREE.AdditiveBlending,depthWrite:false});
+const flySword=new THREE.Group();root.add(flySword);
+{const b=toon(0xdfeee9,{emissive:0x1f5f50});part(new THREE.BoxGeometry(.1,.014,1.25),b,flySword,{p:[0,-.01,.05]});
+ const tip=new THREE.ConeGeometry(.05,.18,4);tip.rotateX(Math.PI/2);tip.scale(1,.14,1);part(tip,b,flySword,{p:[0,-.01,.765],r:[0,0,Math.PI/4]});
+ part(new THREE.BoxGeometry(.03,.02,1.3),bladeGlow,flySword,{p:[0,-.002,.08],ol:false});
+ part(new THREE.BoxGeometry(.22,.03,.05),M.gold,flySword,{p:[0,-.01,-.6]});
+ part(new THREE.CylinderGeometry(.018,.02,.2,8),M.wrap,flySword,{p:[0,-.01,-.72],r:[Math.PI/2,0,0]});
+ const gl=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex,color:0x6fffd0,opacity:.55,blending:THREE.AdditiveBlending,depthWrite:false}));gl.scale.set(1.8,.5,1);flySword.add(gl)}
+anchor('flyTail',flySword,0,-.01,-.82);
+flySword.scale.setScalar(.001);
+
+/* ---------- orbiting swords (施法) ---------- */
+const orbit=[];for(let i=0;i<3;i++){const g=new THREE.Group();scene.add(g);
+  part(new THREE.BoxGeometry(.03,.008,.42),bladeGlow,g,{ol:false});
+  const tp=new THREE.ConeGeometry(.02,.08,4);tp.rotateX(Math.PI/2);part(tp,bladeGlow,g,{p:[0,0,.25],ol:false});
+  const s=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex,color:0x7fffd4,opacity:.7,blending:THREE.AdditiveBlending,depthWrite:false}));s.scale.set(.5,.5,1);g.add(s);
+  g.visible=false;orbit.push(g)}
+const castLight=new THREE.PointLight(0x6fffd0,0,4,1.6);scene.add(castLight);
+
+/* ---------- lantern spirit ---------- */
+const lantern=new THREE.Group();scene.add(lantern);
+{const lt=ctex(256,128,(x,w,h)=>{x.fillStyle='#ffcf86';x.fillRect(0,0,w,h);x.strokeStyle='rgba(140,60,20,.45)';x.lineWidth=3;for(let i=0;i<12;i++){x.beginPath();x.moveTo(i*w/12,0);x.lineTo(i*w/12,h);x.stroke()}
+   x.fillStyle='#c42a20';x.font='bold 64px serif';x.textAlign='center';x.textBaseline='middle';x.fillText('斬',w*.25,h*.54);x.fillText('斬',w*.75,h*.54)});
+ const pts=[[.03,-.11],[.075,-.085],[.098,-.03],[.1,.02],[.082,.075],[.032,.105]].map(p=>new THREE.Vector2(p[0],p[1]));
+ part(new THREE.LatheGeometry(pts,20),new THREE.MeshBasicMaterial({map:lt}),lantern);
+ part(new THREE.CylinderGeometry(.038,.044,.022,12),woodM,lantern,{p:[0,.115,0]});
+ part(new THREE.CylinderGeometry(.044,.036,.022,12),woodM,lantern,{p:[0,-.115,0]});
+ part(new THREE.CylinderGeometry(.002,.002,.12,4),woodM,lantern,{p:[0,.18,0],ol:false});
+ const s=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex,color:0xffa24a,opacity:.8,blending:THREE.AdditiveBlending,depthWrite:false}));s.scale.set(.9,.9,1);lantern.add(s)}
+const lanternL=new THREE.PointLight(0xffa04a,1.6,6,1.4);lantern.add(lanternL);
+anchor('lanTassel',lantern,0,-.13,0);
+
+/* ---------- blob shadow ---------- */
+const shadow=new THREE.Mesh(new THREE.PlaneGeometry(1,1),new THREE.MeshBasicMaterial({map:glowTex,color:0x000000,transparent:true,opacity:.55,depthWrite:false}));
+shadow.rotation.x=-Math.PI/2;shadow.position.y=.012;scene.add(shadow);
+
+/* ---------- soft-body: ropes (ribbons, hair) and sleeve drapes ---------- */
+const HERO={pos:new THREE.Vector3(),right:V(1,0,0),fwd:V(0,0,1),vel:new THREE.Vector3(),fly:0};
+const tmp=new THREE.Vector3(),tmp2=new THREE.Vector3(),tmp3=new THREE.Vector3();
+function pushOut(P){const by=(P.y-HERO.pos.y)/F.height,bk=K*F.legLen;if(by<-.05||by>1.7)return;
+  let r;if(by<bk)r=.28-(.28-.15)*Math.max(0,by-.03)/(bk-.03);else if(by<bodyY(SH)+.06)r=.2;else r=.16;r*=F.height*F.bodyW;
+  const dx=P.x-HERO.pos.x,dz=P.z-HERO.pos.z,d=Math.hypot(dx,dz);
+  if(d<r){if(d<1e-4){P.x-=HERO.fwd.x*r;P.z-=HERO.fwd.z*r}else{P.x=HERO.pos.x+dx/d*r;P.z=HERO.pos.z+dz/d*r}}
+  if(P.y<.01)P.y=.01}
+class Rope{
+  constructor(o){Object.assign(this,{n:10,seg:.06,w0:.04,w1:.02,grav:-5,lift:0,damp:.955,flut:.5,twist:0,mat:M.ribbon,collide:true},o);
+    this.base={seg:this.seg,w0:this.w0,w1:this.w1};
+    this.p=[];this.q=[];for(let i=0;i<this.n;i++){this.p.push(new THREE.Vector3());this.q.push(new THREE.Vector3())}
+    this.ph=rnd()*20;const n=this.n,g=new THREE.BufferGeometry();this.pa=new Float32Array(n*6);g.setAttribute('position',new THREE.BufferAttribute(this.pa,3));
+    const idx=[];for(let i=0;i<n-1;i++){const a=i*2;idx.push(a,a+2,a+1,a+1,a+2,a+3)}g.setIndex(idx);
+    const uv=[];for(let i=0;i<n;i++)uv.push(0,1-i/(n-1),1,1-i/(n-1));g.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));
+    this.geo=g;this.mesh=new THREE.Mesh(g,this.mat);this.mesh.frustumCulled=false;scene.add(this.mesh);this.ok=false}
+  step(dt,t,wind){const a=this.anchor.getWorldPosition(tmp),p=this.p,q=this.q,n=this.n,dt2=dt*dt;
+    if(!this.ok){for(let i=0;i<n;i++){p[i].set(a.x-HERO.fwd.x*i*this.seg*.5,a.y-i*this.seg*.8,a.z-HERO.fwd.z*i*this.seg*.5);q[i].copy(p[i])}this.ok=true}
+    p[0].copy(a);q[0].copy(a);
+    for(let i=1;i<n;i++){const P=p[i],Q=q[i],k=i/(n-1);
+      const vx=(P.x-Q.x)*this.damp,vy=(P.y-Q.y)*this.damp,vz=(P.z-Q.z)*this.damp;Q.copy(P);
+      const f1=Math.sin(t*3.3+this.ph+i*.6)*this.flut*k,f2=Math.cos(t*2.4+this.ph*1.7+i*.45)*this.flut*k;
+      P.x+=vx+(wind.x+HERO.right.x*f1)*dt2;P.y+=vy+(this.grav+this.lift+f2*.8+wind.y)*dt2;P.z+=vz+(wind.z+HERO.right.z*f1)*dt2}
+    for(let i=1;i<n;i++){const A=p[i-1],B=p[i];let dx=B.x-A.x,dy=B.y-A.y,dz=B.z-A.z;const d=Math.hypot(dx,dy,dz)||1e-6,s=this.seg/d;
+      const nx=A.x+dx*s,ny=A.y+dy*s,nz=A.z+dz*s;q[i].x+=(nx-B.x)*.6;q[i].y+=(ny-B.y)*.6;q[i].z+=(nz-B.z)*.6;B.set(nx,ny,nz);if(this.collide)pushOut(B)}}
+  build(){const p=this.p,n=this.n,pa=this.pa;
+    for(let i=0;i<n;i++){const a=p[Math.max(0,i-1)],b=p[Math.min(n-1,i+1)];tmp.subVectors(b,a).normalize();
+      tmp2.copy(HERO.right).addScaledVector(tmp,-HERO.right.dot(tmp)).normalize();
+      if(this.twist){tmp3.crossVectors(tmp,tmp2);const an=this.twist*Math.sin(i*.5+this.ph);tmp2.multiplyScalar(Math.cos(an)).addScaledVector(tmp3,Math.sin(an))}
+      const w=(this.w0+(this.w1-this.w0)*i/(n-1))*.5;
+      pa[i*6]=p[i].x-tmp2.x*w;pa[i*6+1]=p[i].y-tmp2.y*w;pa[i*6+2]=p[i].z-tmp2.z*w;pa[i*6+3]=p[i].x+tmp2.x*w;pa[i*6+4]=p[i].y+tmp2.y*w;pa[i*6+5]=p[i].z+tmp2.z*w}
+    this.geo.attributes.position.needsUpdate=true;this.geo.computeVertexNormals();this.geo.computeBoundingSphere()}}
+class Drape{
+  constructor(pins,rows,sp,mat){this.pins=pins;this.C=pins.length;this.R=rows;this.sp=sp;this.p=[];this.q=[];
+    for(let i=0;i<this.C*rows;i++){this.p.push(new THREE.Vector3());this.q.push(new THREE.Vector3())}
+    const g=new THREE.BufferGeometry();this.pa=new Float32Array(this.C*rows*3);g.setAttribute('position',new THREE.BufferAttribute(this.pa,3));
+    const idx=[];for(let r=0;r<rows-1;r++)for(let c=0;c<this.C-1;c++){const a=r*this.C+c;idx.push(a,a+1,a+this.C,a+1,a+this.C+1,a+this.C)}g.setIndex(idx);
+    const uv=[];for(let r=0;r<rows;r++)for(let c=0;c<this.C;c++)uv.push(c/(this.C-1)*.5,1-r/(rows-1)*.5);g.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));
+    this.geo=g;this.mesh=new THREE.Mesh(g,mat);this.mesh.frustumCulled=false;scene.add(this.mesh);this.ok=false;this.ph=rnd()*9}
+  step(dt,t,wind){const C=this.C,R=this.R,p=this.p,q=this.q,dt2=dt*dt;
+    const top=this.pins.map(o=>o.getWorldPosition(new THREE.Vector3()));
+    if(!this.ok){for(let r=0;r<R;r++)for(let c=0;c<C;c++){p[r*C+c].set(top[c].x,top[c].y-r*this.sp,top[c].z);q[r*C+c].copy(p[r*C+c])}this.ok=true}
+    for(let c=0;c<C;c++){p[c].copy(top[c]);q[c].copy(top[c])}
+    for(let i=C;i<C*R;i++){const P=p[i],Q=q[i],k=Math.floor(i/C)/(R-1);const vx=(P.x-Q.x)*.94,vy=(P.y-Q.y)*.94,vz=(P.z-Q.z)*.94;Q.copy(P);
+      const f=Math.sin(t*2.7+this.ph+i*.4)*.5*k;
+      P.x+=vx+(wind.x*.8+HERO.right.x*f)*dt2;P.y+=vy+(-7+wind.y)*dt2;P.z+=vz+(wind.z*.8+HERO.right.z*f)*dt2}
+    for(let it=0;it<4;it++){
+      for(let r=1;r<R;r++)for(let c=0;c<C;c++){this.cons(p[(r-1)*C+c],p[r*C+c],this.sp,r===1)}
+      for(let r=1;r<R;r++){const fl=1+.5*r/(R-1);for(let c=0;c<C-1;c++){const rest=top[c].distanceTo(top[c+1])*fl;this.cons(p[r*C+c],p[r*C+c+1],rest,false)}}
+      for(let i=C;i<C*R;i++)pushOut(p[i])}}
+  cons(A,B,rest,pinA){tmp.subVectors(B,A);const d=tmp.length()||1e-6,diff=(d-rest)/d;
+    if(pinA)B.addScaledVector(tmp,-diff);else{A.addScaledVector(tmp,diff*.5);B.addScaledVector(tmp,-diff*.5)}}
+  build(){const pa=this.pa;this.p.forEach((v,i)=>{pa[i*3]=v.x;pa[i*3+1]=v.y;pa[i*3+2]=v.z});this.geo.attributes.position.needsUpdate=true;this.geo.computeVertexNormals();this.geo.computeBoundingSphere()}}
+
+const ropes=[
+  new Rope({anchor:A.pony,n:12,seg:.058,w0:.11,w1:.008,grav:-15,flut:.08,damp:.9,mat:M.hairLong,kind:'hair',hairRole:'pony'}),
+  new Rope({anchor:A.pony,n:11,seg:.056,w0:.07,w1:.008,grav:-15,flut:.1,damp:.9,mat:M.hairLong,kind:'hair',hairRole:'pony'}),
+  new Rope({anchor:A.bunL,n:8,seg:.05,w0:.022,w1:.018,grav:-5,flut:.45,damp:.92,twist:.7,kind:'ribbon',hairRole:'bun'}),
+  new Rope({anchor:A.bunR,n:8,seg:.05,w0:.022,w1:.018,grav:-5,flut:.45,damp:.92,twist:.7,kind:'ribbon',hairRole:'bun'}),
+  new Rope({anchor:A.hairE,n:12,seg:.058,w0:.17,w1:.008,grav:-15,flut:.06,damp:.9,mat:M.hairLong,kind:'hair',hairRole:'long'}),
+  new Rope({anchor:A.hairA,n:12,seg:.06,w0:.1,w1:.008,grav:-15,flut:.07,damp:.9,mat:M.hairLong,kind:'hair',hairRole:'long'}),
+  new Rope({anchor:A.hairB,n:12,seg:.06,w0:.1,w1:.008,grav:-15,flut:.07,damp:.9,mat:M.hairLong,kind:'hair',hairRole:'long'}),
+  new Rope({anchor:A.hairC,n:11,seg:.058,w0:.08,w1:.008,grav:-15,flut:.09,damp:.9,mat:M.hairLong,kind:'hair',hairRole:'long'}),
+  new Rope({anchor:A.hairD,n:11,seg:.058,w0:.08,w1:.008,grav:-15,flut:.09,damp:.9,mat:M.hairLong,kind:'hair',hairRole:'long'}),
+  new Rope({anchor:A.hb1,n:12,seg:.06,w0:.026,w1:.022,grav:-5,flut:.45,damp:.92,twist:.7,kind:'ribbon',hairRole:'hb'}),
+  new Rope({anchor:A.hb2,n:12,seg:.06,w0:.026,w1:.022,grav:-5,flut:.45,damp:.92,twist:.7,kind:'ribbon',hairRole:'hb'}),
+  new Rope({anchor:A.sashL,n:15,seg:.066,w0:.05,w1:.03,grav:-5.5,flut:.5,damp:.92,twist:.9,kind:'ribbon'}),
+  new Rope({anchor:A.sashR,n:15,seg:.066,w0:.05,w1:.03,grav:-5.5,flut:.5,damp:.92,twist:.9,kind:'ribbon'}),
+  new Rope({anchor:A.pommel,n:6,seg:.04,w0:.03,w1:.012,grav:-6,flut:.4,mat:M.red}),
+  new Rope({anchor:A.tassel,n:5,seg:.03,w0:.022,w1:.01,grav:-6,flut:.3,mat:M.red}),
+  new Rope({anchor:A.lanTassel,n:5,seg:.035,w0:.025,w1:.01,grav:-6,flut:.3,mat:M.red,collide:false})];
+const drapes=[new Drape(armL.pins,6,.058,M.outerDS),new Drape(armR.pins,6,.058,M.outerDS)];
+
+/* ---------- light trails ---------- */
+class Trail{constructor(n,w,color){this.n=n;this.w=w;this.pts=[];const g=new THREE.BufferGeometry();this.pa=new Float32Array(n*6);this.al=new Float32Array(n*2);
+    g.setAttribute('position',new THREE.BufferAttribute(this.pa,3));g.setAttribute('al',new THREE.BufferAttribute(this.al,1));
+    const idx=[];for(let i=0;i<n-1;i++){const a=i*2;idx.push(a,a+2,a+1,a+1,a+2,a+3)}g.setIndex(idx);this.geo=g;
+    this.mesh=new THREE.Mesh(g,new THREE.ShaderMaterial({transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,side:THREE.DoubleSide,uniforms:{col:{value:new THREE.Color(color)},op:{value:1}},
+      vertexShader:'attribute float al;varying float vA;void main(){vA=al;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}',
+      fragmentShader:'uniform vec3 col;uniform float op;varying float vA;void main(){gl_FragColor=vec4(col,vA*op);}'}));
+    this.mesh.frustumCulled=false;scene.add(this.mesh)}
+  push(v){this.pts.unshift(v.clone());if(this.pts.length>this.n)this.pts.pop()}
+  build(op){const p=this.pts,n=this.n;this.mesh.material.uniforms.op.value=op;this.mesh.visible=op>.01&&p.length>1;if(!this.mesh.visible)return;
+    for(let i=0;i<n;i++){const a=p[Math.min(i,p.length-1)],b=p[Math.min(i+1,p.length-1)],c=p[Math.max(0,i-1)];
+      tmp.subVectors(c,b);if(tmp.lengthSq()<1e-8)tmp.set(0,0,1);tmp.normalize();tmp2.subVectors(camera.position,a).normalize();tmp3.crossVectors(tmp,tmp2).normalize();
+      const w=this.w*(1-i/n)*.5;this.pa.set([a.x-tmp3.x*w,a.y-tmp3.y*w,a.z-tmp3.z*w,a.x+tmp3.x*w,a.y+tmp3.y*w,a.z+tmp3.z*w],i*6);
+      const al=Math.pow(1-i/n,1.6)*(i<p.length?1:0);this.al[i*2]=al;this.al[i*2+1]=al}
+    this.geo.attributes.position.needsUpdate=true;this.geo.attributes.al.needsUpdate=true}}
+const flyTrail=new Trail(34,.16,0x8fffe0);
+const orbitTrails=orbit.map(()=>new Trail(16,.035,0x8fffe0));
+
+/* ---------- poses ---------- */
+const POSES={
+  idle:{aLx:.42,aLz:-.12,fLx:.25,fLz:-1.5,aRx:-.05,aRz:-.12,fRx:-.25,lean:0,fing:0,bootS:0},
+  walk:{aLx:0,aLz:.1,fLx:-.2,fLz:0,aRx:0,aRz:-.1,fRx:-.2,lean:.04,fing:0,bootS:0},
+  cast:{aLx:.42,aLz:-.12,fLx:.25,fLz:-1.5,aRx:-1.38,aRz:.16,fRx:-.3,lean:.04,fing:1,bootS:.08},
+  fly:{aLx:.42,aLz:-.12,fLx:.25,fLz:-1.5,aRx:-1.12,aRz:.1,fRx:-.45,lean:.2,fing:1,bootS:.13}};
+const pose=Object.assign({},POSES.idle);
+let mode='idle',walkPh=0,pathA=0,swordVis=0,castVis=0;
+const lerp=(a,b,k)=>a+(b-a)*k;
+const angLerp=(a,b,k)=>{let d=((b-a+Math.PI)%(Math.PI*2)+Math.PI*2)%(Math.PI*2)-Math.PI;return a+d*k};
+
+function setHeroMode(m){mode=m;const f=m==='cast'?5:null;if(f!==exprForce){exprForce=f;redraw(faceTex,drawFace)}}// 施法 shouts
+/* ---------- per-frame hero animation (pages move root / set mode, then call this) ---------- */
+let clock=0,acc=0;const STEP=1/60;
+const prevPos=new THREE.Vector3(),wind=new THREE.Vector3(),sway={x:0,z:0,lift:0};
+function animateHero(dt){
+  root.updateMatrixWorld();
+  HERO.pos.copy(root.position);HERO.right.set(Math.cos(root.rotation.y),0,-Math.sin(root.rotation.y));HERO.fwd.set(Math.sin(root.rotation.y),0,Math.cos(root.rotation.y));
+  HERO.vel.subVectors(root.position,prevPos).divideScalar(Math.max(dt,1e-3));prevPos.copy(root.position);
+  // pose blend
+  const P0=POSES[mode],kp=1-Math.exp(-dt*6);for(const k in P0)pose[k]=lerp(pose[k],P0[k],kp);
+  const sw=mode==='walk'?Math.sin(walkPh):0;
+  armL.sh.rotation.set(pose.aLx+.36*sw,0,pose.aLz);armL.el.rotation.set(pose.fLx,0,pose.fLz);
+  armR.sh.rotation.set(pose.aRx-.36*sw,0,pose.aRz);armR.el.rotation.set(pose.fRx,0,0);
+  armR.fing.scale.y=Math.max(.001,pose.fing);armL.fing.scale.y=.001;
+  bootL.position.z=.03+.13*sw+pose.bootS;bootR.position.z=.03-.13*sw-pose.bootS;
+  const breath=Math.sin(clock*1.6);
+  body.position.y=(mode==='walk'?Math.abs(Math.cos(walkPh))*.022:0)+breath*.003;
+  body.rotation.x=pose.lean;
+  const lx=HERO.vel.dot(HERO.right),lz=HERO.vel.dot(HERO.fwd);
+  const toC=tmp.copy(root.position).negate().setY(0).normalize();
+  body.rotation.z=lerp(body.rotation.z,mode==='fly'?-.2*toC.dot(HERO.right):mode==='walk'?.03*sw:0,1-Math.exp(-dt*3));
+  headG.rotation.y=Math.sin(clock*.5)*.12*(mode==='idle'?1:.3);headG.rotation.x=mode==='fly'?-.18:Math.sin(clock*.7)*.03;
+  torso.scale.set(1+breath*.006,1,1+breath*.008);
+  // skirt sway
+  const fl=mode==='fly'?1:0;
+  sway.x=lerp(sway.x,-lx*.05+(mode==='walk'?.025*Math.sin(walkPh*2):.012*Math.sin(clock*1.2)),1-Math.exp(-dt*5));
+  sway.z=lerp(sway.z,-lz*.05-fl*.16+(mode==='walk'?.02*Math.abs(sw):0),1-Math.exp(-dt*5));
+  sway.lift=lerp(sway.lift,fl*.05,1-Math.exp(-dt*3));
+  {const a=skirtGeo.attributes.position.array;for(let i=0;i<a.length;i+=3){const by=skirtBase[i+1];const f=Math.pow(Math.max(0,(1.03*K-skirt0[i+1])/K),1.6);
+     const fr=fl*Math.sin(clock*9+skirtBase[i]*20)*.012*f;a[i]=skirtBase[i]+sway.x*f;a[i+1]=by+sway.lift*f+fr;a[i+2]=skirtBase[i+2]+sway.z*f}
+   skirtGeo.attributes.position.needsUpdate=true;
+   const c=coatGeo.attributes.position.array;for(let i=0;i<c.length;i+=3){const by=coatBase[i+1];const f=Math.pow(Math.max(0,(1.03*K-coat0[i+1])/K),1.5);
+     const fr=fl*Math.sin(clock*9+coatBase[i]*18+1)*.016*f;c[i]=coatBase[i]+sway.x*f*1.15;c[i+1]=by+sway.lift*f*1.2+fr;c[i+2]=coatBase[i+2]+sway.z*f*1.15}
+   coatGeo.attributes.position.needsUpdate=true}
+  // props
+  swordVis=lerp(swordVis,mode==='fly'?1:0,1-Math.exp(-dt*5));flySword.scale.setScalar(Math.max(.001,swordVis));flySword.position.y=-.015;
+  castVis=lerp(castVis,mode==='cast'?1:0,1-Math.exp(-dt*5));
+  scene.updateMatrixWorld();
+  // lantern follows over the right shoulder
+  const lt=tmp2.copy(HERO.pos).addScaledVector(HERO.right,-.5).addScaledVector(HERO.fwd,.15);lt.y=HERO.pos.y+1.68+Math.sin(clock*1.7)*.06;
+  lantern.position.lerp(lt,1-Math.exp(-dt*(mode==='fly'?4:2.2)));lantern.rotation.z=Math.sin(clock*1.3)*.08;lantern.rotation.y+=dt*.4;
+  lanternL.intensity=1.5+Math.sin(clock*7.3)*.1+Math.sin(clock*13.1)*.06;
+  // orbit swords
+  const oc=tmp.copy(HERO.pos).addScaledVector(V(0,1,0),1.08);
+  orbit.forEach((g,i)=>{g.visible=castVis>.02;const a=clock*2.4+i*Math.PI*2/3;const r=.72*castVis;
+    g.position.set(oc.x+Math.cos(a)*r,oc.y+Math.sin(a*2)*.08,oc.z+Math.sin(a)*r);g.lookAt(oc.x+Math.cos(a+.3)*r,g.position.y,oc.z+Math.sin(a+.3)*r);g.scale.setScalar(Math.max(.001,castVis));
+    g.updateMatrixWorld();orbitTrails[i].push(g.localToWorld(tmp3.set(0,0,-.2)));orbitTrails[i].build(castVis*.9)});
+  castLight.position.copy(oc);castLight.intensity=castVis*(1.2+Math.sin(clock*9)*.2);
+  flyTrail.push(A.flyTail.getWorldPosition(tmp3));flyTrail.build(swordVis*.85);
+  // soft bodies
+  wind.copy(HERO.vel).multiplyScalar(-(mode==='fly'?2.6:1.2));wind.y=mode==='fly'?1.5:0;
+  acc+=dt;let steps=0;while(acc>=STEP&&steps<3){ropes.forEach(r=>{if(!r.off)r.step(STEP,clock,wind)});drapes.forEach(d=>d.step(STEP,clock,wind));acc-=STEP;steps++}
+  if(steps===3)acc=0;
+  ropes.forEach(r=>{if(!r.off)r.build()});drapes.forEach(d=>d.build());
+  shadow.position.set(HERO.pos.x,.012,HERO.pos.z);const sh=1-Math.min(.6,HERO.pos.y*.35);shadow.scale.set(.95*sh,.95*sh,1);shadow.material.opacity=.55*sh}
+let onBodyApplied=null;// page hook (camera follow-up after the figure changes)
+/* ---------- 身形: heights are remapped (legs below the belt, torso belt→shoulder, the rest shifted), widths scaled below the neck ---------- */
+function bodyY0(y){const L=F.legLen,T=F.torsoLen,BELT=K;return y<=BELT?y*L:y<=SH?BELT*L+(y-BELT)*T:BELT*L+(SH-BELT)*T+(y-SH)}
+function bodyY(y){return bodyY0(y)+(y>SH+.02?neckDy():0)}// clothes use bodyY0 so the collar stays put
+function neckDy(){return (F.neckLen-1)*.09}// 脖子長: lifts everything above the collar
+const bodyKids=body.children.map(o=>({o,p:o.position.clone(),s:o.scale.clone()}));
+const torso0=torsoGeo.attributes.position.array.slice();
+function bodyX(y){return F.bodyW*(1+(F.shoulderW-1)*Math.min(1,Math.max(0,(y-1.15*K)/(.23*K))))}
+const smb=(a,b,v)=>{const t=Math.min(1,Math.max(0,(v-a)/(b-a)));return t*t*(3-2*t)};
+const slope=(x,y)=>-.05*F.shoulderDrop*smb(.05,.17,Math.abs(x))*smb(1.28*K,1.42*K,y);// 溜肩: lower the outer shoulder line
+function remapLathe(src,dst){for(let i=0;i<src.length;i+=3){const x=src[i],y=src[i+1];dst[i]=x*bodyX(y);dst[i+1]=bodyY0(y)+slope(x,y);dst[i+2]=src[i+2]*F.bodyW}}
+function scaleRopes(){const hw=F.height*F.headS*F.faceW;
+  for(const r of ropes){if(!r.kind)continue;const b=r.base,w=(r.kind==='hair'?hw:F.height)*(r.styleW||1);r.seg=b.seg*.75*F.height;r.w0=b.w0*w;r.w1=b.w1*w}}
+function applyBody(){
+  armL.hand.scale.setScalar(F.handS);armR.hand.scale.setScalar(F.handS);
+  body.scale.setScalar(F.height);scaleRopes();
+  remapLathe(skirt0,skirtBase);remapLathe(coat0,coatBase);
+  const ta=torsoGeo.attributes.position;remapLathe(torso0,ta.array);ta.needsUpdate=true;torsoGeo.computeVertexNormals();torsoGeo.computeBoundingSphere();
+  skirtGeo.computeBoundingSphere();coatGeo.computeBoundingSphere();
+  for(const {o,p,s:sc} of bodyKids){
+    if(o===torso||o.geometry===skirtGeo||o.geometry===coatGeo)continue;
+    o.position.y=bodyY(p.y);
+    if(o===armL.sh||o===armR.sh){o.position.x=p.x*bodyX(p.y);o.position.y+=-.03*F.shoulderDrop;o.scale.setScalar(F.armLen);continue}
+    if(pads.includes(o)){o.position.x=p.x*bodyX(p.y);o.position.y+=-.035*F.shoulderDrop;o.scale.set(sc.x*F.bodyW,sc.y*(1-.3*F.shoulderDrop),sc.z*F.bodyW);continue}
+    if(o===neck){const h=.13+neckDy();o.scale.y=sc.y*h/.13;o.position.y=bodyY0(SH)+.02+h/2;continue}
+    if(o===headG||p.y>SH+.04)continue;// head and neck keep their size
+    const w=p.y>1.15*K?bodyX(p.y):F.bodyW;
+    o.position.x=p.x*w;o.position.z=p.z*F.bodyW;o.scale.set(sc.x*w,sc.y,sc.z*F.bodyW)}
+  if(onBodyApplied)onBodyApplied()}
+function applyFace(dirty){
+  headG.scale.set(F.headS*F.faceW,F.headS*F.headH,F.headS);scaleRopes();
+  if(dirty.g)shapeHead();
+  if(dirty.x){redraw(faceTex,drawFace);skinFromFace()}}
+const saveFace=()=>{try{localStorage.setItem(FACE_KEY,JSON.stringify({h:FACE_HASH,f:F}))}catch(e){}};
+// neck and hands take the colour the face texture actually has on the cheeks (base tone + blush + contour), darkened
+// because the neck faces the key light square-on and would otherwise tone-map paler than the face
+function skinFromFace(){const d=faceTex.userData.x.getImageData(2*(256-80),2*300,320,40).data;let r=0,g=0,b=0;
+  for(let i=0;i<d.length;i+=4){r+=d[i];g+=d[i+1];b+=d[i+2]}const n=d.length/4;M.skin.color.setRGB(r/n/255,g/n/255,b/n/255).convertSRGBToLinear().multiplyScalar(.56)}
+skinFromFace();
+applyBody();buildHair();
