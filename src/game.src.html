@@ -867,9 +867,9 @@ function startElite(){G.eliteDone=true;const a=Math.random()*Math.PI*2;const e=s
   if(e){e.hp=e.max=ELITE_HP;e.dmg*=1.2}banner('大燈籠鬼','精英來了，斬了牠掉一大把魂火');shake=.3}
 function startBoss(){G.bossDone=true;boss.alive=true;const a=Math.random()*Math.PI*2;boss.x=HERO.pos.x+Math.sin(a)*8;boss.z=HERO.pos.z+Math.cos(a)*8;
   // tough enough for the build the player has by now: about 30 s of full damage, never less than the base
-  boss.max=boss.hp=BOSS_HP;boss.allow=BOSS_HP/14;SFX.play('boss');buzz(80);boss.cd=3;boss.sum=5;boss.t=0;boss.rage=false;boss.ring=4;boss.g.visible=true;boss.g.position.set(boss.x,0,boss.z);
+  boss.max=boss.hp=BOSS_HP;boss.allow=BOSS_HP/20;SFX.play('boss');buzz(80);boss.cd=3;boss.sum=5;boss.t=0;boss.rage=false;boss.ring=4;boss.g.visible=true;boss.g.position.set(boss.x,0,boss.z);
   $('#bossBox').classList.add('on');banner('燈籠大王：「誰敢在子時點燈——！」','頭目');shake=.8;say('是燈籠大王！它的火球會先畫紅圈，快躲開！',5)}
-function stepBoss(dt){if(!boss.alive)return;boss.t+=dt;boss.allow=Math.min(boss.max/14*1.5,boss.allow+boss.max/14*dt);
+function stepBoss(dt){if(!boss.alive)return;boss.t+=dt;boss.allow=Math.min(boss.max/20*1.5,boss.allow+boss.max/20*dt);
   const dx=HERO.pos.x-boss.x,dz=HERO.pos.z-boss.z,d=Math.hypot(dx,dz)||1;const sp=d>4?1.7:.6;boss.x+=dx/d*sp*dt;boss.z+=dz/d*sp*dt;
   boss.g.position.set(boss.x,Math.sin(boss.t*1.4)*.25,boss.z);boss.g.rotation.y=Math.atan2(dx,dz);boss.body.rotation.y=-Math.PI/2+Math.sin(boss.t*2)*.1;
   boss.body.material.emissiveIntensity=.8+(boss.flash>0?2:0)+Math.sin(boss.t*6)*.1;boss.flash-=dt;boss.L.intensity=2.2+Math.sin(boss.t*9)*.3;
