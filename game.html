@@ -19,6 +19,8 @@ html,body{height:100%;margin:0;background:var(--night);color:var(--ink);overflow
 .vig{position:fixed;inset:0;pointer-events:none;background:radial-gradient(ellipse 85% 75% at 50% 50%,transparent 55%,rgba(3,8,8,.7) 100%)}
 .hurt{position:fixed;inset:0;pointer-events:none;opacity:0;transition:opacity .25s;box-shadow:inset 0 0 90px 30px rgba(229,72,58,.65)}
 .hurt.on{opacity:1;transition:none}
+.edge{position:fixed;left:0;top:0;width:0;height:0;pointer-events:none;display:none;border:11px solid transparent;border-left:20px solid #ff4a32;filter:drop-shadow(0 0 6px rgba(255,74,50,.8));margin:-11px 0 0 -10px}
+.edge.boss{border-left-color:#ffb35a;border-width:15px;border-left-width:26px;margin:-15px 0 0 -13px}
 
 /* HUD */
 .hud{position:fixed;left:0;right:0;top:0;display:grid;gap:6px;pointer-events:none;
@@ -94,6 +96,7 @@ h2{margin:0;font-size:22px;font-weight:400;letter-spacing:.2em}
 <canvas id="c" aria-label="白石村的夜晚，拖曳畫面移動"></canvas>
 <div class="vig"></div>
 <div class="hurt" id="hurt"></div>
+<div id="edges"></div>
 
 <div class="hud" id="hud" hidden>
   <div class="wu" title="頓悟"><i id="wu"></i></div>
@@ -1092,7 +1095,7 @@ let G=null;// the current night
 // one night = NIGHT seconds; the difficulty curve is the 8-'minute' curve squeezed into it (minute() runs 0→8)
 const NIGHT=180;
 function newNight(len){return {nextPill:67,walked:0,moving:false,len,boost:480/len*.75,t:0,over:false,paused:true,kills:0,souls:0,wu:0,wuNeed:6,lv:0,spawnAcc:0,waveAt:60,
-  hp:100,maxhp:100,iframe:0,regenAcc:0,eliteDone:false,bossDone:false,bossKilled:false,eliteKilled:false,
+  hp:150,maxhp:150,iframe:0,regenAcc:0,eliteDone:false,bossDone:false,bossKilled:false,eliteKilled:false,
   s:{dmg:1,rate:1,count:2,pierce:1,range:5,move:3.2,magnet:1.7,regen:0,orbit:0,talis:0,lamp:0},
   skills:{},volley:0,orbitHit:new Map(),talisCd:2,lampCd:1.5,stand:0,auto:false}}
 const minute=()=>G.t/G.len*8;// night progress in "minutes" of an 8-minute night
@@ -1159,7 +1162,7 @@ function dropSoul(x,z,v){if(souls.length>=SOULCAP){souls[0].v+=v;return}
   souls.push({x,z,y:.3,v,t:0,pull:false})}
 // only what the player can see: inside the range AND on screen (so nothing dies off-screen)
 const ndc=new THREE.Vector3();
-function onScreen(x,y,z){ndc.set(x,y,z).project(camera);return Math.abs(ndc.x)<.78&&ndc.y>-.72&&ndc.y<.55&&ndc.z<1}
+function onScreen(x,y,z){ndc.set(x,y,z).project(camera);return Math.abs(ndc.x)<.92&&ndc.y>-.9&&ndc.y<.7&&ndc.z<1}
 // the boss is big, chases the hero and has its own HP bar: anything within 10 m counts (in portrait the screen is only ~4 m wide)
 function bossOnScreen(){return boss.alive&&Math.hypot(boss.x-HERO.pos.x,boss.z-HERO.pos.z)<10}
 function nearest(x,z,maxR,skip){let best=null,bd=maxR*maxR;for(const e of enemies){if(e.dead||(skip&&skip.has(e)))continue;const d=(e.x-x)**2+(e.z-z)**2;if(d<bd&&onScreen(e.x,.4,e.z)){bd=d;best=e}}
@@ -1239,7 +1242,7 @@ function stepWarns(dt){for(const w of warnPool){if(!w.on)continue;w.t+=dt;const 
 let shake=0;
 function hurtHero(dmg,kx,kz){if(G.iframe>0||G.over)return;
   if(G.bellOn){G.bellOn=false;G.iframe=.5;shake=Math.max(shake,.2);fx({p:tmp.set(HERO.pos.x,1,HERO.pos.z),col:0xffd65a,add:true,life:.5,s0:1.5,s1:4,op:.9,vy:0});
-    for(const e of enemies){const dx=e.x-HERO.pos.x,dz=e.z-HERO.pos.z,d=Math.hypot(dx,dz);if(d<2.8){e.x+=dx/(d||1)*2;e.z+=dz/(d||1)*2;hurtEnemy(e,swordDmg()*1.5)}}return}G.hp-=dmg;G.iframe=.7;shake=Math.max(shake,.25);const h=$('#hurt');h.classList.add('on');setTimeout(()=>h.classList.remove('on'),60);
+    for(const e of enemies){const dx=e.x-HERO.pos.x,dz=e.z-HERO.pos.z,d=Math.hypot(dx,dz);if(d<2.8){e.x+=dx/(d||1)*2;e.z+=dz/(d||1)*2;hurtEnemy(e,swordDmg()*1.5)}}return}G.hp-=dmg;G.iframe=.85;shake=Math.max(shake,.25);const h=$('#hurt');h.classList.add('on');setTimeout(()=>h.classList.remove('on'),60);
   if(G.hp<=0){G.hp=0;endNight(false)}}
 
 /* ================= 操作：全畫面拖曳 ================= */
@@ -1298,7 +1301,8 @@ function endNight(win,gaveUp=false){if(G.over)return;G.over=true;G.paused=true;
 renderRealm('#realmText','#realmBar');
 
 /* ================= 主迴圈 ================= */
-function resize(){const w=innerWidth,h=innerHeight;renderer.setSize(w,h,false);camera.aspect=w/h;camera.fov=w/h<.75?42:32;camera.updateProjectionMatrix()}
+// portrait needs a wide angle or the sides of the fight are off screen
+function resize(){const w=innerWidth,h=innerHeight;renderer.setSize(w,h,false);camera.aspect=w/h;camera.fov=w/h<.75?64:36;camera.updateProjectionMatrix()}
 addEventListener('resize',resize);resize();
 let last=performance.now();const camT=new THREE.Vector3(),bubP=new THREE.Vector3();
 mode='idle';
@@ -1314,10 +1318,10 @@ function frame(now){requestAnimationFrame(frame);let dt=Math.min(.05,(now-last)/
   if(bannerT>0){bannerT-=dt;if(bannerT<=0)$('#banner').classList.remove('on')}
   if(sayT>0){sayT-=dt;if(sayT<=0)$('#bubble').classList.remove('on');bubP.copy(lantern.position);bubP.y+=.35;bubP.project(camera);
     const b=$('#bubble');b.style.left=Math.max(120,Math.min(innerWidth-120,(bubP.x*.5+.5)*innerWidth))+'px';b.style.top=((-bubP.y*.5+.5)*innerHeight-8)+'px'}
-  renderer.render(scene,camera)}
+  updateEdges();renderer.render(scene,camera)}
 // camera: high and behind, following the hero (snap = jump straight there, for sim())
 // 視角: 俯視 (high, fixed north-up), 斜視 (lower, fixed), 追尾 (behind the hero, turns with them). camYaw = direction the camera sits in.
-const CAMS=[{n:'俯視',P:.92,D:11.5},{n:'斜視',P:.6,D:9.5},{n:'追尾',P:.4,D:6.8,follow:1}];
+const CAMS=[{n:'俯視',P:.95,D:11},{n:'斜視',P:.68,D:9.5},{n:'追尾',P:.45,D:6.8,follow:1}];
 let camIdx=0,camYaw=0,camP=CAMS[0].P,camD=CAMS[0].D;try{camIdx=+localStorage.getItem('zk-cam')||0}catch(e){}
 function setCam(i){camIdx=i%CAMS.length;try{localStorage.setItem('zk-cam',String(camIdx))}catch(e){}if(G&&!G.over)banner(CAMS[camIdx].n,'視角')}
 let camOverride=0;
@@ -1411,6 +1415,19 @@ function writeInstances(){const lean=-.45*Math.max(0,Math.min(1,(camP-.45)/.45))
   ebMesh.count=ebGlow.count=i;ebMesh.instanceMatrix.needsUpdate=ebGlow.instanceMatrix.needsUpdate=true;
   for(const L of dashPool)if(L.e){L.m.position.set(L.e.x,.03,L.e.z);L.m.material.opacity=.25+.25*Math.sin(G.t*30)}}
 const ELITE=new THREE.Color(1.6,.8,.6);
+// off-screen danger: red arrows on the screen edge for fireballs / winding-up monsters nearby, orange for the boss
+const edgeEls=[];for(let i=0;i<8;i++){const d=document.createElement('div');d.className='edge';$('#edges').appendChild(d);edgeEls.push(d)}
+const ep=new THREE.Vector3();
+function updateEdges(){const th=[];if(G&&!G.paused&&!G.over){if(boss.alive)th.push([boss.x,1.5,boss.z,1]);
+    for(const b of ebs)if((b.x-HERO.pos.x)**2+(b.z-HERO.pos.z)**2<64)th.push([b.x,b.y,b.z,0]);
+    for(const e of enemies)if((e.wind>0||e.leapT>0||(e.t.ranged&&e.cd<.8))&&(e.x-HERO.pos.x)**2+(e.z-HERO.pos.z)**2<64)th.push([e.x,.6,e.z,0])}
+  let n=0;const W=innerWidth,H=innerHeight;
+  for(const [x,y,z,isB] of th){if(n>=edgeEls.length)break;ep.set(x,y,z).project(camera);if(ep.z>1){ep.x=-ep.x;ep.y=-ep.y}
+    if(Math.abs(ep.x)<.97&&Math.abs(ep.y)<.97&&ep.z<1)continue;
+    const k=1/Math.max(Math.abs(ep.x),Math.abs(ep.y)),ex=ep.x*k,ey=ep.y*k,px=(ex*.5+.5)*W,py=(-ey*.5+.5)*H;
+    const el=edgeEls[n++];el.className='edge'+(isB?' boss':'');el.style.display='block';
+    el.style.transform=`translate(${Math.min(W-18,Math.max(18,px))}px,${Math.min(H-18,Math.max(110,py))}px) rotate(${Math.atan2(-ey,ex)}rad)`}
+  for(;n<edgeEls.length;n++)edgeEls[n].style.display='none'}
 requestAnimationFrame(t=>{last=t;frame(t)});
 
 // test hooks (Playwright)
