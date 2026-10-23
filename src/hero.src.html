@@ -39,6 +39,8 @@ h1 .zhan::after{content:"";position:absolute;left:-18%;right:-18%;top:50%;height
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
 .hint{font-size:12px;color:var(--dim);letter-spacing:.2em;text-shadow:0 1px 4px #000;transition:opacity .6s}
 .hint.gone{opacity:0}
+.whorow{display:grid;grid-template-columns:1fr 1fr 1.4fr;gap:6px}
+.big[aria-pressed="true"]{border-color:var(--jade);color:var(--jade);background:rgba(127,227,198,.12)}
 .panel{width:100%;max-width:520px;box-sizing:border-box;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:10px;
   display:grid;gap:8px;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
 .seg{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
@@ -65,7 +67,7 @@ h1 .zhan::after{content:"";position:absolute;left:-18%;right:-18%;top:50%;height
 body.editing .sheet{display:grid}
 body.editing .panel.main,body.editing .hint{display:none}
 body.editing .top{opacity:0;pointer-events:none}
-.ftabs{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.ftabs{display:grid;grid-template-columns:repeat(8,1fr);gap:3px}
 .ftabs button{padding:0 2px!important;font-size:13px!important;letter-spacing:.04em!important}
 .ftabs::-webkit-scrollbar{display:none}
 .ftabs button,.opts button{all:unset;box-sizing:border-box;flex:0 0 auto;cursor:pointer;padding:0 13px;min-height:36px;display:grid;place-items:center;border-radius:999px;
@@ -99,7 +101,7 @@ body.editing .top{opacity:0;pointer-events:none}
   <h1 id="title" aria-label="午夜來斬妖">
     <span style="--r:-5deg;--i:0">午</span><span style="--r:3deg;--i:1">夜</span><span style="--r:-2deg;--i:2">來</span><span class="zhan" style="--r:6deg;--i:3">斬</span><span style="--r:-4deg;--i:4">妖</span>
   </h1>
-  <div class="sub">煉氣一層・小道士　主角試做 v0.10</div>
+  <div class="sub">煉氣一層・小道士　主角試做 v0.11</div>
   <div class="fonts" role="group" aria-label="標題字體">
     <small>標題字體</small>
     <button class="chip" data-font="TPotta" aria-pressed="true">墨團</button>
@@ -128,7 +130,7 @@ body.editing .top{opacity:0;pointer-events:none}
     </div>
   </div>
   <div class="panel main">
-    <button class="big" id="fedit">✦ 捏臉　調整五官</button>
+    <div class="whorow"><button class="big" data-who="0">女主角</button><button class="big" data-who="1">男主角</button><button class="big" id="fedit">✦ 捏臉</button></div>
     <div class="seg" role="group" aria-label="動作">
       <button data-mode="idle" aria-pressed="true">負手</button>
       <button data-mode="walk" aria-pressed="false">行走</button>
@@ -288,12 +290,12 @@ const MARKS=[null,'rgba(120,190,200,.45)','rgba(196,52,44,.8)'];
 // t: s=只改頭部縮放, g=頭型幾何, x=臉部貼圖（g/x 可併用）
 const FACE_SPEC=[
  {tab:'臉型',items:[
-  {k:'headH',n:'頭高（短↔長）',min:0.69,max:0.93,step:.005,span:0.24,def:0.81,t:'s'},
-  {k:'headS',n:'頭大小',min:0.945,max:1.245,step:.005,span:0.3,def:1.095,t:'s'},
-  {k:'faceW',n:'臉寬',min:0.5,max:0.8,step:.005,span:0.3,def:0.625,t:'s'},
-  {k:'foreW',n:'額頭寬',min:-0.02,max:0.1,step:.005,span:0.12,def:0.04,t:'g'},
+  {k:'headH',n:'頭高（短↔長）',min:0.635,max:0.875,step:.005,span:0.24,def:0.755,t:'s'},
+  {k:'headS',n:'頭大小',min:0.97,max:1.27,step:.005,span:0.3,def:1.12,t:'s'},
+  {k:'faceW',n:'臉寬',min:0.5,max:0.8,step:.005,span:0.3,def:0.64,t:'s'},
+  {k:'foreW',n:'額頭寬',min:-0.015,max:0.105,step:.005,span:0.12,def:0.045,t:'g'},
   {k:'cheekW',n:'顴骨寬',min:-0.185,max:0.215,step:.005,span:0.4,def:0.015,t:'g'},
-  {k:'jawW',n:'下頜寬',min:-0.13,max:0.31,step:.005,span:0.44,def:0.09,t:'g'},
+  {k:'jawW',n:'下頜寬',min:-0.065,max:0.375,step:.005,span:0.44,def:0.155,t:'g'},
   {k:'chinW',n:'下巴（尖↔圓）',min:-0.91,max:-0.27,step:.01,span:0.64,def:-0.59,t:'g'},
   {k:'chinR',n:'整個下巴圓潤',min:0.5,max:1.5,step:.05,span:1,def:1,t:'g'},
   {k:'lowerLen',n:'下巴長',min:-0.1,max:0.12,step:.005,span:0.22,def:-0.015,t:'g'},
@@ -305,54 +307,65 @@ const FACE_SPEC=[
   {k:'browBone',n:'眉骨',min:0.95,max:2.95,step:.05,span:2,def:1.95,t:'g'}]},
  {tab:'眼睛',items:[
   {k:'eyeSp',n:'眼距',min:51,max:71,step:1,span:20,def:61,t:'gx'},
-  {k:'eyeUp',n:'眼位高低',min:-29,max:3,step:1,span:32,def:-13,t:'gx'},
-  {k:'eyeSize',n:'眼睛大小',min:0.79,max:1.43,step:.01,span:0.65,def:1.11,t:'gx'},
-  {k:'eyeOpen',n:'眼睛開合',min:0.61,max:1.41,step:.01,span:0.8,def:1.01,t:'x'},
-  {k:'eyeTilt',n:'眼尾上揚',min:-18.5,max:15.5,step:.5,span:34,def:-1.5,t:'x'},
+  {k:'eyeUp',n:'眼位高低',min:-19,max:13,step:1,span:32,def:-3,t:'gx'},
+  {k:'eyeSize',n:'眼睛大小',min:0.89,max:1.53,step:.01,span:0.65,def:1.21,t:'gx'},
+  {k:'eyeOpen',n:'眼睛開合',min:0.7,max:1.5,step:.01,span:0.8,def:1.1,t:'x'},
+  {k:'eyeTilt',n:'眼尾上揚',min:-19.5,max:14.5,step:.5,span:34,def:-2.5,t:'x'},
   {k:'irisS',n:'瞳孔大小',min:0.73,max:1.43,step:.01,span:0.7,def:1.08,t:'x'},
-  {k:'iris',n:'瞳色',opts:['墨褐','墨黑','青碧','琥珀','紫霧'],def:4,t:'x'},
-  {k:'lash',n:'上眼線粗細',min:0.5,max:3.9,step:.1,span:3.5,def:1.5,t:'x'},
-  {k:'shadow',n:'眼影',min:0,max:2.4,step:.1,span:2.5,def:0.8,t:'x'}]},
+  {k:'iris',n:'瞳色',opts:['墨褐','墨黑','青碧','琥珀','紫霧'],def:1,t:'x'},
+  {k:'lashes',n:'睫毛量',min:0,max:2,step:.05,span:2,def:1,t:'x'},
+  {k:'lash',n:'上眼線粗細',min:0.6,max:4,step:.1,span:3.5,def:2.3,t:'x'},
+  {k:'shadow',n:'眼影',min:1.2,max:3.6,step:.1,span:2.5,def:2.4,t:'x'}]},
  {tab:'眉毛',items:[
-  {k:'browUp',n:'眉位高低',min:-25,max:-3,step:1,span:22,def:-14,t:'x'},
-  {k:'browLen',n:'眉長',min:0.76,max:1.66,step:.01,span:0.9,def:1.21,t:'x'},
-  {k:'browThick',n:'眉粗細',min:3.4,max:7.6,step:.1,span:4.2,def:5.5,t:'x'},
-  {k:'browArch',n:'眉弧度',min:2.5,max:13.5,step:.5,span:11,def:8,t:'x'},
-  {k:'browTail',n:'眉尾上揚',min:-16.5,max:1.5,step:.5,span:18,def:-7.5,t:'x'},
-  {k:'browDark',n:'眉色濃淡',min:0.1,max:1.8,step:.05,span:1.7,def:0.9,t:'x'}]},
+  {k:'browUp',n:'眉位高低',min:-24,max:-2,step:1,span:22,def:-13,t:'x'},
+  {k:'browLen',n:'眉長',min:0.88,max:1.78,step:.01,span:0.9,def:1.33,t:'x'},
+  {k:'browThick',n:'眉粗細',min:2.6,max:6.8,step:.1,span:4.2,def:4.7,t:'x'},
+  {k:'browArch',n:'眉弧度',min:1.5,max:12.5,step:.5,span:11,def:7,t:'x'},
+  {k:'browTail',n:'眉尾上揚',min:-18,max:0,step:.5,span:18,def:-9,t:'x'},
+  {k:'browDark',n:'眉色濃淡',min:0.1,max:1.8,step:.05,span:1.7,def:0.7,t:'x'}]},
  {tab:'鼻子',items:[
-  {k:'noseUp',n:'鼻頭位置',min:-8,max:8,step:1,span:16,def:0,t:'gx'},
-  {k:'noseH',n:'鼻樑高度',min:0.2,max:3.9,step:.05,span:3.7,def:2.05,t:'g'},
-  {k:'noseTipP',n:'鼻頭突出',min:0,max:4,step:.1,span:4,def:1.2,t:'g'},
-  {k:'noseW',n:'鼻翼寬',min:0.75,max:2.25,step:.05,span:1.5,def:1.5,t:'gx'}]},
+  {k:'noseUp',n:'鼻頭位置',min:-6,max:10,step:1,span:16,def:2,t:'gx'},
+  {k:'noseH',n:'鼻樑高度',min:0,max:3.7,step:.05,span:3.7,def:1.35,t:'g'},
+  {k:'noseTipP',n:'鼻頭突出',min:0,max:4,step:.1,span:4,def:0.9,t:'g'},
+  {k:'noseW',n:'鼻翼寬',min:0.85,max:2.35,step:.05,span:1.5,def:1.6,t:'gx'}]},
  {tab:'嘴唇',items:[
   {k:'lipUp',n:'唇位置',min:-21,max:5,step:1,span:26,def:-8,t:'gx'},
-  {k:'lipW',n:'唇寬',min:1.8,max:3.48,step:.02,span:1.7,def:2.64,t:'gx'},
-  {k:'lipThick',n:'唇厚',min:0.95,max:3.35,step:.05,span:2.4,def:2.15,t:'gx'},
-  {k:'lipCorner',n:'嘴角上揚',min:-4.5,max:11.5,step:.5,span:16,def:3.5,t:'x'},
-  {k:'lipStyle',n:'唇形',opts:['自然','櫻桃','花瓣','微笑','薄唇','咬唇'],def:0,t:'gx'},
+  {k:'lipW',n:'唇寬',min:2.64,max:4.32,step:.02,span:1.7,def:3.48,t:'gx'},
+  {k:'lipThick',n:'唇厚',min:0.6,max:3,step:.05,span:2.4,def:1.8,t:'gx'},
+  {k:'lipCorner',n:'嘴角上揚',min:-2.5,max:13.5,step:.5,span:16,def:5.5,t:'x'},
+  {k:'lipStyle',n:'唇形',opts:['自然','櫻桃','花瓣','微笑','薄唇','咬唇'],def:3,t:'gx'},
   {k:'expr',n:'表情',opts:['平常','喜','怒','哀','樂','吶喊'],def:0,t:'x'},
   {k:'lipC',n:'唇色',opts:['朱砂','淡櫻','絳紅','裸粉'],def:0,t:'x'}]},
  {tab:'膚妝',items:[
   {k:'skin',n:'膚色',opts:['自然','瓷白','暖玉','小麥'],def:2,t:'x'},
-  {k:'blush',n:'腮紅',min:0.5,max:4.5,step:.1,span:4,def:2.5,t:'x'},
-  {k:'contour',n:'輪廓陰影',min:0.5,max:3.5,step:.1,span:3,def:2,t:'x'},
+  {k:'blush',n:'腮紅',min:2.5,max:6.5,step:.1,span:4,def:4.5,t:'x'},
+  {k:'contour',n:'輪廓陰影',min:0,max:3,step:.1,span:3,def:1.1,t:'x'},
   {k:'mark',n:'額間印記',opts:['無','青','朱'],def:0,t:'x'}]},
+ {tab:'髮型',items:[
+  {k:'hairStyle',n:'髮型',opts:['道冠垂髮','高馬尾','雙髻','披髮','束髮'],def:0,t:'h'},
+  {k:'bangs',n:'瀏海',opts:['中分','齊瀏海','側分','無'],def:0,t:'h'}]},
  {tab:'身形',cam:'body',items:[
   {k:'height',n:'整體身高',min:0.52,max:0.82,step:.005,span:0.3,def:0.67,t:'b'},
-  {k:'legLen',n:'下半身長',min:0.44,max:0.9,step:.005,span:0.46,def:0.67,t:'b'},
-  {k:'torsoLen',n:'上身長',min:0.56,max:0.96,step:.005,span:0.4,def:0.76,t:'b'},
-  {k:'neckLen',n:'脖子長',min:0.2,max:1,step:.01,span:0.8,def:0.46,t:'b'},
-  {k:'shoulderW',n:'肩寬',min:0.405,max:0.905,step:.005,span:0.5,def:0.655,t:'b'},
+  {k:'legLen',n:'下半身長',min:0.495,max:0.955,step:.005,span:0.46,def:0.725,t:'b'},
+  {k:'torsoLen',n:'上身長',min:0.4,max:0.8,step:.005,span:0.4,def:0.56,t:'b'},
+  {k:'neckLen',n:'脖子長',min:0.2,max:1,step:.01,span:0.8,def:0.49,t:'b'},
+  {k:'shoulderW',n:'肩寬',min:0.655,max:1.155,step:.005,span:0.5,def:0.905,t:'b'},
   {k:'shoulderDrop',n:'溜肩',min:0,max:1,step:.05,span:1,def:0.4,t:'b'},
   {k:'bodyW',n:'身材胖瘦',min:0.45,max:1.05,step:.005,span:0.6,def:0.75,t:'b'},
   {k:'handS',n:'手大小',min:1,max:1.8,step:.01,span:.8,def:1.4,t:'b'},
   {k:'armLen',n:'手臂長',min:0.7,max:1,step:.005,span:0.3,def:0.85,t:'b'}]}];
 // t: b=身形（applyBody 重排身體各部件）
-const FACE_DEF={};FACE_SPEC.forEach(s=>s.items.forEach(i=>{FACE_DEF[i.k]=i.def}));
-const FACE_HASH=JSON.stringify(FACE_DEF),FACE_KEY='zk-face-v1';
-const F=Object.assign({},FACE_DEF);
-try{const s=JSON.parse(localStorage.getItem(FACE_KEY)||'null');if(s&&s.h===FACE_HASH&&s.f)Object.keys(FACE_DEF).forEach(k=>{if(typeof s.f[k]==='number')F[k]=s.f[k]})}catch(e){}
+// 角色: FACE_SPEC holds the 女主角 ranges/defaults; MALE overrides them per key as [min,max,def] (tools/set_face.py writes both)
+const MALE={"headH":[0.78,1.02,0.9],"headS":[0.85,1.15,1.0],"faceW":[0.65,0.95,0.8],"foreW":[0.0,0.12,0.06],"cheekW":[-0.08,0.32,0.12],"jawW":[0.04,0.48,0.26],"chinW":[-0.42,0.22,-0.1],"chinR":[-0.2,0.8,0.3],"lowerLen":[-0.01,0.21,0.1],"flat":[0,0.68,0.2],"cheekFull":[-2.0,0.0,-1],"cheekLow":[-0.13,0.17,0.02],"cheekHollow":[0.0,3.0,1.5],"cheekApple":[-1.3,0.7,-0.3],"browBone":[1.2,3.2,2.2],"eyeSp":[51.0,71.0,61],"eyeUp":[-22.0,10.0,-6],"eyeSize":[0.68,1.32,1.0],"eyeOpen":[0.5,1.3,0.88],"eyeTilt":[-12.0,22.0,5],"irisS":[0.65,1.35,1.0],"iris":[0,0,1],"lashes":[-0.7,1.3,0.3],"lash":[0.9,4.3,2.6],"shadow":[0,2.4,0.5],"browUp":[-17.0,5.0,-6],"browLen":[0.9,1.8,1.35],"browThick":[3.4,7.6,5.5],"browArch":[0,11.0,3],"browTail":[-4.0,14.0,5],"browDark":[0.45,2.15,1.3],"noseUp":[-8.0,8.0,0],"noseH":[0.05,3.75,1.9],"noseTipP":[0,4.0,0.8],"noseW":[0.55,2.05,1.3],"lipUp":[-21.0,5.0,-8],"lipW":[1.66,3.34,2.5],"lipThick":[0.3,2.7,1.2],"lipCorner":[-7.0,9.0,1],"lipStyle":[0,0,4],"expr":[0,0,0],"lipC":[0,0,3],"skin":[0,0,2],"blush":[0,4.0,0.6],"contour":[0.1,3.1,1.6],"mark":[0,0,0],"hairStyle":[0,0,4],"bangs":[0,0,3],"height":[0.61,0.91,0.76],"legLen":[0.53,0.99,0.76],"torsoLen":[0.46,0.86,0.66],"neckLen":[0.32,1.12,0.72],"shoulderW":[0.75,1.25,1.0],"shoulderDrop":[0,1.0,0.2],"bodyW":[0.54,1.14,0.84],"handS":[1.05,1.85,1.45],"armLen":[0.75,1.05,0.9]};
+const CHARS=[{n:'女主角',key:'zk-face-v1'},{n:'男主角',key:'zk-face-m1',ov:MALE}];
+const SPEC0={};FACE_SPEC.forEach(s=>s.items.forEach(i=>{SPEC0[i.k]=[i.min,i.max,i.def]}));
+const FACE_DEF={},F={};let FACE_HASH='',FACE_KEY='',who=0;
+try{who=+localStorage.getItem('zk-who')===1?1:0}catch(e){}
+function useChar(c){who=c;const ov=CHARS[c].ov||{};
+  FACE_SPEC.forEach(s=>s.items.forEach(i=>{const v=ov[i.k]||SPEC0[i.k];if(!i.opts){i.min=v[0];i.max=v[1]}i.def=v[2];FACE_DEF[i.k]=v[2]}));
+  FACE_HASH=JSON.stringify(FACE_DEF);FACE_KEY=CHARS[c].key;Object.assign(F,FACE_DEF);
+  try{const s=JSON.parse(localStorage.getItem(FACE_KEY)||'null');if(s&&s.h===FACE_HASH&&s.f)Object.keys(FACE_DEF).forEach(k=>{if(typeof s.f[k]==='number')F[k]=s.f[k]})}catch(e){}}
+useChar(who);
 
 // face: painted at 2x resolution on the head's UV (front of the head is u=.25)
 const drawFace=(x,w,h)=>{x.scale(2,2);
@@ -418,11 +431,11 @@ const drawFace=(x,w,h)=>{x.scale(2,2);
     x.fillStyle='rgba(255,255,255,.6)';x.beginPath();x.arc(d*4.5,5.5,1.1,0,7);x.fill();
     x.restore();
     x.fillStyle='rgba(214,140,136,.6)';x.beginPath();x.ellipse(-d*18.5,2.5,1.6,1.2,0,0,7);x.fill();
-    x.strokeStyle='#1a1013';x.lineCap='round';x.lineJoin='round';x.lineWidth=F.lash;x.beginPath();lid();x.quadraticCurveTo(d*25,-6,d*28.5,-8.5);x.stroke();
-    x.lineWidth=.9;for(let k=0;k<6;k++){const t=.45+k*.1,px=d*(-19+40*t),py=-9.5+Math.pow(2*t-1,2)*6;x.beginPath();x.moveTo(px,py);x.lineTo(px+d*(2+k*.7),py-3.2-k*.3);x.stroke()}
+    x.strokeStyle='#1a1013';x.lineCap='round';x.lineJoin='round';x.lineWidth=F.lash;x.beginPath();lid();const wl=Math.min(1,F.lashes);x.quadraticCurveTo(d*(21+4*wl),-4-2*wl,d*(21+7.5*wl),-4-4.5*wl);x.stroke();
+    x.lineWidth=.9;const la=F.lashes;for(let k=0;k<6&&la>.05;k++){const t=.45+k*.1,px=d*(-19+40*t),py=-9.5+Math.pow(2*t-1,2)*6;x.beginPath();x.moveTo(px,py);x.lineTo(px+d*(2+k*.7)*la,py-(3.2+k*.3)*la);x.stroke()}
     x.strokeStyle='rgba(100,56,50,.5)';x.lineWidth=1;x.beginPath();x.moveTo(-d*13,-11.5);x.bezierCurveTo(-d*2,-16.5,d*12,-15.5,d*22,-10.5);x.stroke();
     x.strokeStyle='rgba(70,36,34,.4)';x.lineWidth=.9;x.beginPath();x.moveTo(-d*8,7.6);x.quadraticCurveTo(d*8,8.4,d*19,2.5);x.stroke();
-    for(let k=0;k<3;k++){const px=d*(8+k*4);x.beginPath();x.moveTo(px,7.2-k*1.2);x.lineTo(px+d*1.2,9.4-k*1.2);x.stroke()}
+    for(let k=0;k<3&&la>.05;k++){const px=d*(8+k*4);x.beginPath();x.moveTo(px,7.2-k*1.2);x.lineTo(px+d*1.2*la,7.2-k*1.2+2.2*la);x.stroke()}
     if(E.tear){x.fillStyle='rgba(200,230,255,.55)';x.beginPath();x.ellipse(-d*8,10.5,5,1.2,d*.1,0,7);x.fill()}
     x.restore()}
     x.lineCap='round';
@@ -574,26 +587,47 @@ function fringeGeo(R,sx,sy,sz){const W=18,H=8,ph0=Math.PI/2-1.42,phL=2.84,th0=Ma
 part(fringeGeo(HR,...HS),M.hairDS,headG,{p:[0,.006,-.002]});
 // hair strands: layered ribbon cards with strand texture
 const onHead=(pol,a,rr=1)=>V(Math.sin(a)*Math.sin(pol*Math.PI)*HR*rr*HS[0],Math.cos(pol*Math.PI)*HR*rr*HS[1]+.006,Math.cos(a)*Math.sin(pol*Math.PI)*HR*rr*HS[2]);
+let strandTo=null;// hair parts that change with 髮型 go into hairVar
 function strand(pts,w0,w1){const c=new THREE.CatmullRomCurve3(pts),N=22,pos=[],uv=[],idx=[],tg=new THREE.Vector3(),nr=new THREE.Vector3(),sd=new THREE.Vector3();
   for(let i=0;i<=N;i++){const t=i/N,p=c.getPoint(t);c.getTangent(t,tg);nr.copy(p).sub(V(0,-.01,-.01)).normalize();sd.crossVectors(tg,nr).normalize();
     const w=(w0+(w1-w0)*Math.pow(t,1.3))*.5;pos.push(p.x-sd.x*w,p.y-sd.y*w,p.z-sd.z*w,p.x+sd.x*w,p.y+sd.y*w,p.z+sd.z*w);uv.push(0,1-t,1,1-t)}
   for(let i=0;i<N;i++){const a=i*2;idx.push(a,a+2,a+1,a+1,a+2,a+3)}
   const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));g.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));g.setIndex(idx);g.computeVertexNormals();
-  headG.add(new THREE.Mesh(g,M.hairCard))}
+  (strandTo||headG).add(new THREE.Mesh(g,M.hairCard))}
 const knot=V(0,.122,-.04);
 for(let k=0;k<20;k++){const a=-1.45+2.9*k/19;strand([onHead(.29,a,1.02),onHead(.2,a*.8,1.045),onHead(.11,a*.5,1.06),knot],.05,.026)}
 for(let k=0;k<14;k++){const a=Math.PI+(-1.25+2.5*k/13);strand([onHead(.62,a,1.03),onHead(.45,a,1.05),onHead(.27,a*.95+Math.PI*.05,1.06),knot],.055,.028)}
-[-1,1].forEach(d=>{for(let j=0;j<5;j++){strand([onHead(.19,d*.03,1.05),onHead(.31,d*(.18+.12*j),1.07),onHead(.43+.03*j,d*(.45+.17*j),1.085),onHead(.53+.04*j,d*(.72+.16*j),1.07)],.05-.004*j,.012)}
+// 髮型: what sits on top, whether long hair hangs down (long = width factor), ponytail, side locks (count, length)
+const HAIRS=[{crown:'gold',long:1,locks:8,lockLen:1,hb:1},{crown:'tie',pony:1,locks:4,lockLen:.8,hb:1},{crown:'buns',locks:4,lockLen:.7,buns:1},
+  {crown:'pin',long:1.35,locks:10,lockLen:1.6},{crown:'gold',locks:2,lockLen:.6,hb:1}];
+const hairVar=new THREE.Group();headG.add(hairVar);
+function buildHair(){
+  hairVar.traverse(o=>{if(o.geometry)o.geometry.dispose()});hairVar.clear();strandTo=hairVar;
+  const H=HAIRS[F.hairStyle]||HAIRS[0];
+  // bangs
+  if(F.bangs===0)[-1,1].forEach(d=>{for(let j=0;j<5;j++)strand([onHead(.19,d*.03,1.05),onHead(.31,d*(.18+.12*j),1.07),onHead(.43+.03*j,d*(.45+.17*j),1.085),onHead(.53+.04*j,d*(.72+.16*j),1.07)],.05-.004*j,.012)});
+  if(F.bangs===1)for(let j=0;j<11;j++){const a=-.62+1.24*j/10,l=.38+.012*Math.sin(j*2.1);strand([onHead(.15,a*.4,1.05),onHead(.27,a*.85,1.075),onHead(l,a,1.085)],.07,.03)}
+  if(F.bangs===2)for(let j=0;j<7;j++){const a0=.32,a=.25-.16*j;strand([onHead(.17,a0,1.05),onHead(.29,a0-.25-.08*j,1.075),onHead(.41+.02*j,a-.25,1.085),onHead(.5+.03*j,a-.55-.06*j,1.07)],.055-.003*j,.012)}
   // side locks: thin tapered strands, staggered lengths, curving in along the cheek and flicking out at the tips
-  for(let j=0;j<8;j++){const a=d*(.96+.075*j),w=Math.sin(j*2.3+d),len=.12+.035*(j%3)+.01*w,s0=onHead(.4+.012*(j%2),a,1.05),s1=onHead(.56,a+d*.05,1.065);
+  [-1,1].forEach(d=>{for(let j=0;j<H.locks;j++){const a=d*(.96+.6*j/Math.max(1,H.locks-1)),w=Math.sin(j*2.3+d),len=(.12+.035*(j%3)+.01*w)*H.lockLen,s0=onHead(.4+.012*(j%2),a,1.05),s1=onHead(.56,a+d*.05,1.065);
     strand([s0,s1,V(s1.x-d*(.008+.003*w),s1.y-len*.45,s1.z+.006),V(s1.x-d*.006,s1.y-len*.8,s1.z-.002-j*.002),V(s1.x+d*(.006+.004*(j%2)),s1.y-len,s1.z-.008-j*.003)],.032-.0015*(j%3),.004)}});
-// top knot, crown, pin
-part(new THREE.SphereGeometry(.05,20,16),M.hair,headG,{p:[0,.128,-.035]});
-part(new THREE.CylinderGeometry(.036,.047,.046,18),M.gold,headG,{p:[0,.152,-.035],r:[-.2,0,0]});
-part(new THREE.BoxGeometry(.03,.034,.01),M.jade,headG,{p:[0,.158,.0],r:[-.2,0,0]});
-part(new THREE.CylinderGeometry(.006,.006,.2,8),M.gold,headG,{p:[0,.155,-.035],r:[0,0,Math.PI/2]});
-part(new THREE.SphereGeometry(.011,10,8),M.jade,headG,{p:[.1,.155,-.035]});
+  strandTo=null;
+  // top: knot, then crown / ribbon tie / hairpin / twin buns
+  part(new THREE.SphereGeometry(H.buns?.018:.05,20,16),M.hair,hairVar,{p:[0,.122,-.035]});
+  if(H.crown==='gold'){part(new THREE.CylinderGeometry(.036,.047,.046,18),M.gold,hairVar,{p:[0,.152,-.035],r:[-.2,0,0]});
+    part(new THREE.BoxGeometry(.03,.034,.01),M.jade,hairVar,{p:[0,.158,.0],r:[-.2,0,0]})}
+  if(H.crown==='gold'||H.crown==='pin'){part(new THREE.CylinderGeometry(.006,.006,.2,8),M.gold,hairVar,{p:[0,.155,-.035],r:[0,0,Math.PI/2]});
+    part(new THREE.SphereGeometry(.011,10,8),M.jade,hairVar,{p:[.1,.155,-.035]})}
+  if(H.crown==='tie'){part(new THREE.SphereGeometry(.046,18,14),M.hair,hairVar,{p:[0,.15,-.06],s:[1,.9,1.1]});
+    part(new THREE.TorusGeometry(.03,.009,8,20),M.ribbon,hairVar,{p:[0,.15,-.1],r:[.3,0,0]})}
+  if(H.buns)[-1,1].forEach(d=>{part(new THREE.SphereGeometry(.042,18,14),M.hair,hairVar,{p:[d*.072,.112,-.03]});
+    part(new THREE.TorusGeometry(.03,.007,8,20),M.ribbon,hairVar,{p:[d*.072,.1,-.03],r:[Math.PI/2+.4,d*.5,0]})});
+  // which hanging ropes are live
+  if(typeof ropes!=='undefined')for(const r of ropes){const k=r.hairRole;if(!k)continue;
+    r.off=!(k==='long'&&H.long||k==='pony'&&H.pony||k==='hb'&&H.hb||k==='bun'&&H.buns);r.mesh.visible=!r.off;r.ok=false;r.styleW=k==='long'?H.long||1:1}
+  scaleRopes()}
 anchor('hb1',headG,.04,.15,-.06);anchor('hb2',headG,-.04,.15,-.06);
+anchor('pony',headG,0,.14,-.11);anchor('bunL',headG,.072,.08,-.05);anchor('bunR',headG,-.072,.08,-.05);
 anchor('hairA',headG,.03,.0,-.11);anchor('hairB',headG,-.03,.0,-.11);anchor('hairC',headG,.06,-.04,-.095);anchor('hairD',headG,-.06,-.04,-.095);anchor('hairE',headG,0,-.06,-.1);
 
 // sword on the back
@@ -698,13 +732,17 @@ class Drape{
   build(){const pa=this.pa;this.p.forEach((v,i)=>{pa[i*3]=v.x;pa[i*3+1]=v.y;pa[i*3+2]=v.z});this.geo.attributes.position.needsUpdate=true;this.geo.computeVertexNormals();this.geo.computeBoundingSphere()}}
 
 const ropes=[
-  new Rope({anchor:A.hairE,n:12,seg:.058,w0:.17,w1:.07,grav:-15,flut:.06,damp:.9,mat:M.hairCard,kind:'hair'}),
-  new Rope({anchor:A.hairA,n:12,seg:.06,w0:.1,w1:.035,grav:-15,flut:.07,damp:.9,mat:M.hairCard,kind:'hair'}),
-  new Rope({anchor:A.hairB,n:12,seg:.06,w0:.1,w1:.035,grav:-15,flut:.07,damp:.9,mat:M.hairCard,kind:'hair'}),
-  new Rope({anchor:A.hairC,n:11,seg:.058,w0:.08,w1:.025,grav:-15,flut:.09,damp:.9,mat:M.hairCard,kind:'hair'}),
-  new Rope({anchor:A.hairD,n:11,seg:.058,w0:.08,w1:.025,grav:-15,flut:.09,damp:.9,mat:M.hairCard,kind:'hair'}),
-  new Rope({anchor:A.hb1,n:12,seg:.06,w0:.026,w1:.022,grav:-5,flut:.45,damp:.92,twist:.7,kind:'ribbon'}),
-  new Rope({anchor:A.hb2,n:12,seg:.06,w0:.026,w1:.022,grav:-5,flut:.45,damp:.92,twist:.7,kind:'ribbon'}),
+  new Rope({anchor:A.pony,n:12,seg:.058,w0:.11,w1:.04,grav:-15,flut:.08,damp:.9,mat:M.hairCard,kind:'hair',hairRole:'pony'}),
+  new Rope({anchor:A.pony,n:11,seg:.056,w0:.07,w1:.025,grav:-15,flut:.1,damp:.9,mat:M.hairCard,kind:'hair',hairRole:'pony'}),
+  new Rope({anchor:A.bunL,n:8,seg:.05,w0:.022,w1:.018,grav:-5,flut:.45,damp:.92,twist:.7,kind:'ribbon',hairRole:'bun'}),
+  new Rope({anchor:A.bunR,n:8,seg:.05,w0:.022,w1:.018,grav:-5,flut:.45,damp:.92,twist:.7,kind:'ribbon',hairRole:'bun'}),
+  new Rope({anchor:A.hairE,n:12,seg:.058,w0:.17,w1:.07,grav:-15,flut:.06,damp:.9,mat:M.hairCard,kind:'hair',hairRole:'long'}),
+  new Rope({anchor:A.hairA,n:12,seg:.06,w0:.1,w1:.035,grav:-15,flut:.07,damp:.9,mat:M.hairCard,kind:'hair',hairRole:'long'}),
+  new Rope({anchor:A.hairB,n:12,seg:.06,w0:.1,w1:.035,grav:-15,flut:.07,damp:.9,mat:M.hairCard,kind:'hair',hairRole:'long'}),
+  new Rope({anchor:A.hairC,n:11,seg:.058,w0:.08,w1:.025,grav:-15,flut:.09,damp:.9,mat:M.hairCard,kind:'hair',hairRole:'long'}),
+  new Rope({anchor:A.hairD,n:11,seg:.058,w0:.08,w1:.025,grav:-15,flut:.09,damp:.9,mat:M.hairCard,kind:'hair',hairRole:'long'}),
+  new Rope({anchor:A.hb1,n:12,seg:.06,w0:.026,w1:.022,grav:-5,flut:.45,damp:.92,twist:.7,kind:'ribbon',hairRole:'hb'}),
+  new Rope({anchor:A.hb2,n:12,seg:.06,w0:.026,w1:.022,grav:-5,flut:.45,damp:.92,twist:.7,kind:'ribbon',hairRole:'hb'}),
   new Rope({anchor:A.sashL,n:15,seg:.066,w0:.05,w1:.03,grav:-5.5,flut:.5,damp:.92,twist:.9,kind:'ribbon'}),
   new Rope({anchor:A.sashR,n:15,seg:.066,w0:.05,w1:.03,grav:-5.5,flut:.5,damp:.92,twist:.9,kind:'ribbon'}),
   new Rope({anchor:A.pommel,n:6,seg:.04,w0:.03,w1:.012,grav:-6,flut:.4,mat:M.red}),
@@ -825,9 +863,9 @@ function frame(now){requestAnimationFrame(frame);let dt=Math.min(.05,(now-last)/
   flyTrail.push(A.flyTail.getWorldPosition(tmp3));flyTrail.build(swordVis*.85);
   // soft bodies
   wind.copy(HERO.vel).multiplyScalar(-(mode==='fly'?2.6:1.2));wind.y=mode==='fly'?1.5:0;
-  acc+=dt;let steps=0;while(acc>=STEP&&steps<3){ropes.forEach(r=>r.step(STEP,clock,wind));drapes.forEach(d=>d.step(STEP,clock,wind));acc-=STEP;steps++}
+  acc+=dt;let steps=0;while(acc>=STEP&&steps<3){ropes.forEach(r=>{if(!r.off)r.step(STEP,clock,wind)});drapes.forEach(d=>d.step(STEP,clock,wind));acc-=STEP;steps++}
   if(steps===3)acc=0;
-  ropes.forEach(r=>r.build());drapes.forEach(d=>d.build());
+  ropes.forEach(r=>{if(!r.off)r.build()});drapes.forEach(d=>d.build());
   // world ambience
   fogs.forEach((m,i)=>{m.rotation.z+=m.userData.s*dt;m.position.x+=Math.sin(clock*.1+i)*.002});
   wisps.forEach(s=>{const u=s.userData;s.position.set(u.b.x+Math.sin(clock*.4+u.p)*.4,u.b.y+Math.sin(clock*.9+u.p)*.25,u.b.z+Math.cos(clock*.35+u.p)*.4);s.material.opacity=.55+Math.sin(clock*2+u.p)*.35});
@@ -854,7 +892,7 @@ const smb=(a,b,v)=>{const t=Math.min(1,Math.max(0,(v-a)/(b-a)));return t*t*(3-2*
 const slope=(x,y)=>-.05*F.shoulderDrop*smb(.05,.17,Math.abs(x))*smb(1.28*K,1.42*K,y);// 溜肩: lower the outer shoulder line
 function remapLathe(src,dst){for(let i=0;i<src.length;i+=3){const x=src[i],y=src[i+1];dst[i]=x*bodyX(y);dst[i+1]=bodyY0(y)+slope(x,y);dst[i+2]=src[i+2]*F.bodyW}}
 function scaleRopes(){const hw=F.height*F.headS*F.faceW;
-  for(const r of ropes){if(!r.kind)continue;const b=r.base,w=r.kind==='hair'?hw:F.height;r.seg=b.seg*.75*F.height;r.w0=b.w0*w;r.w1=b.w1*w}}
+  for(const r of ropes){if(!r.kind)continue;const b=r.base,w=(r.kind==='hair'?hw:F.height)*(r.styleW||1);r.seg=b.seg*.75*F.height;r.w0=b.w0*w;r.w1=b.w1*w}}
 function applyBody(){
   armL.hand.scale.setScalar(F.handS);armR.hand.scale.setScalar(F.handS);
   body.scale.setScalar(F.height);scaleRopes();
@@ -877,17 +915,17 @@ function applyFace(dirty){
   if(dirty.g)shapeHead();
   if(dirty.x){redraw(faceTex,drawFace);skinFromFace()}}
 const saveFace=()=>{try{localStorage.setItem(FACE_KEY,JSON.stringify({h:FACE_HASH,f:F}))}catch(e){}};
-let fdirty={g:0,x:0,b:0},ftimer=0;
+let fdirty={g:0,x:0,b:0,h:0},ftimer=0;
 function faceChanged(it){
-  if(it.t.includes('g'))fdirty.g=1;if(it.t.includes('x'))fdirty.x=1;if(it.t.includes('b'))fdirty.b=1;
-  if(!ftimer)ftimer=setTimeout(()=>{ftimer=0;const d=fdirty;fdirty={g:0,x:0,b:0};applyFace(d);if(d.b)applyBody();saveFace()},50)}
+  if(it.t.includes('g'))fdirty.g=1;if(it.t.includes('x'))fdirty.x=1;if(it.t.includes('b'))fdirty.b=1;if(it.t.includes('h'))fdirty.h=1;
+  if(!ftimer)ftimer=setTimeout(()=>{ftimer=0;const d=fdirty;fdirty={g:0,x:0,b:0,h:0};applyFace(d);if(d.b)applyBody();if(d.h)buildHair();saveFace()},50)}
 // neck and hands take the colour the face texture actually has on the cheeks (base tone + blush + contour), darkened
 // because the neck faces the key light square-on and would otherwise tone-map paler than the face
 function skinFromFace(){const d=faceTex.userData.x.getImageData(2*(256-80),2*300,320,40).data;let r=0,g=0,b=0;
   for(let i=0;i<d.length;i+=4){r+=d[i];g+=d[i+1];b+=d[i+2]}const n=d.length/4;M.skin.color.setRGB(r/n/255,g/n/255,b/n/255).convertSRGBToLinear().multiplyScalar(.56)}
 skinFromFace();
 let curTab=0,ftoastT=0;
-applyBody();
+applyBody();buildHair();
 const ftoast=m=>{const e=$('#ftoast');e.textContent=m;clearTimeout(ftoastT);ftoastT=setTimeout(()=>{e.textContent=''},3200)};
 function renderTabs(){const box=$('#ftabs');box.innerHTML='';
   FACE_SPEC.forEach((s,i)=>{const b=document.createElement('button');b.textContent=s.tab;b.setAttribute('aria-pressed',String(i===curTab));
@@ -908,11 +946,11 @@ function renderList(){const box=$('#flist');box.innerHTML='';box.scrollTop=0;
       const show=()=>{const n=Math.round((F[it.k]-it.def)/it.step);val.textContent=n?(n>0?'+':'')+n:'預設';val.classList.toggle('on',!!n)};show();
       inp.oninput=()=>{F[it.k]=+inp.value;show();faceChanged(it)};row.append(inp,val)}
     box.appendChild(row)})}
-const packFace=()=>{const o={};FACE_SPEC.forEach(s=>s.items.forEach(i=>{o[i.k]=+(+F[i.k]).toFixed(3)}));return '午夜來斬妖・捏臉設定 '+JSON.stringify(o)};
+const packFace=()=>{const o={};FACE_SPEC.forEach(s=>s.items.forEach(i=>{o[i.k]=+(+F[i.k]).toFixed(3)}));o.who=who;return '午夜來斬妖・捏臉設定 '+JSON.stringify(o)};
 function unpackFace(txt){const a=txt.indexOf('{'),b=txt.lastIndexOf('}');if(a<0||b<a)return 0;let o;try{o=JSON.parse(txt.slice(a,b+1))}catch(e){return 0}
   let n=0;FACE_SPEC.forEach(s=>s.items.forEach(i=>{const v=o[i.k];if(typeof v==='number'&&isFinite(v)){
     F[i.k]=i.opts?Math.max(0,Math.min(i.opts.length-1,Math.round(v))):Math.max(i.min,Math.min(i.max,v));n++}}));return n}
-const applyAllFace=()=>{applyFace({g:1,x:1});applyBody();saveFace();renderList()};
+const applyAllFace=()=>{applyFace({g:1,x:1});applyBody();buildHair();saveFace();renderList()};
 function showIO(hint,text){const io=$('#fio');io.hidden=false;$('#fiohint').textContent=hint;const ta=$('#fiota');ta.value=text||'';ta.focus();if(text){ta.select();try{ta.setSelectionRange(0,text.length)}catch(e){}}}
 $('#fcopy').onclick=async()=>{const t=packFace();
   try{await navigator.clipboard.writeText(t);ftoast('已複製！貼給 Claude 就能設成預設');$('#fio').hidden=true;return}catch(e){}
@@ -927,8 +965,11 @@ $('#freset').onclick=()=>{Object.assign(F,FACE_DEF);applyAllFace();ftoast('已�
 let editPrev=null;
 function openEdit(){editPrev={view,mode};document.body.classList.add('editing');setMode('idle');setView('edit');want.sh=.26;want.yaw=0;renderTabs();renderList();editCam()}
 function closeEdit(){document.body.classList.remove('editing');$('#fio').hidden=true;if(editPrev){setMode(editPrev.mode);setView(VIEWS[editPrev.view]?editPrev.view:'full')}want.sh=0;editPrev=null}
+function switchChar(c){saveFace();useChar(c);try{localStorage.setItem('zk-who',String(c))}catch(e){}applyAllFace();renderTabs();markWho()}
+const markWho=()=>$$('[data-who]').forEach(b=>b.setAttribute('aria-pressed',String(+b.dataset.who===who)));
+$$('[data-who]').forEach(b=>b.addEventListener('click',()=>{if(+b.dataset.who!==who)switchChar(+b.dataset.who)}));markWho();
 $('#fedit').onclick=openEdit;$('#fdone').onclick=closeEdit;
 $$('[data-fyaw]').forEach(b=>b.addEventListener('click',()=>{want.yaw=+b.dataset.fyaw}));
-window.__hero={setMode,setView,applyPal,setYaw:y=>{want.yaw=y},openEdit,closeEdit,F,applyAllFace,setTab:i=>{curTab=i;renderTabs();renderList();editCam()}};
+window.__hero={switchChar,setMode,setView,applyPal,setYaw:y=>{want.yaw=y},openEdit,closeEdit,F,applyAllFace,setTab:i=>{curTab=i;renderTabs();renderList();editCam()}};
 })();
 </script>
