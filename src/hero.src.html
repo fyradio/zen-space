@@ -99,7 +99,7 @@ body.editing .top{opacity:0;pointer-events:none}
   <h1 id="title" aria-label="午夜來斬妖">
     <span style="--r:-5deg;--i:0">午</span><span style="--r:3deg;--i:1">夜</span><span style="--r:-2deg;--i:2">來</span><span class="zhan" style="--r:6deg;--i:3">斬</span><span style="--r:-4deg;--i:4">妖</span>
   </h1>
-  <div class="sub">煉氣一層・小道士　主角試做 v0.8</div>
+  <div class="sub">煉氣一層・小道士　主角試做 v0.9</div>
   <div class="fonts" role="group" aria-label="標題字體">
     <small>標題字體</small>
     <button class="chip" data-font="TPotta" aria-pressed="true">墨團</button>
@@ -273,67 +273,80 @@ const torsoTex=ctex(512,256,drawTorso),skirtTex=ctex(256,256,drawSkirt),coatTex=
 const IRIS=[['#2a1812','#5b3624','#8e6235','#3a2418','#1d120e'],['#0c0a0b','#1d1618','#33262a','#1b1315','#0b0809'],['#0e2a2a','#1f5a58','#3f9a8e','#18403c','#0b1c1c'],['#3a1f0a','#8a4f1c','#d49a3c','#5a3312','#2a1608'],['#1c1230','#3d2a6b','#7a62b8','#2a1d4a','#150e26']];
 const LIP_STYLES=[{w:1,up:1,lo:1,bow:1,corner:0,gloss:1},{w:.74,up:1.1,lo:1.3,bow:1.4,corner:0,gloss:1.5},{w:1,up:1.3,lo:1.15,bow:1.9,corner:.6,gloss:1},
   {w:1.06,up:.9,lo:.95,bow:1,corner:3,gloss:.9},{w:1.06,up:.55,lo:.62,bow:.6,corner:0,gloss:.5},{w:.92,up:1,lo:1.05,bow:1.1,corner:0,gloss:1.2,bite:1}];
+// 表情 平常/喜/怒/哀/樂/吶喊. Mouth (lip-local px): open = lower lip drop, w = width, corner = corner lift, lift = upper lip raise.
+// Brows (texture px, + = down): bIn at the head of the brow, bOut at the tail. eo = eye opening; happy = closed ^ ^ eyes; furrow, tear.
+const EXPRS=[{open:0,w:1,corner:0,lift:0,bIn:0,bOut:0,eo:1},
+  {open:3,w:1.15,corner:6,lift:.5,bIn:-3,bOut:0,eo:.8},
+  {open:2.5,w:.92,corner:-5,lift:.8,bIn:13,bOut:-5,eo:.78,furrow:1},
+  {open:0,w:.86,corner:-5,lift:0,bIn:-12,bOut:6,eo:.86,tear:1},
+  {open:6,w:1.2,corner:5,lift:1,bIn:-3,bOut:0,eo:1,happy:1},
+  {open:15,w:1.3,corner:-1.5,lift:2.5,bIn:9,bOut:-4,eo:1.12,furrow:1}];
+let exprForce=null;// 施法 forces 吶喊 without touching the saved setting
 const LIPS=[['#cf8a80','#df9f95'],['#d9a49c','#e7b8af'],['#b5584f','#c77067'],['#d49b8c','#e0b0a2']];
 const SKINS=[['#f2cdb3','#eec5aa'],['#f7dfcf','#f3d6c3'],['#ebc09f','#e5b793'],['#d9a67f','#d29c74']];
 const MARKS=[null,'rgba(120,190,200,.45)','rgba(196,52,44,.8)'];
 // t: s=只改頭部縮放, g=頭型幾何, x=臉部貼圖（g/x 可併用）
 const FACE_SPEC=[
  {tab:'臉型',items:[
-  {k:'headH',n:'頭高（短↔長）',min:0.76,max:1,step:.005,def:0.88,t:'s'},
-  {k:'headS',n:'頭大小',min:0.915,max:1.215,step:.005,def:1.065,t:'s'},
-  {k:'faceW',n:'臉寬',min:0.61,max:0.91,step:.005,def:0.76,t:'s'},
-  {k:'foreW',n:'額頭寬',min:0.035,max:0.155,step:.005,def:0.095,t:'g'},
-  {k:'cheekW',n:'顴骨寬',min:0.11,max:0.51,step:.005,def:0.31,t:'g'},
-  {k:'jawW',n:'下頜寬',min:0.06,max:0.5,step:.005,def:0.28,t:'g'},
-  {k:'chinW',n:'下巴（尖↔圓）',min:-0.78,max:-0.14,step:.01,def:-0.46,t:'g'},
-  {k:'chinR',n:'整個下巴圓潤',min:0.1,max:1.1,step:.05,def:0.6,t:'g'},
-  {k:'lowerLen',n:'下巴長',min:0.03,max:0.25,step:.005,def:0.14,t:'g'},
-  {k:'flat',n:'臉平度',min:0,max:0.12,step:.02,def:0.06,t:'g'},
-  {k:'cheekFull',n:'臉頰飽滿',min:-2,max:0,step:.05,def:-1,t:'g'},
-  {k:'browBone',n:'眉骨',min:0.7,max:2.7,step:.05,def:1.7,t:'g'}]},
+  {k:'headH',n:'頭高（短↔長）',min:0.765,max:1.005,step:.005,span:0.24,def:0.885,t:'s'},
+  {k:'headS',n:'頭大小',min:0.925,max:1.225,step:.005,span:0.3,def:1.075,t:'s'},
+  {k:'faceW',n:'臉寬',min:0.52,max:0.82,step:.005,span:0.3,def:0.67,t:'s'},
+  {k:'foreW',n:'額頭寬',min:0.02,max:0.14,step:.005,span:0.12,def:0.08,t:'g'},
+  {k:'cheekW',n:'顴骨寬',min:-0.005,max:0.395,step:.005,span:0.4,def:0.195,t:'g'},
+  {k:'jawW',n:'下頜寬',min:0,max:0.44,step:.005,span:0.44,def:0.22,t:'g'},
+  {k:'chinW',n:'下巴（尖↔圓）',min:-1.08,max:-0.44,step:.01,span:0.64,def:-0.76,t:'g'},
+  {k:'chinR',n:'整個下巴圓潤',min:0.3,max:1.3,step:.05,span:1,def:0.8,t:'g'},
+  {k:'lowerLen',n:'下巴長',min:-0.035,max:0.185,step:.005,span:0.22,def:0.075,t:'g'},
+  {k:'flat',n:'臉平度',min:0,max:0.68,step:.02,span:0.7,def:0.04,t:'g'},
+  {k:'cheekFull',n:'臉頰飽滿',min:-2,max:0,step:.05,span:2,def:-1,t:'g'},
+  {k:'cheekLow',n:'兩頰寬',min:-.15,max:.15,step:.005,span:.3,def:0,t:'g'},
+  {k:'cheekHollow',n:'兩頰凹陷',min:0,max:3,step:.1,span:3,def:1,t:'g'},
+  {k:'cheekApple',n:'蘋果肌',min:-1,max:1,step:.05,span:2,def:0,t:'g'},
+  {k:'browBone',n:'眉骨',min:0.7,max:2.7,step:.05,span:2,def:1.7,t:'g'}]},
  {tab:'眼睛',items:[
-  {k:'eyeSp',n:'眼距',min:51,max:71,step:1,def:61,t:'gx'},
-  {k:'eyeUp',n:'眼位高低',min:-34,max:-2,step:1,def:-18,t:'gx'},
-  {k:'eyeSize',n:'眼睛大小',min:0.85,max:1.49,step:.01,def:1.17,t:'gx'},
-  {k:'eyeOpen',n:'眼睛開合',min:0.79,max:1.59,step:.01,def:1.19,t:'x'},
-  {k:'eyeTilt',n:'眼尾上揚',min:-18.5,max:15.5,step:.5,def:-1.5,t:'x'},
-  {k:'irisS',n:'瞳孔大小',min:0.73,max:1.43,step:.01,def:1.08,t:'x'},
+  {k:'eyeSp',n:'眼距',min:51,max:71,step:1,span:20,def:61,t:'gx'},
+  {k:'eyeUp',n:'眼位高低',min:-35,max:-3,step:1,span:32,def:-19,t:'gx'},
+  {k:'eyeSize',n:'眼睛大小',min:0.72,max:1.36,step:.01,span:0.65,def:1.04,t:'gx'},
+  {k:'eyeOpen',n:'眼睛開合',min:0.66,max:1.46,step:.01,span:0.8,def:1.06,t:'x'},
+  {k:'eyeTilt',n:'眼尾上揚',min:-18.5,max:15.5,step:.5,span:34,def:-1.5,t:'x'},
+  {k:'irisS',n:'瞳孔大小',min:0.73,max:1.43,step:.01,span:0.7,def:1.08,t:'x'},
   {k:'iris',n:'瞳色',opts:['墨褐','墨黑','青碧','琥珀','紫霧'],def:1,t:'x'},
-  {k:'lash',n:'上眼線粗細',min:0.5,max:3.7,step:.1,def:2.1,t:'x'},
-  {k:'shadow',n:'眼影',min:0,max:1.6,step:.1,def:0.8,t:'x'}]},
+  {k:'lash',n:'上眼線粗細',min:0.5,max:3.9,step:.1,span:3.5,def:2.1,t:'x'},
+  {k:'shadow',n:'眼影',min:0,max:2.4,step:.1,span:2.5,def:0.8,t:'x'}]},
  {tab:'眉毛',items:[
-  {k:'browUp',n:'眉位高低',min:-19,max:3,step:1,def:-8,t:'x'},
-  {k:'browLen',n:'眉長',min:0.78,max:1.68,step:.01,def:1.23,t:'x'},
-  {k:'browThick',n:'眉粗細',min:2.9,max:7.1,step:.1,def:5,t:'x'},
-  {k:'browArch',n:'眉弧度',min:1,max:12,step:.5,def:6.5,t:'x'},
-  {k:'browTail',n:'眉尾上揚',min:-13.5,max:4.5,step:.5,def:-4.5,t:'x'},
-  {k:'browDark',n:'眉色濃淡',min:0.1,max:1.8,step:.05,def:0.95,t:'x'}]},
+  {k:'browUp',n:'眉位高低',min:-19,max:3,step:1,span:22,def:-8,t:'x'},
+  {k:'browLen',n:'眉長',min:0.78,max:1.68,step:.01,span:0.9,def:1.23,t:'x'},
+  {k:'browThick',n:'眉粗細',min:2.9,max:7.1,step:.1,span:4.2,def:5,t:'x'},
+  {k:'browArch',n:'眉弧度',min:1,max:12,step:.5,span:11,def:6.5,t:'x'},
+  {k:'browTail',n:'眉尾上揚',min:-13.5,max:4.5,step:.5,span:18,def:-4.5,t:'x'},
+  {k:'browDark',n:'眉色濃淡',min:0.1,max:1.8,step:.05,span:1.7,def:0.95,t:'x'}]},
  {tab:'鼻子',items:[
-  {k:'noseUp',n:'鼻頭位置',min:-16,max:0,step:1,def:-8,t:'gx'},
-  {k:'noseH',n:'鼻樑高度',min:0.5,max:4.2,step:.05,def:2.35,t:'g'},
-  {k:'noseTipP',n:'鼻頭突出',min:0,max:0.6,step:.1,def:0.3,t:'g'},
-  {k:'noseW',n:'鼻翼寬',min:0.75,max:2.25,step:.05,def:1.5,t:'gx'}]},
+  {k:'noseUp',n:'鼻頭位置',min:-16,max:0,step:1,span:16,def:-8,t:'gx'},
+  {k:'noseH',n:'鼻樑高度',min:0,max:3.7,step:.05,span:3.7,def:1.65,t:'g'},
+  {k:'noseTipP',n:'鼻頭突出',min:0,max:4,step:.1,span:4,def:0.6,t:'g'},
+  {k:'noseW',n:'鼻翼寬',min:0.75,max:2.25,step:.05,span:1.5,def:1.5,t:'gx'}]},
  {tab:'嘴唇',items:[
-  {k:'lipUp',n:'唇位置',min:-25,max:1,step:1,def:-12,t:'gx'},
-  {k:'lipW',n:'唇寬',min:0.96,max:2.64,step:.02,def:1.8,t:'gx'},
-  {k:'lipThick',n:'唇厚',min:0.8,max:3.2,step:.05,def:2,t:'gx'},
-  {k:'lipCorner',n:'嘴角上揚',min:-6.5,max:9.5,step:.5,def:1.5,t:'x'},
-  {k:'lipStyle',n:'唇形',opts:['自然','櫻桃','花瓣','微笑','薄唇','咬唇'],def:4,t:'gx'},
-  {k:'lipC',n:'唇色',opts:['朱砂','淡櫻','絳紅','裸粉'],def:2,t:'x'}]},
+  {k:'lipUp',n:'唇位置',min:-29,max:-3,step:1,span:26,def:-16,t:'gx'},
+  {k:'lipW',n:'唇寬',min:1.8,max:3.48,step:.02,span:1.7,def:2.64,t:'gx'},
+  {k:'lipThick',n:'唇厚',min:0.95,max:3.35,step:.05,span:2.4,def:2.15,t:'gx'},
+  {k:'lipCorner',n:'嘴角上揚',min:-9,max:7,step:.5,span:16,def:-1,t:'x'},
+  {k:'lipStyle',n:'唇形',opts:['自然','櫻桃','花瓣','微笑','薄唇','咬唇'],def:0,t:'gx'},
+  {k:'expr',n:'表情',opts:['平常','喜','怒','哀','樂','吶喊'],def:0,t:'x'},
+  {k:'lipC',n:'唇色',opts:['朱砂','淡櫻','絳紅','裸粉'],def:0,t:'x'}]},
  {tab:'膚妝',items:[
   {k:'skin',n:'膚色',opts:['自然','瓷白','暖玉','小麥'],def:2,t:'x'},
-  {k:'blush',n:'腮紅',min:0.5,max:4.5,step:.1,def:2.5,t:'x'},
-  {k:'contour',n:'輪廓陰影',min:0.5,max:3.5,step:.1,def:2,t:'x'},
+  {k:'blush',n:'腮紅',min:0.5,max:4.5,step:.1,span:4,def:2.5,t:'x'},
+  {k:'contour',n:'輪廓陰影',min:0.5,max:3.5,step:.1,span:3,def:2,t:'x'},
   {k:'mark',n:'額間印記',opts:['無','青','朱'],def:0,t:'x'}]},
  {tab:'身形',cam:'body',items:[
-  {k:'height',n:'整體身高',min:0.585,max:0.885,step:.005,def:0.735,t:'b'},
-  {k:'legLen',n:'下半身長',min:0.44,max:0.9,step:.005,def:0.67,t:'b'},
-  {k:'torsoLen',n:'上身長',min:0.56,max:0.96,step:.005,def:0.76,t:'b'},
-  {k:'neckLen',n:'脖子長',min:0.2,max:1,step:.01,def:0.6,t:'b'},
-  {k:'shoulderW',n:'肩寬',min:0.405,max:0.905,step:.005,def:0.655,t:'b'},
-  {k:'shoulderDrop',n:'溜肩',min:0,max:0.8,step:.05,def:0.4,t:'b'},
-  {k:'bodyW',n:'身材胖瘦',min:0.5,max:1.1,step:.005,def:0.8,t:'b'},
-  {k:'armLen',n:'手臂長',min:0.7,max:1,step:.005,def:0.85,t:'b'}]}];
+  {k:'height',n:'整體身高',min:0.52,max:0.82,step:.005,span:0.3,def:0.67,t:'b'},
+  {k:'legLen',n:'下半身長',min:0.44,max:0.9,step:.005,span:0.46,def:0.67,t:'b'},
+  {k:'torsoLen',n:'上身長',min:0.56,max:0.96,step:.005,span:0.4,def:0.76,t:'b'},
+  {k:'neckLen',n:'脖子長',min:0.2,max:1,step:.01,span:0.8,def:0.6,t:'b'},
+  {k:'shoulderW',n:'肩寬',min:0.405,max:0.905,step:.005,span:0.5,def:0.655,t:'b'},
+  {k:'shoulderDrop',n:'溜肩',min:0,max:1,step:.05,span:1,def:0.4,t:'b'},
+  {k:'bodyW',n:'身材胖瘦',min:0.5,max:1.1,step:.005,span:0.6,def:0.8,t:'b'},
+  {k:'armLen',n:'手臂長',min:0.7,max:1,step:.005,span:0.3,def:0.85,t:'b'}]}];
 // t: b=身形（applyBody 重排身體各部件）
 const FACE_DEF={};FACE_SPEC.forEach(s=>s.items.forEach(i=>{FACE_DEF[i.k]=i.def}));
 const FACE_HASH=JSON.stringify(FACE_DEF),FACE_KEY='zk-face-v1';
@@ -361,28 +374,39 @@ const drawFace=(x,w,h)=>{x.scale(2,2);
   R(cx,(pt+ly)/2-2,5,'190,128,112',.22*ct);
   x.strokeStyle='rgba(255,240,230,.25)';x.lineWidth=1;[-1,1].forEach(d=>{x.beginPath();x.moveTo(cx+d*2.4,pt+3);x.lineTo(cx+d*3.6,ly-6);x.stroke()});
   // lips (drawn at default size, then scaled about the mouth line): cupid's bow, fuller lower lip, dark parting line, corners
-  const lc=LIPS[F.lipC],LS=LIP_STYLES[F.lipStyle]||LIP_STYLES[0],kc=(F.lipCorner+LS.corner)/1.3;
+  const lc=LIPS[F.lipC],LS=LIP_STYLES[F.lipStyle]||LIP_STYLES[0],E=EXPRS[exprForce??F.expr]||EXPRS[0],o=E.open,L=E.lift,kc=(F.lipCorner+LS.corner+E.corner)/1.3;
   const U=y=>336+(y-336)*LS.up,D=y=>336+(y-336)*LS.lo,dip=U(329.5+1.8*LS.bow);// upper/lower lip heights; dip = centre of the cupid's bow
-  x.save();x.translate(cx,ly);x.scale(11/15*F.lipW*LS.w,10/15*F.lipThick);x.translate(-cx,-336);
+  x.save();x.translate(cx,ly);x.scale(11/15*F.lipW*LS.w*E.w,10/15*F.lipThick);x.translate(-cx,-336);
+  x.save();x.translate(0,-L);
   x.fillStyle=lc[0];x.beginPath();x.moveTo(cx-15,336-kc);x.bezierCurveTo(cx-10,U(333),cx-6,U(329.5),cx-2.5,U(330));x.quadraticCurveTo(cx,dip,cx+2.5,U(330));x.bezierCurveTo(cx+6,U(329.5),cx+10,U(333),cx+15,336-kc);x.quadraticCurveTo(cx,334.6,cx-15,336-kc);x.fill();
-  const ud=x.createLinearGradient(0,U(329),0,336);ud.addColorStop(0,'rgba(90,30,30,0)');ud.addColorStop(1,'rgba(90,30,30,.18)');x.fillStyle=ud;x.fill();
-  x.fillStyle=lc[1];x.beginPath();x.moveTo(cx-13.5,336.4-kc);x.quadraticCurveTo(cx,335.4,cx+13.5,336.4-kc);x.bezierCurveTo(cx+10,D(343),cx+4,D(345),cx,D(345));x.bezierCurveTo(cx-4,D(345),cx-10,D(343),cx-13.5,336.4-kc);x.fill();
-  const ld=x.createLinearGradient(0,336,0,D(345));ld.addColorStop(0,'rgba(90,30,30,.2)');ld.addColorStop(.45,'rgba(90,30,30,0)');x.fillStyle=ld;x.fill();
+  const ud=x.createLinearGradient(0,U(329),0,336);ud.addColorStop(0,'rgba(90,30,30,0)');ud.addColorStop(1,'rgba(90,30,30,.18)');x.fillStyle=ud;x.fill();x.restore();
+  if(o>0){// open mouth: dark inside, upper teeth, tongue
+    x.save();x.beginPath();x.moveTo(cx-14,336-kc);x.quadraticCurveTo(cx,337.2-L*2,cx+14,336-kc);x.quadraticCurveTo(cx,336+o*2,cx-14,336-kc);
+    const mg=x.createLinearGradient(0,336-L,0,336+o);mg.addColorStop(0,'#2a0a0d');mg.addColorStop(1,'#5e1b20');x.fillStyle=mg;x.fill();x.clip();
+    x.fillStyle='rgba(248,242,236,.95)';x.fillRect(cx-11,330,22,336.6-L+Math.min(2.2,o*.3)-330);
+    if(o>4){x.fillStyle='#b9545a';x.beginPath();x.ellipse(cx,336+o*.95,8,o*.32,0,0,7);x.fill()}
+    x.restore()}
+  x.fillStyle=lc[1];x.beginPath();x.moveTo(cx-13.5,336.4-kc);x.quadraticCurveTo(cx,335.4+o*2,cx+13.5,336.4-kc);x.bezierCurveTo(cx+10,D(343)+o,cx+4,D(345)+o,cx,D(345)+o);x.bezierCurveTo(cx-4,D(345)+o,cx-10,D(343)+o,cx-13.5,336.4-kc);x.fill();
+  const ld=x.createLinearGradient(0,336+o,0,D(345)+o);ld.addColorStop(0,'rgba(90,30,30,.2)');ld.addColorStop(.45,'rgba(90,30,30,0)');x.fillStyle=ld;x.fill();
   if(LS.bite){// 咬唇: colour concentrated at the centre, fading out to the corners
     x.save();x.globalCompositeOperation='source-atop';const bg=x.createRadialGradient(cx,336,0,cx,336,15);bg.addColorStop(0,'rgba(170,40,50,.55)');bg.addColorStop(.55,'rgba(170,40,50,.18)');bg.addColorStop(1,'rgba(242,214,200,.35)');
     x.fillStyle=bg;x.fillRect(cx-20,325,40,25);x.restore()}
-  R(cx,D(348.5),9,'170,104,92',.22*ct);
-  x.strokeStyle='rgba(98,44,42,.85)';x.lineWidth=1.1;x.beginPath();x.moveTo(cx-15.5,335.8-kc);x.bezierCurveTo(cx-8,335.6,cx-3,337.2,cx,336.3);x.bezierCurveTo(cx+3,337.2,cx+8,335.6,cx+15.5,335.8-kc);x.stroke();
+  R(cx,D(348.5)+o,9,'170,104,92',.22*ct);
+  if(!o){x.strokeStyle='rgba(98,44,42,.85)';x.lineWidth=1.1;x.beginPath();x.moveTo(cx-15.5,335.8-kc);x.bezierCurveTo(cx-8,335.6,cx-3,337.2,cx,336.3);x.bezierCurveTo(cx+3,337.2,cx+8,335.6,cx+15.5,335.8-kc);x.stroke()}
   [-1,1].forEach(d=>{x.strokeStyle='rgba(120,60,54,.45)';x.lineWidth=1;x.beginPath();x.moveTo(cx+d*15,335.4-kc);x.quadraticCurveTo(cx+d*17,335.8-kc,cx+d*17.5,334.4-kc*1.3);x.stroke()});
-  x.fillStyle=`rgba(255,236,230,${Math.min(.8,.35*LS.gloss)})`;x.beginPath();x.ellipse(cx+1.5,D(340.5),3.6,.9*LS.lo,0,0,7);x.fill();
+  x.fillStyle=`rgba(255,236,230,${Math.min(.8,.35*LS.gloss)})`;x.beginPath();x.ellipse(cx+1.5,D(340.5)+o,3.6,.9*LS.lo,0,0,7);x.fill();
   x.fillStyle=`rgba(255,236,230,${Math.min(.8,.3*LS.gloss)})`;x.beginPath();x.ellipse(cx-5,U(332.2),2.4,.7,-.2,0,7);x.fill();
   x.restore();
   function eye(ex,ey,d){
     R(ex+d*2,ey-8,26,'184,116,104',.26*F.shadow);
     R(ex-d*24,ey-14,16,'160,100,90',.28*ct);R(ex+d*6,ey-24,22,'180,120,108',.16*ct);R(ex,ey+20,18,'255,242,232',.16);
-    x.save();x.translate(ex,ey);x.rotate(-d*F.eyeTilt*Math.PI/180);x.scale(1.4*F.eyeSize,1.4*F.eyeSize*F.eyeOpen);
+    x.save();x.translate(ex,ey);x.rotate(-d*F.eyeTilt*Math.PI/180);x.scale(1.4*F.eyeSize,1.4*F.eyeSize*F.eyeOpen*E.eo);
     const ir=F.irisS,ic=IRIS[F.iris];
     const lid=()=>{x.moveTo(-d*19,2);x.bezierCurveTo(-d*10,-9.5,d*10,-10.5,d*21,-4)};
+    if(E.happy){// 樂: eyes closed into upward arcs
+      x.strokeStyle='#1a1013';x.lineCap='round';x.lineWidth=F.lash*1.1;x.beginPath();x.moveTo(-d*18,3);x.quadraticCurveTo(d*1,-9,d*20,1);x.stroke();
+      x.lineWidth=.9;for(let k=0;k<4;k++){const px=d*(6+k*4);x.beginPath();x.moveTo(px,-3.5+k*1.1);x.lineTo(px+d*(2+k*.6),-6.5+k*.6);x.stroke()}
+      x.restore();}else{
     x.save();x.beginPath();lid();x.bezierCurveTo(d*12,6.5,-d*6,8.5,-d*19,2);x.closePath();x.fillStyle='#f4eee7';x.fill();x.clip();
     const ig=x.createRadialGradient(d*1,1.5,.5,d*1,1.5,11.5*ir);ig.addColorStop(0,ic[0]);ig.addColorStop(.35,ic[1]);ig.addColorStop(.75,ic[2]);ig.addColorStop(.92,ic[3]);ig.addColorStop(1,ic[4]);
     x.fillStyle=ig;x.beginPath();x.ellipse(d*1,1.5,10.5*ir,11.5*ir,0,0,7);x.fill();
@@ -398,10 +422,11 @@ const drawFace=(x,w,h)=>{x.scale(2,2);
     x.strokeStyle='rgba(100,56,50,.5)';x.lineWidth=1;x.beginPath();x.moveTo(-d*13,-11.5);x.bezierCurveTo(-d*2,-16.5,d*12,-15.5,d*22,-10.5);x.stroke();
     x.strokeStyle='rgba(70,36,34,.4)';x.lineWidth=.9;x.beginPath();x.moveTo(-d*8,7.6);x.quadraticCurveTo(d*8,8.4,d*19,2.5);x.stroke();
     for(let k=0;k<3;k++){const px=d*(8+k*4);x.beginPath();x.moveTo(px,7.2-k*1.2);x.lineTo(px+d*1.2,9.4-k*1.2);x.stroke()}
-    x.restore();
+    if(E.tear){x.fillStyle='rgba(200,230,255,.55)';x.beginPath();x.ellipse(-d*8,10.5,5,1.2,d*.1,0,7);x.fill()}
+    x.restore()}
     x.lineCap='round';
     // brows: tapered soft base, then two layers of hair strokes (rising at the head, sweeping out along the tail)
-    const bk=F.browThick/4,by=t=>ey-44-F.browUp-Math.sin(t*Math.PI*.92)*F.browArch+t*2-F.browTail*t,bw=t=>bk*(7.5*(1-t)+1.6*t-3*Math.pow(1-t,6)),bx=t=>ex+d*(-20+58*F.browLen*t);
+    const bk=F.browThick/4,by=t=>ey-44-F.browUp-Math.sin(t*Math.PI*.92)*F.browArch+t*2-F.browTail*t+E.bIn*Math.pow(1-t,1.5)+E.bOut*t*t,bw=t=>bk*(7.5*(1-t)+1.6*t-3*Math.pow(1-t,6)),bx=t=>ex+d*(-20+58*F.browLen*t);
     const bd=a=>Math.min(1,a*F.browDark);
     x.fillStyle=`rgba(52,36,34,${bd(.45)})`;x.beginPath();for(let k=0;k<=20;k++){const t=k/20;x.lineTo(bx(t),by(t)-bw(t)*.55)}for(let k=20;k>=0;k--){const t=k/20;x.lineTo(bx(t),by(t)+bw(t)*.45)}x.fill();
     let bs=5;const br=()=>(bs=bs*16807%2147483647)/2147483647;// own seed: redrawing the face must not shift the scene's rnd()
@@ -409,6 +434,7 @@ const drawFace=(x,w,h)=>{x.scale(2,2);
       x.strokeStyle=`rgba(${t<.2?60:38},${t<.2?42:28},${t<.2?38:28},${bd(.3+.45*(1-Math.abs(t-.4)))})`;x.lineWidth=(.8+.6*(1-t))*Math.sqrt(bk);
       x.beginPath();x.moveTo(px,py+1.8);x.lineTo(px+d*4.2*lean,py-1.8+t*1.2);x.stroke()}}
   eye(cx-F.eyeSp,268-F.eyeUp,-1);eye(cx+F.eyeSp,268-F.eyeUp,1);
+  if(E.furrow){x.strokeStyle='rgba(150,96,84,.35)';x.lineWidth=1.2;[-1,1].forEach(d=>{x.beginPath();x.moveTo(cx+d*5,232-F.eyeUp-F.browUp);x.quadraticCurveTo(cx+d*3.5,238-F.eyeUp-F.browUp,cx+d*4.5,244-F.eyeUp-F.browUp);x.stroke()})}
   if(MARKS[F.mark]){x.fillStyle=MARKS[F.mark];x.beginPath();x.moveTo(cx,200);x.quadraticCurveTo(cx+3,207,cx,214);x.quadraticCurveTo(cx-3,207,cx,200);x.fill()}};
 const faceTex=ctex(2048,1024,drawFace);
 
@@ -485,7 +511,7 @@ const pyN=py=>Math.cos(py/512*Math.PI),pxN=(px,py)=>Math.sin(px/1024*Math.PI*2)*
 function shapeHead(){
  const p=headGeo.attributes.position,g=(u,s)=>Math.exp(-(u*u)/(s*s)),sm=(a,b,v)=>{const t=Math.min(1,Math.max(0,(v-a)/(b-a)));return t*t*(3-2*t)};
  // face width by height: forehead, cheekbones, jaw angle, chin (V-line)
- const WT=[[1,.9],[.3,.92+F.foreW],[0,.9+F.foreW],[-.2,.87+F.cheekW],[-.45,.8+F.cheekW],[-.65,.68+F.jawW+(.78-.68-F.jawW)*F.chinR*.6],[-.82,.53+F.jawW+(.76-.53-F.jawW)*F.chinR],[-.95,.42+F.chinW+(.66-.42-F.chinW)*F.chinR],[-1,.38+F.chinW+(.5-.38-F.chinW)*F.chinR]];
+ const WT=[[1,.9],[.3,.92+F.foreW],[0,.9+F.foreW],[-.2,.87+F.cheekW],[-.45,.8+F.cheekW+F.cheekLow],[-.65,.68+F.cheekLow*.5+F.jawW+(.78-.68-F.jawW)*F.chinR*.6],[-.82,.53+F.jawW+(.76-.53-F.jawW)*F.chinR],[-.95,.42+F.chinW+(.66-.42-F.chinW)*F.chinR],[-1,.38+F.chinW+(.5-.38-F.chinW)*F.chinR]];
  const wAt=y=>{for(let i=1;i<WT.length;i++){const [y0,w0]=WT[i-1],[y1,w1]=WT[i];if(y<=y0&&y>=y1)return w0+(w1-w0)*(y0-y)/(y0-y1)}return .2};
  const eyeY=268-F.eyeUp,eNy=-.07+pyN(eyeY)-pyN(268),eNx=.33+pxN(F.eyeSp,eyeY)-pxN(55,268);
  const nTip=-.32+pyN(309-F.noseUp)-pyN(309),lipD=pyN(334-F.lipUp)-pyN(334);
@@ -507,7 +533,8 @@ function shapeHead(){
     d-=.004*g(ax-.17,.035)*g(ny+.04,.05);
     // cheekbones, soft hollow below
     d+=.01*g(ax-.47,.12)*g(ny+.19,.08)+F.cheekFull*.012*g(ax-.45,.16)*g(ny+.3,.14);
-    d-=.004*g(ax-.52,.12)*g(ny+.42,.1);
+    d-=.004*F.cheekHollow*g(ax-.52,.12)*g(ny+.42,.1);
+    d+=.01*F.cheekApple*g(ax-.36,.1)*g(ny+.2,.07);
     // mouth: philtrum, upper lip, parting line, lower lip, corners
     d-=.002*g(nx,.011)*g(ny+.39-lipD,.035);
     d+=.003*lt*g(nx,.1*lw)*g(ny+.452-lipD,.018*lt);
@@ -554,7 +581,9 @@ const knot=V(0,.122,-.04);
 for(let k=0;k<20;k++){const a=-1.45+2.9*k/19;strand([onHead(.29,a,1.02),onHead(.2,a*.8,1.045),onHead(.11,a*.5,1.06),knot],.05,.026)}
 for(let k=0;k<14;k++){const a=Math.PI+(-1.25+2.5*k/13);strand([onHead(.62,a,1.03),onHead(.45,a,1.05),onHead(.27,a*.95+Math.PI*.05,1.06),knot],.055,.028)}
 [-1,1].forEach(d=>{for(let j=0;j<5;j++){strand([onHead(.19,d*.03,1.05),onHead(.31,d*(.18+.12*j),1.07),onHead(.43+.03*j,d*(.45+.17*j),1.085),onHead(.53+.04*j,d*(.72+.16*j),1.07)],.05-.004*j,.012)}
-  for(let j=0;j<4;j++){const a=d*(1.0+.15*j),s0=onHead(.42,a,1.05),s1=onHead(.58,a+d*.06,1.06);strand([s0,s1,V(s1.x-d*.006,s1.y-.07,s1.z-.004),V(s1.x-d*.004,s1.y-.15,s1.z-.012-j*.005)],.044,.012)}});
+  // side locks: thin tapered strands, staggered lengths, curving in along the cheek and flicking out at the tips
+  for(let j=0;j<8;j++){const a=d*(.96+.075*j),w=Math.sin(j*2.3+d),len=.12+.035*(j%3)+.01*w,s0=onHead(.4+.012*(j%2),a,1.05),s1=onHead(.56,a+d*.05,1.065);
+    strand([s0,s1,V(s1.x-d*(.008+.003*w),s1.y-len*.45,s1.z+.006),V(s1.x-d*.006,s1.y-len*.8,s1.z-.002-j*.002),V(s1.x+d*(.006+.004*(j%2)),s1.y-len,s1.z-.008-j*.003)],.032-.0015*(j%3),.004)}});
 // top knot, crown, pin
 part(new THREE.SphereGeometry(.05,20,16),M.hair,headG,{p:[0,.128,-.035]});
 part(new THREE.CylinderGeometry(.036,.047,.046,18),M.gold,headG,{p:[0,.152,-.035],r:[-.2,0,0]});
@@ -621,6 +650,7 @@ function pushOut(P){const by=(P.y-HERO.pos.y)/F.height,bk=K*F.legLen;if(by<-.05|
   if(P.y<.01)P.y=.01}
 class Rope{
   constructor(o){Object.assign(this,{n:10,seg:.06,w0:.04,w1:.02,grav:-5,lift:0,damp:.955,flut:.5,twist:0,mat:M.ribbon,collide:true},o);
+    this.base={seg:this.seg,w0:this.w0,w1:this.w1};
     this.p=[];this.q=[];for(let i=0;i<this.n;i++){this.p.push(new THREE.Vector3());this.q.push(new THREE.Vector3())}
     this.ph=rnd()*20;const n=this.n,g=new THREE.BufferGeometry();this.pa=new Float32Array(n*6);g.setAttribute('position',new THREE.BufferAttribute(this.pa,3));
     const idx=[];for(let i=0;i<n-1;i++){const a=i*2;idx.push(a,a+2,a+1,a+1,a+2,a+3)}g.setIndex(idx);
@@ -665,15 +695,15 @@ class Drape{
   build(){const pa=this.pa;this.p.forEach((v,i)=>{pa[i*3]=v.x;pa[i*3+1]=v.y;pa[i*3+2]=v.z});this.geo.attributes.position.needsUpdate=true;this.geo.computeVertexNormals();this.geo.computeBoundingSphere()}}
 
 const ropes=[
-  new Rope({anchor:A.hairE,n:12,seg:.058,w0:.17,w1:.07,grav:-9.5,flut:.12,damp:.94,mat:M.hairCard}),
-  new Rope({anchor:A.hairA,n:12,seg:.06,w0:.1,w1:.035,grav:-9,flut:.15,damp:.94,mat:M.hairCard}),
-  new Rope({anchor:A.hairB,n:12,seg:.06,w0:.1,w1:.035,grav:-9,flut:.15,damp:.94,mat:M.hairCard}),
-  new Rope({anchor:A.hairC,n:11,seg:.058,w0:.08,w1:.025,grav:-9.5,flut:.18,damp:.94,mat:M.hairCard}),
-  new Rope({anchor:A.hairD,n:11,seg:.058,w0:.08,w1:.025,grav:-9.5,flut:.18,damp:.94,mat:M.hairCard}),
-  new Rope({anchor:A.hb1,n:12,seg:.06,w0:.026,w1:.022,grav:-2.6,flut:.9,twist:.7}),
-  new Rope({anchor:A.hb2,n:12,seg:.06,w0:.026,w1:.022,grav:-2.6,flut:.9,twist:.7}),
-  new Rope({anchor:A.sashL,n:15,seg:.066,w0:.05,w1:.03,grav:-2.8,flut:1.0,twist:.9}),
-  new Rope({anchor:A.sashR,n:15,seg:.066,w0:.05,w1:.03,grav:-2.8,flut:1.0,twist:.9}),
+  new Rope({anchor:A.hairE,n:12,seg:.058,w0:.17,w1:.07,grav:-15,flut:.06,damp:.9,mat:M.hairCard,kind:'hair'}),
+  new Rope({anchor:A.hairA,n:12,seg:.06,w0:.1,w1:.035,grav:-15,flut:.07,damp:.9,mat:M.hairCard,kind:'hair'}),
+  new Rope({anchor:A.hairB,n:12,seg:.06,w0:.1,w1:.035,grav:-15,flut:.07,damp:.9,mat:M.hairCard,kind:'hair'}),
+  new Rope({anchor:A.hairC,n:11,seg:.058,w0:.08,w1:.025,grav:-15,flut:.09,damp:.9,mat:M.hairCard,kind:'hair'}),
+  new Rope({anchor:A.hairD,n:11,seg:.058,w0:.08,w1:.025,grav:-15,flut:.09,damp:.9,mat:M.hairCard,kind:'hair'}),
+  new Rope({anchor:A.hb1,n:12,seg:.06,w0:.026,w1:.022,grav:-5,flut:.45,damp:.92,twist:.7,kind:'ribbon'}),
+  new Rope({anchor:A.hb2,n:12,seg:.06,w0:.026,w1:.022,grav:-5,flut:.45,damp:.92,twist:.7,kind:'ribbon'}),
+  new Rope({anchor:A.sashL,n:15,seg:.066,w0:.05,w1:.03,grav:-5.5,flut:.5,damp:.92,twist:.9,kind:'ribbon'}),
+  new Rope({anchor:A.sashR,n:15,seg:.066,w0:.05,w1:.03,grav:-5.5,flut:.5,damp:.92,twist:.9,kind:'ribbon'}),
   new Rope({anchor:A.pommel,n:6,seg:.04,w0:.03,w1:.012,grav:-6,flut:.4,mat:M.red}),
   new Rope({anchor:A.tassel,n:5,seg:.03,w0:.022,w1:.01,grav:-6,flut:.3,mat:M.red}),
   new Rope({anchor:A.lanTassel,n:5,seg:.035,w0:.025,w1:.01,grav:-6,flut:.3,mat:M.red,collide:false})];
@@ -722,8 +752,9 @@ canvas.addEventListener('pointerup',up);canvas.addEventListener('pointercancel',
 canvas.addEventListener('wheel',e=>{e.preventDefault();want.d=Math.max(.9,Math.min(16,want.d*(1+e.deltaY*.0012)));hideHint()},{passive:false});
 function hideHint(){$('#hint').classList.add('gone')}
 const viewTy=v=>v==='face'||v==='edit'?VIEWS[v].ty+bodyY(HY)*F.height-HY:VIEWS[v].ty*F.height;
-function setView(v){view=v;const V0=VIEWS[v];want.d=V0.d;want.pitch=V0.p;want.ty=viewTy(v);$$('[data-view]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.view===v)))}
-function setMode(m){mode=m;$$('[data-mode]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.mode===m)));lastDrag=-99}
+function setView(v){view=v;const V0=VIEWS[v];want.d=V0.d*(v==='game'?1:F.height);// closer for a smaller figure
+ want.pitch=V0.p;want.ty=viewTy(v);$$('[data-view]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.view===v)))}
+function setMode(m){mode=m;{const f=m==='cast'?5:null;if(f!==exprForce){exprForce=f;redraw(faceTex,drawFace)}}$$('[data-mode]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.mode===m)));lastDrag=-99}
 $$('[data-mode]').forEach(b=>b.addEventListener('click',()=>setMode(b.dataset.mode)));
 $$('[data-view]').forEach(b=>b.addEventListener('click',()=>setView(b.dataset.view)));
 $$('[data-pal]').forEach(b=>b.addEventListener('click',()=>{applyPal(+b.dataset.pal);$$('[data-pal]').forEach(x=>x.setAttribute('aria-pressed',String(x===b)))}));
@@ -819,8 +850,10 @@ function bodyX(y){return F.bodyW*(1+(F.shoulderW-1)*Math.min(1,Math.max(0,(y-1.1
 const smb=(a,b,v)=>{const t=Math.min(1,Math.max(0,(v-a)/(b-a)));return t*t*(3-2*t)};
 const slope=(x,y)=>-.05*F.shoulderDrop*smb(.05,.17,Math.abs(x))*smb(1.28*K,1.42*K,y);// 溜肩: lower the outer shoulder line
 function remapLathe(src,dst){for(let i=0;i<src.length;i+=3){const x=src[i],y=src[i+1];dst[i]=x*bodyX(y);dst[i+1]=bodyY0(y)+slope(x,y);dst[i+2]=src[i+2]*F.bodyW}}
+function scaleRopes(){const hw=F.height*F.headS*F.faceW;
+  for(const r of ropes){if(!r.kind)continue;const b=r.base,w=r.kind==='hair'?hw:F.height;r.seg=b.seg*.75*F.height;r.w0=b.w0*w;r.w1=b.w1*w}}
 function applyBody(){
-  body.scale.setScalar(F.height);
+  body.scale.setScalar(F.height);scaleRopes();
   remapLathe(skirt0,skirtBase);remapLathe(coat0,coatBase);
   const ta=torsoGeo.attributes.position;remapLathe(torso0,ta.array);ta.needsUpdate=true;torsoGeo.computeVertexNormals();torsoGeo.computeBoundingSphere();
   skirtGeo.computeBoundingSphere();coatGeo.computeBoundingSphere();
@@ -836,15 +869,15 @@ function applyBody(){
   if(document.body.classList.contains('editing'))editCam();else want.ty=viewTy(view)}
 /* ---------- 捏臉面板 ---------- */
 function applyFace(dirty){
-  headG.scale.set(F.headS*F.faceW,F.headS*F.headH,F.headS);
+  headG.scale.set(F.headS*F.faceW,F.headS*F.headH,F.headS);scaleRopes();
   if(dirty.g)shapeHead();
-  if(dirty.x){redraw(faceTex,drawFace);M.skin.color.copy(LC(SKINS[F.skin][1]))}}
+  if(dirty.x){redraw(faceTex,drawFace);M.skin.color.copy(LC(SKINS[F.skin][0])).multiplyScalar(.93)}}
 const saveFace=()=>{try{localStorage.setItem(FACE_KEY,JSON.stringify({h:FACE_HASH,f:F}))}catch(e){}};
 let fdirty={g:0,x:0,b:0},ftimer=0;
 function faceChanged(it){
   if(it.t.includes('g'))fdirty.g=1;if(it.t.includes('x'))fdirty.x=1;if(it.t.includes('b'))fdirty.b=1;
   if(!ftimer)ftimer=setTimeout(()=>{ftimer=0;const d=fdirty;fdirty={g:0,x:0,b:0};applyFace(d);if(d.b)applyBody();saveFace()},50)}
-M.skin.color.copy(LC(SKINS[F.skin][1]));
+M.skin.color.copy(LC(SKINS[F.skin][0])).multiplyScalar(.93);// same tone as the face texture so the neck matches
 let curTab=0,ftoastT=0;
 applyBody();
 const ftoast=m=>{const e=$('#ftoast');e.textContent=m;clearTimeout(ftoastT);ftoastT=setTimeout(()=>{e.textContent=''},3200)};
@@ -852,7 +885,7 @@ function renderTabs(){const box=$('#ftabs');box.innerHTML='';
   FACE_SPEC.forEach((s,i)=>{const b=document.createElement('button');b.textContent=s.tab;b.setAttribute('aria-pressed',String(i===curTab));
     b.onclick=()=>{curTab=i;renderTabs();renderList();editCam()};box.appendChild(b)})}
 // 身形 tab frames the whole figure above the sheet; other tabs frame the face
-function editCam(){if(FACE_SPEC[curTab].cam==='body'){const tot=(bodyY(HY)+.15)*F.height;want.d=tot*2.9;want.pitch=.08;want.ty=tot*.54}else{want.d=VIEWS.edit.d;want.pitch=VIEWS.edit.p;want.ty=viewTy('edit')}}
+function editCam(){if(FACE_SPEC[curTab].cam==='body'){const tot=(bodyY(HY)+.15)*F.height;want.d=tot*2.9;want.pitch=.08;want.ty=tot*.54}else{want.d=VIEWS.edit.d*F.height;want.pitch=VIEWS.edit.p;want.ty=viewTy('edit')}}
 function renderList(){const box=$('#flist');box.innerHTML='';box.scrollTop=0;
   FACE_SPEC[curTab].items.forEach(it=>{
     const row=document.createElement('div');row.className='ctl';
