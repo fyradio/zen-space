@@ -41,7 +41,7 @@ function frostCast(){const lv=G.k.sweepLv,R=SK.sweep.range(),dmg=swordDmg()*4.6*
 // ---------- 赤焰火龍（築基・橘紅）----------
 const DRAGON_N=[1,2,3,5,8],DRAGON_SPREAD=[0,.5,.9,1.6,Math.PI*2];
 const DRAGON_LV=['兩條火龍','三條火龍','五條火龍','八條火龍，四面八方'];
-function dragonCast(A){const lv=G.k.beamLv,L=SK.beam.range(),a0=Math.atan2(A.dir[0],A.dir[1]),n=DRAGON_N[lv],sp=DRAGON_SPREAD[lv],dmg=swordDmg()*4.4*G.k.beamD*[1,.9,.8,.7,.6][lv],hx=HERO.pos.x,hz=HERO.pos.z,hitN=new Map();
+function dragonCast(A){const lv=G.k.beamLv,L=SK.beam.range(),a0=Math.atan2(A.dir[0],A.dir[1]),n=DRAGON_N[lv],sp=DRAGON_SPREAD[lv],dmg=swordDmg()*6*G.k.beamD*[1,.9,.8,.7,.6][lv],hx=HERO.pos.x,hz=HERO.pos.z,hitN=new Map();
   SFX.play('beam');SFX.play('boom');shake=Math.max(shake,.2);
   for(let j=0;j<n;j++){const a=lv>=4?a0+j/n*Math.PI*2:n>1?a0-sp/2+sp*j/(n-1):a0,dx=Math.sin(a),dz=Math.cos(a),mine=new Set(),T=L/15;let trail=0;
     const segs=[];if(!simming)for(let i=0;i<7;i++){const s=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex,color:i===0?0xffe08a:i<3?0xff8a2a:0xff4a1a,opacity:.95,blending:THREE.AdditiveBlending,depthWrite:false}));
@@ -74,7 +74,7 @@ function taijiAt(x,z,r,dmg,lv){const m=new THREE.Mesh(new THREE.CircleGeometry(1
         const D=dmg*(lv>=3?1.5:1);for(const e of enemies){if(e.dead)continue;const dx=e.x-x,dz=e.z-z,d=Math.hypot(dx,dz);if(d<r+.3){if(lv>=3)e.stun=Math.max(e.stun||0,1.5);hurtEnemy(e,D,dx/(d||1)*1.5,dz/(d||1)*1.5,false,6)}}
         if(boss.alive&&(boss.x-x)**2+(boss.z-z)**2<(r+boss.r)**2)hurtBoss(D)}},
     ()=>{scene.remove(m);m.geometry.dispose();m.material.dispose()})}
-function taijiCast(){const lv=G.k.thLv,R=SK.thunder.range(),r=2.4*(lv>=1?1.3:1),dmg=swordDmg()*4*G.k.thD,spots=crowdSpots(HERO.pos.x,HERO.pos.z,R,r,lv>=2?2:1);
+function taijiCast(){const lv=G.k.thLv,R=SK.thunder.range(),r=2.4*(lv>=1?1.3:1),dmg=swordDmg()*5.5*G.k.thD,spots=crowdSpots(HERO.pos.x,HERO.pos.z,R,r,lv>=2?2:1);
   if(!spots.length)return false;spots.forEach(([x,z])=>taijiAt(x,z,r,dmg,lv));SFX.play('wan');return true}
 /* ---------- 技能組 ---------- */
 const SKILL_SETS=[

@@ -1,4 +1,4 @@
-"""Build the pages: src/hero.src.html -> index.html (主角試做), src/game.src.html -> game.html (關卡).
+"""Build the pages: src/hero.src.html -> hero.html (主角試做), src/game.src.html -> game.html (關卡，給 Artifact) + index.html (同一個遊戲包成完整網頁，給 GitHub Pages).
 
 - `/*@include name.js*/` in a page is replaced by src/name.js (the shared hero lives in src/hero_core.js).
 
@@ -37,14 +37,14 @@ def subset(path, text):
         return base64.b64encode(open(out, 'rb').read()).decode()
 
 
-PAGES = [('hero.src.html', 'index.html', 'hero.test.html'), ('game.src.html', 'game.html', 'game.test.html')]
+PAGES = [('hero.src.html', 'hero.html', 'hero.test.html', None), ('game.src.html', 'game.html', 'game.test.html', 'index.html')]
 
 
 def include(text):
     return re.sub(r'/\*@include ([\w./]+)\*/', lambda m: open(os.path.join(ROOT, 'src', m.group(1)), encoding='utf8').read(), text)
 
 
-def build(src_name, out_name, test_name):
+def build(src_name, out_name, test_name, page_name=None):
     path = os.path.join(ROOT, 'src', src_name)
     if not os.path.exists(path):
         return
@@ -85,6 +85,11 @@ def build(src_name, out_name, test_name):
     print('syntax   OK')
 
     open(os.path.join(ROOT, out_name), 'w', encoding='utf8').write(out)
+    if page_name:  # GitHub Pages needs a real document (charset + viewport); the Artifact wraps the fragment itself
+        open(os.path.join(ROOT, page_name), 'w', encoding='utf8').write(
+            '<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" '
+            'content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no"></head><body>' + out + '</body></html>')
+        print(page_name, 'written')
     test = out.replace(f'<script src="{THREE_CDN}"></script>', f'<script src="file://{THREE_LOCAL}"></script>')
     test = ('<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" '
             'content="width=device-width,initial-scale=1,viewport-fit=cover"></head><body>' + test + '</body></html>')

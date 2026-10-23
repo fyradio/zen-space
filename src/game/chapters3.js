@@ -76,7 +76,7 @@ CHC[6]={map:6,sky:1,fog:0x6a84a0,ground:0xdde8f4,mobs:[['bird',2.4,0],['crow',1.
 CHC[7]={map:7,sky:1,fog:0x2a2840,ground:0x7a7494,mobs:[['crow',2.6,0],['cloud',1.8,.5],['bird',1.2,0],['tmq',.8,4]],elite:'cloud',boss:'kui'};
 CHC[8]={map:8,sky:1,fog:0x1a2a54,ground:0x7a98d8,mobs:[['jiaoling',2.4,0],['tmq',1.8,.5],['bird',1.2,0],['crow',1,3]],elite:'tmq',boss:'dragon'};
 // ---------- 劍氣貫日（第七章大絕）：全畫面的巨大劍氣長虹 ----------
-function sunCast(A){const a0=Math.atan2(A.dir[0],A.dir[1]),hx=HERO.pos.x,hz=HERO.pos.z,L=18,W=5,dmg=swordDmg()*11,dx=Math.sin(a0),dz=Math.cos(a0);G.ultBoss=0;G.slow=.5;shake=Math.max(shake,.7);SFX.play('ult');buzz(70);
+function sunCast(A){const a0=Math.atan2(A.dir[0],A.dir[1]),hx=HERO.pos.x,hz=HERO.pos.z,L=18,W=5,dmg=swordDmg()*95,dx=Math.sin(a0),dz=Math.cos(a0);G.ultBoss=0;G.slow=.5;shake=Math.max(shake,.7);SFX.play('ult');buzz(70);
   const u=$('#ultFx');u.classList.remove('on');void u.offsetWidth;u.classList.add('on');banner('劍氣貫日','大絕',true);
   const m=new THREE.Mesh(beamGeo,new THREE.MeshBasicMaterial({map:beamTex,color:0xffe9a0,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide}));m.position.set(hx,.8,hz);m.rotation.y=a0;scene.add(m);let hit=false;
   act(1.6,t=>{const k=Math.min(1,t/.25);m.position.set(HERO.pos.x,.8,HERO.pos.z);m.scale.set(W*(t>.9?Math.max(.1,1-(t-.9)/.7):1),1,L*k);m.material.opacity=t<1.1?1:Math.max(0,1-(t-1.1)/.5);

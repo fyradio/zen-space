@@ -76,14 +76,14 @@ CHC[11]={rate:2.2,map:0,fog:0x1a1a26,ground:0xb8b0c0,mobs:[['ghost',2,0]],elite:
 const ENDLESS_BOSS=['lantern','general','fox','bell','hungry','ferry','yinshi','xuanbing','jinjia','shenhan','xuehe'];
 function endlessPick(){const m=Math.floor(Math.random()*6),src=CHC[m];Object.assign(CHC[11],{map:m,fog:src.fog,ground:src.ground,mobs:src.mobs.concat([['skel',1,2]]),elite:src.elite});curMap=-1}
 // ---------- 元嬰技能組 ----------
-const SOUL_LV=['範圍 +30%、傷害 +30%','雙斬：回頭再斬一次','三斬，斬完回復一成生命'];
-function soulCast(){const lv=G.k.sweepLv,R=SK.sweep.range(),dmg=swordDmg()*5.6*G.k.sweepD,n=lv>=3?3:lv>=2?2:1;SFX.play('sweep');shake=Math.max(shake,.3);buzz(25);
+const SOUL_LV=['範圍 +30%、傷害 +30%','雙斬：回頭再斬一次','斬得更重，斬完回復一成生命'];
+function soulCast(){const lv=G.k.sweepLv,R=SK.sweep.range(),dmg=swordDmg()*4.2*G.k.sweepD*(lv>=3?1.25:1),n=lv>=2?2:1;SFX.play('sweep');shake=Math.max(shake,.3);buzz(25);
   for(let w=0;w<n;w++)act(w*.32,null,()=>{const rr=R*(1+w*.18),a0=Math.random()*6.28;fx({p:tmp.set(HERO.pos.x,.5,HERO.pos.z),col:0xffe9a0,add:true,life:.45,s0:1,s1:rr*2.4,op:.95,vy:0});fx({p:tmp.set(HERO.pos.x,.9,HERO.pos.z),col:0xffffff,add:true,life:.3,s0:1,s1:rr*1.6,op:.8,vy:0});
     if(w===n-1&&lv>=3)G.hp=Math.min(G.maxhp,G.hp+G.maxhp*.1);SFX.play('sweep');
     for(const e of enemies){if(e.dead)continue;const dx=e.x-HERO.pos.x,dz=e.z-HERO.pos.z,d=Math.hypot(dx,dz);if(d<rr+e.r)hurtEnemy(e,dmg,dx/(d||1)*1.5,dz/(d||1)*1.5,false,6)}
     if(boss.alive&&Math.hypot(boss.x-HERO.pos.x,boss.z-HERO.pos.z)<rr+boss.r)hurtBoss(dmg)})}
 const HONG_LV=['光柱變寬','兩道貫虹','三道，被貫穿的定身 1 秒','五道貫虹'];const HONG_N=[1,1,2,3,5],HONG_W=[1.8,2.6,2.6,2.6,2.6],HONG_SP=[0,0,.5,.9,1.8];
-function hongCast(A){const lv=G.k.beamLv,L=SK.beam.range(),a0=Math.atan2(A.dir[0],A.dir[1]),dmg=swordDmg()*4.4*G.k.beamD*[1,1,.9,.8,.7][lv],hx=HERO.pos.x,hz=HERO.pos.z,n=HONG_N[lv],W=HONG_W[lv];SFX.play('beam');shake=Math.max(shake,.3);
+function hongCast(A){const lv=G.k.beamLv,L=SK.beam.range(),a0=Math.atan2(A.dir[0],A.dir[1]),dmg=swordDmg()*9*G.k.beamD*[1,1,.9,.8,.7][lv],hx=HERO.pos.x,hz=HERO.pos.z,n=HONG_N[lv],W=HONG_W[lv];SFX.play('beam');shake=Math.max(shake,.3);
   for(let j=0;j<n;j++){const a=n>1?a0-HONG_SP[lv]/2+HONG_SP[lv]*j/(n-1):a0,dx=Math.sin(a),dz=Math.cos(a),hit=new Set();
     const m=new THREE.Mesh(beamGeo,new THREE.MeshBasicMaterial({map:beamTex,color:0xfff0b0,transparent:true,opacity:0,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide}));m.position.set(hx,.8,hz);m.rotation.y=a;scene.add(m);
     act(.7,t=>{const k=Math.min(1,t/.12);m.scale.set(W*(.7+.3*k),1,L*k);m.material.opacity=.9*(t>.3?Math.max(0,1-(t-.3)/.4):1);
@@ -91,7 +91,7 @@ function hongCast(A){const lv=G.k.beamLv,L=SK.beam.range(),a0=Math.atan2(A.dir[0
         if(boss.alive&&!hit.has(boss)){const px=boss.x-hx,pz=boss.z-hz,al=px*dx+pz*dz,pe=Math.abs(px*dz-pz*dx);if(al>0&&al<L*k&&pe<W/2+boss.r){hit.add(boss);hurtBoss(dmg,true)}}},
       ()=>{scene.remove(m);m.material.dispose()})}}
 const SHADOW_LV=['劍影 +3 把','持續更久','劍影更快更痛','劍影 +4 把，會追魔王'];
-function shadowCast(){const lv=G.k.thLv,n=6+G.k.thN+(lv>=1?3:0)+(lv>=4?4:0),dur=3.6+(lv>=2?1.4:0),dmg=swordDmg()*1.7*G.k.thD*(lv>=3?1.3:1),spd=lv>=3?15:11;
+function shadowCast(){const lv=G.k.thLv,n=8+G.k.thN+(lv>=1?3:0)+(lv>=4?4:0),dur=3.6+(lv>=2?1.4:0),dmg=swordDmg()*3.4*G.k.thD*(lv>=3?1.3:1),spd=lv>=3?15:11;
   if(!enemies.some(e=>!e.dead&&onScreen(e.x,.4,e.z))&&!boss.alive)return false;SFX.play('thunder');
   for(let i=0;i<n;i++){const m=new THREE.Mesh(new THREE.ConeGeometry(.12,1.1,4),new THREE.MeshBasicMaterial({color:0xdfe8ff,transparent:true,opacity:.9,blending:THREE.AdditiveBlending,depthWrite:false}));m.rotation.order='YXZ';scene.add(m);
     const s={x:HERO.pos.x,z:HERO.pos.z,tg:null,cd:0,hit:new Map(),a:i/n*6.28};
@@ -105,7 +105,7 @@ SKILL_SETS.push({name:'元嬰',sweep:{n:'元神斬',ic:'神',col:0xffe9a0,shape:
   beam:{n:'劍氣貫虹',ic:'貫',col:0xfff0b0,shape:'line',w:1.8,range:()=>13,cd:()=>5.5*G.k.beamCd,spread:()=>HONG_SP[G.k.beamLv]>0?HONG_SP[G.k.beamLv]+.2:0,lv:HONG_LV,cast:hongCast},
   thunder:{n:'分神劍影',ic:'影',col:0xdfe8ff,shape:'auto',range:()=>9,cd:()=>10,lv:SHADOW_LV,cast:shadowCast}});
 // ---------- 大絕：元嬰出竅 ----------
-function yuanyingCast(A){const [px,pz]=A.pt,dmg=swordDmg()*3.2;G.ultBoss=0;G.slow=.4;shake=Math.max(shake,.5);SFX.play('ult');buzz(60);const u=$('#ultFx');u.classList.remove('on');void u.offsetWidth;u.classList.add('on');banner('元嬰出竅','元嬰化身替你斬妖',true);
+function yuanyingCast(A){const [px,pz]=A.pt,dmg=swordDmg()*5;G.ultBoss=0;G.slow=.4;shake=Math.max(shake,.5);SFX.play('ult');buzz(60);const u=$('#ultFx');u.classList.remove('on');void u.offsetWidth;u.classList.add('on');banner('元嬰出竅','元嬰化身替你斬妖',true);
   const av=new THREE.Group(),M=new THREE.MeshBasicMaterial({color:0xffe9a0,transparent:true,opacity:.7,blending:THREE.AdditiveBlending,depthWrite:false});
   const c=new THREE.Mesh(new THREE.ConeGeometry(1.1,3,10),M);c.position.y=1.5;av.add(c);const h=new THREE.Mesh(new THREE.SphereGeometry(.55,12,10),M);h.position.y=3.3;av.add(h);
   const sw=new THREE.Mesh(new THREE.ConeGeometry(.18,4,4),M);sw.position.set(1.4,2.2,0);sw.rotation.z=-.4;av.add(sw);av.position.set(px,0,pz);scene.add(av);let tk=0;const DUR=9;

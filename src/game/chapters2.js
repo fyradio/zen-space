@@ -74,7 +74,7 @@ CHC[4]={map:4,fog:0x2a1a1e,ground:0x6a5a5a,mobs:[['umb',2.4,0],['ghost',1.4,0],[
 CHC[5]={map:5,fog:0x10202c,ground:0x5a6a78,mobs:[['drown',2.2,0],['lamp',1.8,.5],['ghost',1.6,0],['jiang',1.1,2.5],['umb',1,3]],elite:'drown',boss:'ferry'};
 
 // ---------- 八卦封妖陣 ----------
-function baguaCast(A){const [x,z]=A.pt,r=SK.ult.r(),dmg=swordDmg()*9;G.ultBoss=0;G.slow=.5;shake=Math.max(shake,.5);SFX.play('ult');buzz(60);const u=$('#ultFx');u.classList.remove('on');void u.offsetWidth;u.classList.add('on');banner('八卦封妖陣','大絕',true);
+function baguaCast(A){const [x,z]=A.pt,r=SK.ult.r(),dmg=swordDmg()*30;G.ultBoss=0;G.slow=.5;shake=Math.max(shake,.5);SFX.play('ult');buzz(60);const u=$('#ultFx');u.classList.remove('on');void u.offsetWidth;u.classList.add('on');banner('八卦封妖陣','大絕',true);
   thForm.visible=true;thForm.material.color.setHex(0xffe08a);thForm.position.set(x,.08,z);thForm.scale.setScalar(r);let boom=false;
   act(2.3,(t,dt)=>{thForm.rotation.y+=dt*1.2;thForm.material.opacity=Math.min(1,t/.2)*(t>1.9?Math.max(0,1-(t-1.9)/.4):1);
       if(t<1.4){for(const e of enemies){if(e.dead)continue;const dx=x-e.x,dz=z-e.z,d=Math.hypot(dx,dz);if(d<r+2.5&&d>.3){const v=Math.min(d,(5+3*(1-d/(r+2.5)))*dt);e.x+=dx/d*v;e.z+=dz/d*v;e.stun=Math.max(e.stun||0,.4)}}
@@ -99,7 +99,7 @@ function lotusCast(){const lv=G.k.sweepLv,R=SK.sweep.range(),dmg=swordDmg()*5.2*
 // 玄冰長河: a wide river of ice down a line, freezing what it crosses
 const RIVER_LV=['河面變寬','兩道冰河','三道，冰封 1.5 秒','五道冰河'];
 const RIVER_N=[1,1,2,3,5],RIVER_W=[2,2.6,2.6,2.6,2.6],RIVER_SP=[0,0,.6,1.1,2.2];
-function riverCast(A){const lv=G.k.beamLv,L=SK.beam.range(),a0=Math.atan2(A.dir[0],A.dir[1]),dmg=swordDmg()*4*G.k.beamD*[1,1,.9,.8,.7][lv],hx=HERO.pos.x,hz=HERO.pos.z,n=RIVER_N[lv],W=RIVER_W[lv];
+function riverCast(A){const lv=G.k.beamLv,L=SK.beam.range(),a0=Math.atan2(A.dir[0],A.dir[1]),dmg=swordDmg()*7.5*G.k.beamD*[1,1,.9,.8,.7][lv],hx=HERO.pos.x,hz=HERO.pos.z,n=RIVER_N[lv],W=RIVER_W[lv];
   SFX.play('beam');SFX.play('bell');shake=Math.max(shake,.25);
   for(let j=0;j<n;j++){const a=n>1?a0-RIVER_SP[lv]/2+RIVER_SP[lv]*j/(n-1):a0,dx=Math.sin(a),dz=Math.cos(a),hit=new Set();
     const m=new THREE.Mesh(beamGeo,new THREE.MeshBasicMaterial({color:0x9fe8ff,transparent:true,opacity:0,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide}));m.position.set(hx,.1,hz);m.rotation.y=a;scene.add(m);

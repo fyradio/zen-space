@@ -3,7 +3,7 @@
    難度：妖血 ×1.1^推薦境界×(1+0.08×章)；魔王血 ×1.1^推薦境界×(1+0.15×章)。 */
 const chRec=ch=>CH[ch]?CH[ch].rec:0;
 const chDmg=ch=>Math.pow(1.06,chRec(ch));// monsters hit harder as the recommended realm (and your own HP) grows
-const chHp=ch=>Math.pow(1.1,chRec(ch))*(1+.08*ch),chBoss=ch=>Math.pow(1.1,chRec(ch))*(1+.15*ch);
+const chHp=ch=>Math.pow(1.1,chRec(ch))*(1+.08*ch),chBoss=ch=>Math.pow(1.1,chRec(ch))*(1+.04*ch);
 /* ---------- 地圖 ---------- */
 function clearMap(){while(mapG.children.length){const o=mapG.children.pop();o.traverse(n=>{if(n.geometry)n.geometry.dispose()})}HOUSES.length=0}
 const MAPS={
@@ -184,7 +184,7 @@ Object.assign(CUTS,{
   ch3end:[{scene:'tribulation',t:'鎮魂燈亮起第三盞。你體內的靈氣翻湧——是築基的時候了。'},{scene:'tribulation',t:'集齊築基丹，在靜室打坐、或在戰場上引雷劫，就能踏入築基。'}]});
 /* ---------- 新大絕 ---------- */
 // 三昧真火: a fan of fire that rolls outward and keeps burning what it touched
-function fireCast(A){const S=SK.ult,ang=S.ang,R=S.range(),a0=Math.atan2(A.dir[0],A.dir[1]),hx=HERO.pos.x,hz=HERO.pos.z,dmg=swordDmg()*10;
+function fireCast(A){const S=SK.ult,ang=S.ang,R=S.range(),a0=Math.atan2(A.dir[0],A.dir[1]),hx=HERO.pos.x,hz=HERO.pos.z,dmg=swordDmg()*50;
   G.slow=.4;shake=Math.max(shake,.4);SFX.play('ult');buzz(50);const u=$('#ultFx');u.classList.remove('on');void u.offsetWidth;u.classList.add('on');banner('三昧真火','大絕',true);
   const m=new THREE.Mesh(fanGeo(ang),new THREE.MeshBasicMaterial({color:0xff6a1a,transparent:true,opacity:0,blending:THREE.AdditiveBlending,depthWrite:false}));m.position.set(hx,.06,hz);m.rotation.y=a0;scene.add(m);let hit=false;
   act(2.2,(t)=>{const k=Math.min(1,t/.5);m.scale.setScalar(R*k);m.material.opacity=t<1.6?.55+.15*Math.sin(t*20):Math.max(0,.6*(1-(t-1.6)/.6));
@@ -198,7 +198,7 @@ const thForm=(()=>{const t=ctex(512,512,x=>{x.translate(256,256);x.strokeStyle=x
     for(let i=0;i<12;i++){const a=i/12*Math.PI*2;x.beginPath();let px=Math.cos(a)*60,py=Math.sin(a)*60;x.moveTo(px,py);for(let k=1;k<5;k++){const rr=60+k*24,aa=a+(k%2?.08:-.08);x.lineTo(Math.cos(aa)*rr,Math.sin(aa)*rr)}x.stroke()}
     x.font='bold 96px serif';x.textAlign='center';x.textBaseline='middle';x.fillStyle='#ffe08a';x.fillText('雷',0,6)});
   const m=new THREE.Mesh(new THREE.PlaneGeometry(2,2).rotateX(-Math.PI/2),new THREE.MeshBasicMaterial({map:t,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false,opacity:0}));m.visible=false;m.renderOrder=4;scene.add(m);return m})();
-function thunder9Cast(A){const [x,z]=A.pt,r=SK.ult.r(),dmg=swordDmg()*3.5;G.ultBoss=0;
+function thunder9Cast(A){const [x,z]=A.pt,r=SK.ult.r(),dmg=swordDmg()*9;G.ultBoss=0;
   G.slow=.5;shake=Math.max(shake,.5);SFX.play('ult');buzz(60);const u=$('#ultFx');u.classList.remove('on');void u.offsetWidth;u.classList.add('on');banner('九天神雷','大絕',true);
   thForm.visible=true;thForm.position.set(x,.08,z);thForm.scale.setScalar(r);for(const e of enemies)if(!e.dead&&(e.x-x)**2+(e.z-z)**2<r*r)e.stun=2.5;if(boss.alive&&(boss.x-x)**2+(boss.z-z)**2<(r+boss.r)**2)boss.stun=1.5;
   let n=0,big=false;act(2.2,(t,dt)=>{thForm.rotation.y-=dt;thForm.material.opacity=Math.min(1,t/.2)*(t>1.8?Math.max(0,1-(t-1.8)/.4):1);

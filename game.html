@@ -1509,7 +1509,7 @@ const beamTex=ctex(64,16,(x,w,h)=>{const g=x.createLinearGradient(0,0,w,0);g.add
   g.addColorStop(.72,'rgba(255,70,50,.6)');g.addColorStop(1,'rgba(255,40,30,0)');x.fillStyle=g;x.fillRect(0,0,w,h)});
 const beamGeo=new THREE.PlaneGeometry(1,1).rotateX(-Math.PI/2).translate(0,0,.5);
 function beamDirs(a0){const lv=G.k.beamLv,n=BEAM_N[lv],sp=BEAM_SPREAD[lv];return Array.from({length:n},(_,j)=>lv>=4?a0+j/n*Math.PI*2:n>1?a0-sp/2+sp*j/(n-1):a0)}
-function beamCast(A){const lv=G.k.beamLv,L=SK.beam.range(),W=SK.beam.w,a0=Math.atan2(A.dir[0],A.dir[1]),hx=HERO.pos.x,hz=HERO.pos.z,dmg=swordDmg()*4*G.k.beamD*[1,.9,.8,.75,.7][lv],hitN=new Map();
+function beamCast(A){const lv=G.k.beamLv,L=SK.beam.range(),W=SK.beam.w,a0=Math.atan2(A.dir[0],A.dir[1]),hx=HERO.pos.x,hz=HERO.pos.z,dmg=swordDmg()*7*G.k.beamD*[1,.9,.8,.75,.7][lv],hitN=new Map();
   SFX.play('beam');shake=Math.max(shake,.15+lv*.05);
   beamDirs(a0).forEach((a,j)=>{const dx=Math.sin(a),dz=Math.cos(a);
     const m=new THREE.Mesh(beamGeo,new THREE.MeshBasicMaterial({map:beamTex,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide}));
@@ -1557,7 +1557,7 @@ const ultSwords=[];for(let i=0;i<40;i++)ultSwords.push({g:goldSword(),on:false})
 function ultHit(x,z,r,dmg){for(const e of enemies)if(!e.dead&&(e.x-x)**2+(e.z-z)**2<(r+e.r)**2)hurtEnemy(e,dmg,(e.x-x)*.3,(e.z-z)*.3,true,5);
   // the 大絕 may take up to 30% of the boss's HP per cast, past its usual per-second limit
   if(boss.alive&&(boss.x-x)**2+(boss.z-z)**2<(r+boss.r)**2){const room=boss.max*.22-G.ultBoss;if(room>0){const d=Math.min(dmg,room);G.ultBoss+=d;boss.allow+=d;hurtBoss(d,true)}}}
-function ultCast(pt){const [x,z]=pt,r=SK.ult.r(),N=Math.round(30*G.k.ultN),dmg=swordDmg()*8;G.ultBoss=0;
+function ultCast(pt){const [x,z]=pt,r=SK.ult.r(),N=Math.round(30*G.k.ultN),dmg=swordDmg()*6;G.ultBoss=0;
   G.slow=.6;shake=Math.max(shake,.5);SFX.play('ult');buzz(60);const u=$('#ultFx');u.classList.remove('on');void u.offsetWidth;u.classList.add('on');banner('萬劍歸宗','大絕',true);
   form.visible=pillar.visible=true;form.position.set(x,.08,z);form.scale.setScalar(r);pillar.position.set(x,4.5,z);pillar.scale.set(r*.9,9,r*.9);
   const drops=[];for(let i=0;i<N;i++){const a=Math.random()*Math.PI*2,rr=Math.sqrt(Math.random())*r;drops.push({x:x+Math.sin(a)*rr,z:z+Math.cos(a)*rr,t0:.35+(i/N)*1.15,done:false,s:null})}
@@ -1633,7 +1633,7 @@ function frostCast(){const lv=G.k.sweepLv,R=SK.sweep.range(),dmg=swordDmg()*4.6*
 // ---------- 赤焰火龍（築基・橘紅）----------
 const DRAGON_N=[1,2,3,5,8],DRAGON_SPREAD=[0,.5,.9,1.6,Math.PI*2];
 const DRAGON_LV=['兩條火龍','三條火龍','五條火龍','八條火龍，四面八方'];
-function dragonCast(A){const lv=G.k.beamLv,L=SK.beam.range(),a0=Math.atan2(A.dir[0],A.dir[1]),n=DRAGON_N[lv],sp=DRAGON_SPREAD[lv],dmg=swordDmg()*4.4*G.k.beamD*[1,.9,.8,.7,.6][lv],hx=HERO.pos.x,hz=HERO.pos.z,hitN=new Map();
+function dragonCast(A){const lv=G.k.beamLv,L=SK.beam.range(),a0=Math.atan2(A.dir[0],A.dir[1]),n=DRAGON_N[lv],sp=DRAGON_SPREAD[lv],dmg=swordDmg()*6*G.k.beamD*[1,.9,.8,.7,.6][lv],hx=HERO.pos.x,hz=HERO.pos.z,hitN=new Map();
   SFX.play('beam');SFX.play('boom');shake=Math.max(shake,.2);
   for(let j=0;j<n;j++){const a=lv>=4?a0+j/n*Math.PI*2:n>1?a0-sp/2+sp*j/(n-1):a0,dx=Math.sin(a),dz=Math.cos(a),mine=new Set(),T=L/15;let trail=0;
     const segs=[];if(!simming)for(let i=0;i<7;i++){const s=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex,color:i===0?0xffe08a:i<3?0xff8a2a:0xff4a1a,opacity:.95,blending:THREE.AdditiveBlending,depthWrite:false}));
@@ -1666,7 +1666,7 @@ function taijiAt(x,z,r,dmg,lv){const m=new THREE.Mesh(new THREE.CircleGeometry(1
         const D=dmg*(lv>=3?1.5:1);for(const e of enemies){if(e.dead)continue;const dx=e.x-x,dz=e.z-z,d=Math.hypot(dx,dz);if(d<r+.3){if(lv>=3)e.stun=Math.max(e.stun||0,1.5);hurtEnemy(e,D,dx/(d||1)*1.5,dz/(d||1)*1.5,false,6)}}
         if(boss.alive&&(boss.x-x)**2+(boss.z-z)**2<(r+boss.r)**2)hurtBoss(D)}},
     ()=>{scene.remove(m);m.geometry.dispose();m.material.dispose()})}
-function taijiCast(){const lv=G.k.thLv,R=SK.thunder.range(),r=2.4*(lv>=1?1.3:1),dmg=swordDmg()*4*G.k.thD,spots=crowdSpots(HERO.pos.x,HERO.pos.z,R,r,lv>=2?2:1);
+function taijiCast(){const lv=G.k.thLv,R=SK.thunder.range(),r=2.4*(lv>=1?1.3:1),dmg=swordDmg()*5.5*G.k.thD,spots=crowdSpots(HERO.pos.x,HERO.pos.z,R,r,lv>=2?2:1);
   if(!spots.length)return false;spots.forEach(([x,z])=>taijiAt(x,z,r,dmg,lv));SFX.play('wan');return true}
 /* ---------- 技能組 ---------- */
 const SKILL_SETS=[
@@ -1709,7 +1709,7 @@ function clearHZ(){HZ.forEach(h=>{scene.remove(h.m);h.m.material.dispose()});HZ.
    難度：妖血 ×1.1^推薦境界×(1+0.08×章)；魔王血 ×1.1^推薦境界×(1+0.15×章)。 */
 const chRec=ch=>CH[ch]?CH[ch].rec:0;
 const chDmg=ch=>Math.pow(1.06,chRec(ch));// monsters hit harder as the recommended realm (and your own HP) grows
-const chHp=ch=>Math.pow(1.1,chRec(ch))*(1+.08*ch),chBoss=ch=>Math.pow(1.1,chRec(ch))*(1+.15*ch);
+const chHp=ch=>Math.pow(1.1,chRec(ch))*(1+.08*ch),chBoss=ch=>Math.pow(1.1,chRec(ch))*(1+.04*ch);
 /* ---------- 地圖 ---------- */
 function clearMap(){while(mapG.children.length){const o=mapG.children.pop();o.traverse(n=>{if(n.geometry)n.geometry.dispose()})}HOUSES.length=0}
 const MAPS={
@@ -1890,7 +1890,7 @@ Object.assign(CUTS,{
   ch3end:[{scene:'tribulation',t:'鎮魂燈亮起第三盞。你體內的靈氣翻湧——是築基的時候了。'},{scene:'tribulation',t:'集齊築基丹，在靜室打坐、或在戰場上引雷劫，就能踏入築基。'}]});
 /* ---------- 新大絕 ---------- */
 // 三昧真火: a fan of fire that rolls outward and keeps burning what it touched
-function fireCast(A){const S=SK.ult,ang=S.ang,R=S.range(),a0=Math.atan2(A.dir[0],A.dir[1]),hx=HERO.pos.x,hz=HERO.pos.z,dmg=swordDmg()*10;
+function fireCast(A){const S=SK.ult,ang=S.ang,R=S.range(),a0=Math.atan2(A.dir[0],A.dir[1]),hx=HERO.pos.x,hz=HERO.pos.z,dmg=swordDmg()*50;
   G.slow=.4;shake=Math.max(shake,.4);SFX.play('ult');buzz(50);const u=$('#ultFx');u.classList.remove('on');void u.offsetWidth;u.classList.add('on');banner('三昧真火','大絕',true);
   const m=new THREE.Mesh(fanGeo(ang),new THREE.MeshBasicMaterial({color:0xff6a1a,transparent:true,opacity:0,blending:THREE.AdditiveBlending,depthWrite:false}));m.position.set(hx,.06,hz);m.rotation.y=a0;scene.add(m);let hit=false;
   act(2.2,(t)=>{const k=Math.min(1,t/.5);m.scale.setScalar(R*k);m.material.opacity=t<1.6?.55+.15*Math.sin(t*20):Math.max(0,.6*(1-(t-1.6)/.6));
@@ -1904,7 +1904,7 @@ const thForm=(()=>{const t=ctex(512,512,x=>{x.translate(256,256);x.strokeStyle=x
     for(let i=0;i<12;i++){const a=i/12*Math.PI*2;x.beginPath();let px=Math.cos(a)*60,py=Math.sin(a)*60;x.moveTo(px,py);for(let k=1;k<5;k++){const rr=60+k*24,aa=a+(k%2?.08:-.08);x.lineTo(Math.cos(aa)*rr,Math.sin(aa)*rr)}x.stroke()}
     x.font='bold 96px serif';x.textAlign='center';x.textBaseline='middle';x.fillStyle='#ffe08a';x.fillText('雷',0,6)});
   const m=new THREE.Mesh(new THREE.PlaneGeometry(2,2).rotateX(-Math.PI/2),new THREE.MeshBasicMaterial({map:t,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false,opacity:0}));m.visible=false;m.renderOrder=4;scene.add(m);return m})();
-function thunder9Cast(A){const [x,z]=A.pt,r=SK.ult.r(),dmg=swordDmg()*3.5;G.ultBoss=0;
+function thunder9Cast(A){const [x,z]=A.pt,r=SK.ult.r(),dmg=swordDmg()*9;G.ultBoss=0;
   G.slow=.5;shake=Math.max(shake,.5);SFX.play('ult');buzz(60);const u=$('#ultFx');u.classList.remove('on');void u.offsetWidth;u.classList.add('on');banner('九天神雷','大絕',true);
   thForm.visible=true;thForm.position.set(x,.08,z);thForm.scale.setScalar(r);for(const e of enemies)if(!e.dead&&(e.x-x)**2+(e.z-z)**2<r*r)e.stun=2.5;if(boss.alive&&(boss.x-x)**2+(boss.z-z)**2<(r+boss.r)**2)boss.stun=1.5;
   let n=0,big=false;act(2.2,(t,dt)=>{thForm.rotation.y-=dt;thForm.material.opacity=Math.min(1,t/.2)*(t>1.8?Math.max(0,1-(t-1.8)/.4):1);
@@ -1995,7 +1995,7 @@ CHC[4]={map:4,fog:0x2a1a1e,ground:0x6a5a5a,mobs:[['umb',2.4,0],['ghost',1.4,0],[
 CHC[5]={map:5,fog:0x10202c,ground:0x5a6a78,mobs:[['drown',2.2,0],['lamp',1.8,.5],['ghost',1.6,0],['jiang',1.1,2.5],['umb',1,3]],elite:'drown',boss:'ferry'};
 
 // ---------- 八卦封妖陣 ----------
-function baguaCast(A){const [x,z]=A.pt,r=SK.ult.r(),dmg=swordDmg()*9;G.ultBoss=0;G.slow=.5;shake=Math.max(shake,.5);SFX.play('ult');buzz(60);const u=$('#ultFx');u.classList.remove('on');void u.offsetWidth;u.classList.add('on');banner('八卦封妖陣','大絕',true);
+function baguaCast(A){const [x,z]=A.pt,r=SK.ult.r(),dmg=swordDmg()*30;G.ultBoss=0;G.slow=.5;shake=Math.max(shake,.5);SFX.play('ult');buzz(60);const u=$('#ultFx');u.classList.remove('on');void u.offsetWidth;u.classList.add('on');banner('八卦封妖陣','大絕',true);
   thForm.visible=true;thForm.material.color.setHex(0xffe08a);thForm.position.set(x,.08,z);thForm.scale.setScalar(r);let boom=false;
   act(2.3,(t,dt)=>{thForm.rotation.y+=dt*1.2;thForm.material.opacity=Math.min(1,t/.2)*(t>1.9?Math.max(0,1-(t-1.9)/.4):1);
       if(t<1.4){for(const e of enemies){if(e.dead)continue;const dx=x-e.x,dz=z-e.z,d=Math.hypot(dx,dz);if(d<r+2.5&&d>.3){const v=Math.min(d,(5+3*(1-d/(r+2.5)))*dt);e.x+=dx/d*v;e.z+=dz/d*v;e.stun=Math.max(e.stun||0,.4)}}
@@ -2020,7 +2020,7 @@ function lotusCast(){const lv=G.k.sweepLv,R=SK.sweep.range(),dmg=swordDmg()*5.2*
 // 玄冰長河: a wide river of ice down a line, freezing what it crosses
 const RIVER_LV=['河面變寬','兩道冰河','三道，冰封 1.5 秒','五道冰河'];
 const RIVER_N=[1,1,2,3,5],RIVER_W=[2,2.6,2.6,2.6,2.6],RIVER_SP=[0,0,.6,1.1,2.2];
-function riverCast(A){const lv=G.k.beamLv,L=SK.beam.range(),a0=Math.atan2(A.dir[0],A.dir[1]),dmg=swordDmg()*4*G.k.beamD*[1,1,.9,.8,.7][lv],hx=HERO.pos.x,hz=HERO.pos.z,n=RIVER_N[lv],W=RIVER_W[lv];
+function riverCast(A){const lv=G.k.beamLv,L=SK.beam.range(),a0=Math.atan2(A.dir[0],A.dir[1]),dmg=swordDmg()*7.5*G.k.beamD*[1,1,.9,.8,.7][lv],hx=HERO.pos.x,hz=HERO.pos.z,n=RIVER_N[lv],W=RIVER_W[lv];
   SFX.play('beam');SFX.play('bell');shake=Math.max(shake,.25);
   for(let j=0;j<n;j++){const a=n>1?a0-RIVER_SP[lv]/2+RIVER_SP[lv]*j/(n-1):a0,dx=Math.sin(a),dz=Math.cos(a),hit=new Set();
     const m=new THREE.Mesh(beamGeo,new THREE.MeshBasicMaterial({color:0x9fe8ff,transparent:true,opacity:0,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide}));m.position.set(hx,.1,hz);m.rotation.y=a;scene.add(m);
@@ -2130,7 +2130,7 @@ CHC[6]={map:6,sky:1,fog:0x6a84a0,ground:0xdde8f4,mobs:[['bird',2.4,0],['crow',1.
 CHC[7]={map:7,sky:1,fog:0x2a2840,ground:0x7a7494,mobs:[['crow',2.6,0],['cloud',1.8,.5],['bird',1.2,0],['tmq',.8,4]],elite:'cloud',boss:'kui'};
 CHC[8]={map:8,sky:1,fog:0x1a2a54,ground:0x7a98d8,mobs:[['jiaoling',2.4,0],['tmq',1.8,.5],['bird',1.2,0],['crow',1,3]],elite:'tmq',boss:'dragon'};
 // ---------- 劍氣貫日（第七章大絕）：全畫面的巨大劍氣長虹 ----------
-function sunCast(A){const a0=Math.atan2(A.dir[0],A.dir[1]),hx=HERO.pos.x,hz=HERO.pos.z,L=18,W=5,dmg=swordDmg()*11,dx=Math.sin(a0),dz=Math.cos(a0);G.ultBoss=0;G.slow=.5;shake=Math.max(shake,.7);SFX.play('ult');buzz(70);
+function sunCast(A){const a0=Math.atan2(A.dir[0],A.dir[1]),hx=HERO.pos.x,hz=HERO.pos.z,L=18,W=5,dmg=swordDmg()*95,dx=Math.sin(a0),dz=Math.cos(a0);G.ultBoss=0;G.slow=.5;shake=Math.max(shake,.7);SFX.play('ult');buzz(70);
   const u=$('#ultFx');u.classList.remove('on');void u.offsetWidth;u.classList.add('on');banner('劍氣貫日','大絕',true);
   const m=new THREE.Mesh(beamGeo,new THREE.MeshBasicMaterial({map:beamTex,color:0xffe9a0,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide}));m.position.set(hx,.8,hz);m.rotation.y=a0;scene.add(m);let hit=false;
   act(1.6,t=>{const k=Math.min(1,t/.25);m.position.set(HERO.pos.x,.8,HERO.pos.z);m.scale.set(W*(t>.9?Math.max(.1,1-(t-.9)/.7):1),1,L*k);m.material.opacity=t<1.1?1:Math.max(0,1-(t-1.1)/.5);
@@ -2229,14 +2229,14 @@ CHC[11]={rate:2.2,map:0,fog:0x1a1a26,ground:0xb8b0c0,mobs:[['ghost',2,0]],elite:
 const ENDLESS_BOSS=['lantern','general','fox','bell','hungry','ferry','yinshi','xuanbing','jinjia','shenhan','xuehe'];
 function endlessPick(){const m=Math.floor(Math.random()*6),src=CHC[m];Object.assign(CHC[11],{map:m,fog:src.fog,ground:src.ground,mobs:src.mobs.concat([['skel',1,2]]),elite:src.elite});curMap=-1}
 // ---------- 元嬰技能組 ----------
-const SOUL_LV=['範圍 +30%、傷害 +30%','雙斬：回頭再斬一次','三斬，斬完回復一成生命'];
-function soulCast(){const lv=G.k.sweepLv,R=SK.sweep.range(),dmg=swordDmg()*5.6*G.k.sweepD,n=lv>=3?3:lv>=2?2:1;SFX.play('sweep');shake=Math.max(shake,.3);buzz(25);
+const SOUL_LV=['範圍 +30%、傷害 +30%','雙斬：回頭再斬一次','斬得更重，斬完回復一成生命'];
+function soulCast(){const lv=G.k.sweepLv,R=SK.sweep.range(),dmg=swordDmg()*4.2*G.k.sweepD*(lv>=3?1.25:1),n=lv>=2?2:1;SFX.play('sweep');shake=Math.max(shake,.3);buzz(25);
   for(let w=0;w<n;w++)act(w*.32,null,()=>{const rr=R*(1+w*.18),a0=Math.random()*6.28;fx({p:tmp.set(HERO.pos.x,.5,HERO.pos.z),col:0xffe9a0,add:true,life:.45,s0:1,s1:rr*2.4,op:.95,vy:0});fx({p:tmp.set(HERO.pos.x,.9,HERO.pos.z),col:0xffffff,add:true,life:.3,s0:1,s1:rr*1.6,op:.8,vy:0});
     if(w===n-1&&lv>=3)G.hp=Math.min(G.maxhp,G.hp+G.maxhp*.1);SFX.play('sweep');
     for(const e of enemies){if(e.dead)continue;const dx=e.x-HERO.pos.x,dz=e.z-HERO.pos.z,d=Math.hypot(dx,dz);if(d<rr+e.r)hurtEnemy(e,dmg,dx/(d||1)*1.5,dz/(d||1)*1.5,false,6)}
     if(boss.alive&&Math.hypot(boss.x-HERO.pos.x,boss.z-HERO.pos.z)<rr+boss.r)hurtBoss(dmg)})}
 const HONG_LV=['光柱變寬','兩道貫虹','三道，被貫穿的定身 1 秒','五道貫虹'];const HONG_N=[1,1,2,3,5],HONG_W=[1.8,2.6,2.6,2.6,2.6],HONG_SP=[0,0,.5,.9,1.8];
-function hongCast(A){const lv=G.k.beamLv,L=SK.beam.range(),a0=Math.atan2(A.dir[0],A.dir[1]),dmg=swordDmg()*4.4*G.k.beamD*[1,1,.9,.8,.7][lv],hx=HERO.pos.x,hz=HERO.pos.z,n=HONG_N[lv],W=HONG_W[lv];SFX.play('beam');shake=Math.max(shake,.3);
+function hongCast(A){const lv=G.k.beamLv,L=SK.beam.range(),a0=Math.atan2(A.dir[0],A.dir[1]),dmg=swordDmg()*9*G.k.beamD*[1,1,.9,.8,.7][lv],hx=HERO.pos.x,hz=HERO.pos.z,n=HONG_N[lv],W=HONG_W[lv];SFX.play('beam');shake=Math.max(shake,.3);
   for(let j=0;j<n;j++){const a=n>1?a0-HONG_SP[lv]/2+HONG_SP[lv]*j/(n-1):a0,dx=Math.sin(a),dz=Math.cos(a),hit=new Set();
     const m=new THREE.Mesh(beamGeo,new THREE.MeshBasicMaterial({map:beamTex,color:0xfff0b0,transparent:true,opacity:0,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide}));m.position.set(hx,.8,hz);m.rotation.y=a;scene.add(m);
     act(.7,t=>{const k=Math.min(1,t/.12);m.scale.set(W*(.7+.3*k),1,L*k);m.material.opacity=.9*(t>.3?Math.max(0,1-(t-.3)/.4):1);
@@ -2244,7 +2244,7 @@ function hongCast(A){const lv=G.k.beamLv,L=SK.beam.range(),a0=Math.atan2(A.dir[0
         if(boss.alive&&!hit.has(boss)){const px=boss.x-hx,pz=boss.z-hz,al=px*dx+pz*dz,pe=Math.abs(px*dz-pz*dx);if(al>0&&al<L*k&&pe<W/2+boss.r){hit.add(boss);hurtBoss(dmg,true)}}},
       ()=>{scene.remove(m);m.material.dispose()})}}
 const SHADOW_LV=['劍影 +3 把','持續更久','劍影更快更痛','劍影 +4 把，會追魔王'];
-function shadowCast(){const lv=G.k.thLv,n=6+G.k.thN+(lv>=1?3:0)+(lv>=4?4:0),dur=3.6+(lv>=2?1.4:0),dmg=swordDmg()*1.7*G.k.thD*(lv>=3?1.3:1),spd=lv>=3?15:11;
+function shadowCast(){const lv=G.k.thLv,n=8+G.k.thN+(lv>=1?3:0)+(lv>=4?4:0),dur=3.6+(lv>=2?1.4:0),dmg=swordDmg()*3.4*G.k.thD*(lv>=3?1.3:1),spd=lv>=3?15:11;
   if(!enemies.some(e=>!e.dead&&onScreen(e.x,.4,e.z))&&!boss.alive)return false;SFX.play('thunder');
   for(let i=0;i<n;i++){const m=new THREE.Mesh(new THREE.ConeGeometry(.12,1.1,4),new THREE.MeshBasicMaterial({color:0xdfe8ff,transparent:true,opacity:.9,blending:THREE.AdditiveBlending,depthWrite:false}));m.rotation.order='YXZ';scene.add(m);
     const s={x:HERO.pos.x,z:HERO.pos.z,tg:null,cd:0,hit:new Map(),a:i/n*6.28};
@@ -2258,7 +2258,7 @@ SKILL_SETS.push({name:'元嬰',sweep:{n:'元神斬',ic:'神',col:0xffe9a0,shape:
   beam:{n:'劍氣貫虹',ic:'貫',col:0xfff0b0,shape:'line',w:1.8,range:()=>13,cd:()=>5.5*G.k.beamCd,spread:()=>HONG_SP[G.k.beamLv]>0?HONG_SP[G.k.beamLv]+.2:0,lv:HONG_LV,cast:hongCast},
   thunder:{n:'分神劍影',ic:'影',col:0xdfe8ff,shape:'auto',range:()=>9,cd:()=>10,lv:SHADOW_LV,cast:shadowCast}});
 // ---------- 大絕：元嬰出竅 ----------
-function yuanyingCast(A){const [px,pz]=A.pt,dmg=swordDmg()*3.2;G.ultBoss=0;G.slow=.4;shake=Math.max(shake,.5);SFX.play('ult');buzz(60);const u=$('#ultFx');u.classList.remove('on');void u.offsetWidth;u.classList.add('on');banner('元嬰出竅','元嬰化身替你斬妖',true);
+function yuanyingCast(A){const [px,pz]=A.pt,dmg=swordDmg()*5;G.ultBoss=0;G.slow=.4;shake=Math.max(shake,.5);SFX.play('ult');buzz(60);const u=$('#ultFx');u.classList.remove('on');void u.offsetWidth;u.classList.add('on');banner('元嬰出竅','元嬰化身替你斬妖',true);
   const av=new THREE.Group(),M=new THREE.MeshBasicMaterial({color:0xffe9a0,transparent:true,opacity:.7,blending:THREE.AdditiveBlending,depthWrite:false});
   const c=new THREE.Mesh(new THREE.ConeGeometry(1.1,3,10),M);c.position.y=1.5;av.add(c);const h=new THREE.Mesh(new THREE.SphereGeometry(.55,12,10),M);h.position.y=3.3;av.add(h);
   const sw=new THREE.Mesh(new THREE.ConeGeometry(.18,4,4),M);sw.position.set(1.4,2.2,0);sw.rotation.z=-.4;av.add(sw);av.position.set(px,0,pz);scene.add(av);let tk=0;const DUR=9;
@@ -2545,7 +2545,7 @@ function stepSkills(dt){
       if(boss.alive&&(boss.x-s.to.x)**2+(boss.z-s.to.z)**2<(s.aoe+boss.r)**2)hurtBoss(s.dmg);shots.splice(i,1)}}}
 
 /* ================= 頭目 ================= */
-const ELITE_HP=3000,BOSS_HP=14000;// fixed: a stronger build kills them faster (that is the point of getting stronger)
+const ELITE_HP=4000,BOSS_HP=75000,BOSS_AT=.4;// fixed: a stronger build kills them faster (that is the point of getting stronger)
 
 function startElite(){G.eliteDone=true;const a=Math.random()*Math.PI*2,k=(CHC[G.ch]||CHC[0]).elite;const e=spawn(k,HERO.pos.x+Math.sin(a)*9,HERO.pos.z+Math.cos(a)*9,{elite:true,s:2.4,r:.6,spd:k==='lgh'?1.6:ET[k].spd*.8});
   if(e){e.hp=e.max=ELITE_HP*chHp(G.ch);e.dmg*=1.2}banner('大'+ET[k].n,'精英來了，斬了牠掉一大把魂火');shake=.3}
@@ -2555,10 +2555,10 @@ function startBoss(){const key=bossKey(G),D=BOSSES[key];boss.def=D;
   const M=boss.m=boss.models[key];M.g.visible=true;M.g.scale.setScalar(1);
   BGM.play('boss');G.bossDone=true;boss.alive=true;const a=Math.random()*Math.PI*2;boss.x=HERO.pos.x+Math.sin(a)*8;boss.z=HERO.pos.z+Math.cos(a)*8;
   // fixed HP (a stronger build kills it faster), scaled by chapter and by night (圍城 ×1.5)
-  boss.max=boss.hp=BOSS_HP*G.mod.boss*chBoss(G.ch);boss.allow=boss.max/20;boss.r=D.r;boss.dmg=D.dmg*(1+.1*G.ch)*chDmg(G.ch);SFX.play('boss');buzz(80);
+  boss.max=boss.hp=BOSS_HP*G.mod.boss*chBoss(G.ch)*(D.duel?.3:1);boss.allow=boss.max/30;boss.r=D.r;boss.dmg=D.dmg*(1+.1*G.ch)*chDmg(G.ch);SFX.play('boss');buzz(80);
   Object.assign(boss,{cd:3,sum:5,t:0,rage:false,ring:4,k:0,swing:0,stun:0,cl:16,dm:14,rd:0,done:false,tele:2,dash:0,fled:false,fleeT:0,shield:D.duel?boss.max*.3:0});if(D.noHit)boss.allow=boss.max;boss.g.visible=true;boss.g.position.set(boss.x,0,boss.z);
   $('#bossName').textContent=D.name;G.clash=null;$('#bossBox').classList.add('on');banner(D.line,'頭目');shake=.8;say(D.tip,5)}
-function stepBoss(dt){if(!boss.alive)return;const D=boss.def,M=boss.m;boss.t+=dt;boss.allow=Math.min(boss.max/20*1.5,boss.allow+boss.max/20*dt);
+function stepBoss(dt){if(!boss.alive)return;const D=boss.def,M=boss.m;boss.t+=dt;boss.allow=Math.min(boss.max/30*1.5,boss.allow+boss.max/30*dt);
   const dx=HERO.pos.x-boss.x,dz=HERO.pos.z-boss.z,d=Math.hypot(dx,dz)||1;let sp=d>4?D.spd:.6;if(D.keep&&d<D.keep)sp=-D.spd*.7;if(G.sky)sp=0;
   if(!(boss.stun>0)){boss.x+=dx/d*sp*dt;boss.z+=dz/d*sp*dt}else boss.stun-=dt;
   if(!G.sky){const rr=Math.hypot(boss.x,boss.z);if(rr>ARENA){boss.x*=ARENA/rr;boss.z*=ARENA/rr}}
@@ -2632,7 +2632,7 @@ function pickChar(c){if(c!==who){saveFace();useChar(c);applyFace({g:1,x:1});appl
 $$('[data-who]').forEach(b=>b.onclick=()=>pickChar(+b.dataset.who));pickChar(who);
 if(save.pal)applyPal(save.pal);
 function startNight(len,opt={}){BGM.play('night');bannerT=0;$('#banner').classList.remove('on');$('#breakBtn').hidden=true;SFX.resume();tryLandscape();leaveSky();if((opt.ch||0)===11)endlessPick();buildMap(opt.ch||0);setUlt(save.ult);resetWorld();cancelAim();G=newNight(len);G.sky=!!(CHC[opt.ch||0]&&CHC[opt.ch||0].sky);setSkills(G.tier=skillTier());G.ch=opt.ch||0;G.nt=opt.nt||0;if(G.ch===11)G.endBoss=ENDLESS_BOSS[Math.floor(Math.random()*ENDLESS_BOSS.length)];G.mod=[{spawn:1,boss:1,elite2:0},{spawn:1.4,boss:1,elite2:1},{spawn:1.2,boss:1.5,elite2:0}][G.nt];G.paused=false;$('#pillBtn').hidden=!(save.inv.pill.hui>0);$('#pillN').textContent=save.inv.pill.hui;$('#skills').hidden=$('#joy').hidden=false;drawJoy();$('#startOv').classList.remove('on');$('#endOv').classList.remove('on');$('#hud').hidden=false;
-  $('#bossMark').style.left='67%';spawnRing('ghost',8,7.5);// an opening ring so the first monsters are seen walking in
+  $('#bossMark').style.left=(BOSS_AT*100)+'%';spawnRing('ghost',8,7.5);// an opening ring so the first monsters are seen walking in
   renderBuffs();tipShown=false;say('左手走路，右手放技能！按住技能拖曳可以瞄準',6);
   setTimeout(()=>{if(G&&!G.over&&G.kills<3)say('吸青色的魂火可以頓悟喔！',4)},9000)}
 let med=null;
@@ -2717,8 +2717,8 @@ function stepGame(dt){const g=G;
   for(const h of HOUSES){const dx=root.position.x-h.x,dz=root.position.z-h.z,d=Math.hypot(dx,dz),r=h.r+.3;if(d<r&&d>1e-4){root.position.x=h.x+dx/d*r;root.position.z=h.z+dz/d*r}}
   // timeline
   const p=g.t/g.len;
-  const dk=BOSSES[bossKey(g)],cc=CHC[g.ch]||CHC[0];if(!cc.noElite&&!g.eliteDone&&p>=(g.mod.elite2?.3:.4))startElite();if(g.mod.elite2&&!g.elite2Done&&p>=.55){g.elite2Done=true;startElite()}
-  if(!g.bossDone&&p>=(dk.duel?.025:.67))startBoss();
+  const dk=BOSSES[bossKey(g)],cc=CHC[g.ch]||CHC[0];if(!cc.noElite&&!g.eliteDone&&p>=(g.mod.elite2?.17:.22))startElite();if(g.mod.elite2&&!g.elite2Done&&p>=.3){g.elite2Done=true;startElite()}
+  if(!g.bossDone&&p>=(dk.duel?.025:BOSS_AT))startBoss();
   if(dk.duel&&g.bossDone&&!boss.alive&&g.bossKilled){g.winT=(g.winT||0)+dt;if(g.winT>2.5){endNight(true);return}}
   if(dk.duel&&g.bossDone&&!boss.alive&&!g.bossKilled){g.winT=(g.winT||0)+dt;if(g.winT>3){endNight(true);return}}
   if(p>=.9){const k=Math.min(1,(p-.9)/.1);scene.fog.color.lerpColors(NIGHT_FOG,DAWN_FOG,k);scene.background.copy(scene.fog.color);hemi.intensity=.55+.6*k}
@@ -2926,7 +2926,7 @@ const DF=(()=>{let tab='go',tick=0,lookTab=0,lt=0,ld={g:0,x:0,b:0,h:0};
   return {render,set tab(v){tab=v}}})();
 
 DF.render();
-window.__game={get save(){return save},DUEL,B:boss,hurtBoss:(d)=>hurtBoss(d),cast:k=>castSkill(k,null),DF,startTribulation,canBreak,setCam:i=>{setCam(i)},ic:()=>{const m=ET.paper.mesh;return {cnt:m.count,ic:[...m.instanceColor.array.slice(0,9)],attr:Object.keys(m.geometry.attributes),vc:m.material.vertexColors,prog:renderer.info.programs.map(p=>p.name)}},cols:k=>{const a=ET[k].geo.attributes.color.array,u=new Set();for(let i=0;i<a.length;i+=3)u.add(a[i].toFixed(2)+','+a[i+1].toFixed(2)+','+a[i+2].toFixed(2));return [...u].concat([ET[k].mesh.material.vertexColors,!!ET[k].mesh.instanceColor])},gallery:(ks=['ghost','paper','jiang','lgh'])=>{G.paused=true;resetWorld();G.paused=true;ks.forEach((k,i)=>{const e=spawn(k,-(ks.length-1)*.45+i*.9,0);e.cd=99;e.cd2=99});root.position.set(0,0,-2.5);root.rotation.y=Math.PI;HERO.pos.set(0,0,3);root.rotation.y=0;writeInstances()},camD:d=>{camOverride=d},start:(ch=0,nt=0)=>startNight(NIGHT,{ch,nt}),startBoss:()=>{if(G&&!boss.alive)startBoss()},boss:()=>({alive:boss.alive,hp:boss.hp,max:boss.max,name:boss.def&&boss.def.name}),get G(){return G},setT:s=>{if(G)G.t=s},auto:v=>{if(G)G.auto=v},pick:i=>pickCard(i),god:()=>{if(G){G.maxhp=G.hp=1e9}},
+window.__game={get save(){return save},DUEL,T:{get enemies(){return enemies},spawn,SK,SKILL_SETS,setSkills,ULT_DEF,setUlt,swordDmg,resetWorld,get acts(){return acts}},B:boss,hurtBoss:(d)=>hurtBoss(d),cast:k=>castSkill(k,null),DF,startTribulation,canBreak,setCam:i=>{setCam(i)},ic:()=>{const m=ET.paper.mesh;return {cnt:m.count,ic:[...m.instanceColor.array.slice(0,9)],attr:Object.keys(m.geometry.attributes),vc:m.material.vertexColors,prog:renderer.info.programs.map(p=>p.name)}},cols:k=>{const a=ET[k].geo.attributes.color.array,u=new Set();for(let i=0;i<a.length;i+=3)u.add(a[i].toFixed(2)+','+a[i+1].toFixed(2)+','+a[i+2].toFixed(2));return [...u].concat([ET[k].mesh.material.vertexColors,!!ET[k].mesh.instanceColor])},gallery:(ks=['ghost','paper','jiang','lgh'])=>{G.paused=true;resetWorld();G.paused=true;ks.forEach((k,i)=>{const e=spawn(k,-(ks.length-1)*.45+i*.9,0);e.cd=99;e.cd2=99});root.position.set(0,0,-2.5);root.rotation.y=Math.PI;HERO.pos.set(0,0,3);root.rotation.y=0;writeInstances()},camD:d=>{camOverride=d},start:(ch=0,nt=0)=>startNight(NIGHT,{ch,nt}),startBoss:()=>{if(G&&!boss.alive)startBoss()},boss:()=>({alive:boss.alive,hp:boss.hp,max:boss.max,name:boss.def&&boss.def.name}),get G(){return G},setT:s=>{if(G)G.t=s},auto:v=>{if(G)G.auto=v},pick:i=>pickCard(i),god:()=>{if(G){G.maxhp=G.hp=1e9}},
   spawnRing,setWho:pickChar,sim,mat:k=>[...ET[k].mesh.instanceMatrix.array.slice(0,16)].map(v=>+v.toFixed(3)).concat(ET[k].list.slice(0,3).map(e=>[e.x,e.y,e.z,e.s,e.flash])),bdbg:()=>({n:(ndc.set(boss.x,1.5,boss.z).project(camera),[ndc.x,ndc.y,ndc.z].map(v=>+v.toFixed(2))),bx:[boss.x,boss.z],cam:camera.position.toArray().map(v=>+v.toFixed(1)),d:Math.hypot(boss.x-HERO.pos.x,boss.z-HERO.pos.z),on:bossOnScreen(),hp:boss.hp,max:boss.max,dps:G.dps,sw:swords.filter(s=>s.on&&s.tgt===boss).length}),dbg:()=>({cnt:Object.keys(ET).map(k=>k+':'+ET[k].mesh.count+(ET[k].mesh.instanceColor?'c':'')+(ET[k].mesh.visible?'v':'')),pr:renderer.getPixelRatio(),gl2:renderer.capabilities.isWebGL2,prog:renderer.info.programs.length,en:enemies.length,near:enemies.filter(e=>Math.hypot(e.x-HERO.pos.x,e.z-HERO.pos.z)<6.5).length,sw:swords.filter(s=>s.on).length,hero:[HERO.pos.x,HERO.pos.z],e0:enemies[0]&&[enemies[0].x,enemies[0].z,enemies[0].hp],vol:G&&G.volley})};
 })();
 </script>
