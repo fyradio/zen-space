@@ -148,4 +148,10 @@ Object.assign(CUTS,{
   ch9:[{scene:'baby',t:'第九章・九霄魔域。心魔被你斬了，丹田裡坐起一個小小的人影——元嬰成了。'},{scene:'realm9',t:'魔域的天上有一圈石柱。三位元嬰老怪輪番站上來：「想喚醒你師父？先過我們這關。」'}],
   ch9end:[{scene:'master',t:'你把元嬰之力送進師父的眉心。他眼皮動了動，嘆了一口氣：「……酒呢？」'}],
   ch10:[{scene:'gate',t:'第十章・渡劫長征。千年一次的子時，鬼門緩緩打開，天上的雷雲也跟著壓了下來。'},{scene:'brother',t:'雷雲下，師兄沈寒站在鬼門前。他的眼睛，是紅色的。'}],
-  ch10end:[{scene:'gate',t:'血河老祖的元嬰被斬，鬼門轟然合上，千年的怨氣散成了星光。'},{scene:'brother',t:'師兄醒了。他跪在地上哭了很久，你只是遞給他一壺酒：「回家吧。」'},{scene:'dawn',t:'喔喔喔——公雞終於啼了，天亮了。'},{scene:'home',t:'你接下了青燈觀。從此，每到午夜，你仍提著那盞會說話的燈籠下山——午夜來斬妖。（全劇終・無盡之夜開放）'}]});
+  ch10end:[{scene:'gate',t:'血河老祖的元嬰被斬，鬼門轟然合上，千年的怨氣散成了星光。'},{scene:'brother',t:'師兄醒了。他跪在地上哭了很久，你只是遞給他一壺酒：「回家吧。」'},{scene:'baby',t:'鬼門合上的那一刻，千年魂火化成金光湧進你的丹田——元嬰化神，你踏入了化神初期。'},{scene:'dawn',t:'喔喔喔——公雞終於啼了，天亮了。'},{scene:'home',t:'你接下了青燈觀。從此，每到午夜，你仍提著那盞會說話的燈籠下山——午夜來斬妖。（全劇終・無盡之夜開放）'}]});
+
+// ---------- 化神：腳下金色法相光環（化神初期才有）----------
+const hsAura=(()=>{const g=new THREE.Group();g.visible=false;root.add(g);const M=new THREE.MeshBasicMaterial({color:0xffe08a,transparent:true,opacity:.55,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide});
+  const r1=new THREE.Mesh(new THREE.RingGeometry(.75,.85,48).rotateX(-Math.PI/2),M);r1.position.y=.04;g.add(r1);const r2=new THREE.Mesh(new THREE.RingGeometry(.5,.54,6).rotateX(-Math.PI/2),M);r2.position.y=.05;g.add(r2);
+  const halo=new THREE.Mesh(new THREE.TorusGeometry(.32,.025,6,32),M);halo.position.set(0,1.75,-.22);g.add(halo);const L=new THREE.PointLight(0xffd86a,.8,4,1.6);L.position.y=1;g.add(L);
+  let t=0;g.userData.spin=dt=>{t+=dt;r1.rotation.y=t*.6;r2.rotation.y=-t*1.1;M.opacity=.45+.15*Math.sin(t*3)};return g})();
