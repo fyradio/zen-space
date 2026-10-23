@@ -749,7 +749,7 @@ class Trail{constructor(n,w,color){this.n=n;this.w=w;this.pts=[];const g=new THR
     this.mesh.frustumCulled=false;scene.add(this.mesh)}
   push(v){this.pts.unshift(v.clone());if(this.pts.length>this.n)this.pts.pop()}
   build(op){const p=this.pts,n=this.n;this.mesh.material.uniforms.op.value=op;this.mesh.visible=op>.01&&p.length>1;if(!this.mesh.visible)return;
-    for(let i=0;i<n;i++){const a=p[Math.min(i,p.length-1)],b=p[Math.min(i+1,p.length-1)],c=p[Math.max(0,i-1)];
+    for(let i=0;i<n;i++){const a=p[Math.min(i,p.length-1)],b=p[Math.min(i+1,p.length-1)],c=p[Math.min(Math.max(0,i-1),p.length-1)];
       tmp.subVectors(c,b);if(tmp.lengthSq()<1e-8)tmp.set(0,0,1);tmp.normalize();tmp2.subVectors(camera.position,a).normalize();tmp3.crossVectors(tmp,tmp2).normalize();
       const w=this.w*(1-i/n)*.5;this.pa.set([a.x-tmp3.x*w,a.y-tmp3.y*w,a.z-tmp3.z*w,a.x+tmp3.x*w,a.y+tmp3.y*w,a.z+tmp3.z*w],i*6);
       const al=Math.pow(1-i/n,1.6)*(i<p.length?1:0);this.al[i*2]=al;this.al[i*2+1]=al}
