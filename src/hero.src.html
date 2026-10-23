@@ -98,7 +98,7 @@ body.editing .top{opacity:0;pointer-events:none}
   <h1 id="title" aria-label="午夜來斬妖">
     <span style="--r:-5deg;--i:0">午</span><span style="--r:3deg;--i:1">夜</span><span style="--r:-2deg;--i:2">來</span><span class="zhan" style="--r:6deg;--i:3">斬</span><span style="--r:-4deg;--i:4">妖</span>
   </h1>
-  <div class="sub">煉氣一層・小道士　主角試做 v0.6</div>
+  <div class="sub">煉氣一層・小道士　主角試做 v0.7</div>
   <div class="fonts" role="group" aria-label="標題字體">
     <small>標題字體</small>
     <button class="chip" data-font="TPotta" aria-pressed="true">墨團</button>
@@ -276,50 +276,59 @@ const MARKS=[null,'rgba(120,190,200,.45)','rgba(196,52,44,.8)'];
 // t: s=只改頭部縮放, g=頭型幾何, x=臉部貼圖（g/x 可併用）
 const FACE_SPEC=[
  {tab:'臉型',items:[
-  {k:'headS',n:'頭大小',min:0.8,max:1.1,step:.005,def:0.92,t:'s'},
-  {k:'faceW',n:'臉寬',min:0.8,max:1.1,step:.005,def:0.9,t:'s'},
-  {k:'foreW',n:'額頭寬',min:-.06,max:.06,step:.005,def:0,t:'g'},
-  {k:'cheekW',n:'顴骨寬',min:-0.2,max:0.2,step:.005,def:0.1,t:'g'},
-  {k:'jawW',n:'下頜寬',min:-0.14,max:0.3,step:.005,def:0.14,t:'g'},
-  {k:'chinW',n:'下巴（尖↔圓）',min:-0.14,max:0.5,step:.01,def:0.2,t:'g'},
-  {k:'chinR',n:'整個下巴圓潤',min:0,max:1,step:.05,def:.6,t:'g'},
-  {k:'lowerLen',n:'下巴長',min:0,max:.22,step:.005,def:.1,t:'g'},
-  {k:'flat',n:'臉平度',min:0,max:.7,step:.02,def:.4,t:'g'},
+  {k:'headS',n:'頭大小',min:0.8,max:1.1,step:.005,def:1.1,t:'s'},
+  {k:'faceW',n:'臉寬',min:0.8,max:1.1,step:.005,def:0.78,t:'s'},
+  {k:'foreW',n:'額頭寬',min:-.06,max:.06,step:.005,def:0.05,t:'g'},
+  {k:'cheekW',n:'顴骨寬',min:-0.2,max:0.2,step:.005,def:0.15,t:'g'},
+  {k:'jawW',n:'下頜寬',min:-0.14,max:0.3,step:.005,def:0.06,t:'g'},
+  {k:'chinW',n:'下巴（尖↔圓）',min:-0.14,max:0.5,step:.01,def:-0.14,t:'g'},
+  {k:'chinR',n:'整個下巴圓潤',min:0,max:1,step:.05,def:0.1,t:'g'},
+  {k:'lowerLen',n:'下巴長',min:0,max:.22,step:.005,def:0.16,t:'g'},
+  {k:'flat',n:'臉平度',min:0,max:.7,step:.02,def:0.4,t:'g'},
   {k:'cheekFull',n:'臉頰飽滿',min:-1,max:1,step:.05,def:0,t:'g'},
   {k:'browBone',n:'眉骨',min:0,max:2,step:.05,def:1,t:'g'}]},
  {tab:'眼睛',items:[
-  {k:'eyeSp',n:'眼距',min:46,max:66,step:1,def:57,t:'gx'},
-  {k:'eyeUp',n:'眼位高低',min:-18,max:14,step:1,def:-10,t:'gx'},
-  {k:'eyeSize',n:'眼睛大小',min:0.85,max:1.5,step:.01,def:1.2,t:'gx'},
-  {k:'eyeOpen',n:'眼睛開合',min:0.8,max:1.6,step:.01,def:1.25,t:'x'},
-  {k:'eyeTilt',n:'眼尾上揚',min:-16,max:18,step:.5,def:-9,t:'x'},
-  {k:'irisS',n:'瞳孔大小',min:0.8,max:1.5,step:.01,def:1.2,t:'x'},
+  {k:'eyeSp',n:'眼距',min:46,max:66,step:1,def:61,t:'gx'},
+  {k:'eyeUp',n:'眼位高低',min:-18,max:14,step:1,def:-18,t:'gx'},
+  {k:'eyeSize',n:'眼睛大小',min:0.85,max:1.5,step:.01,def:1.17,t:'gx'},
+  {k:'eyeOpen',n:'眼睛開合',min:0.8,max:1.6,step:.01,def:1.19,t:'x'},
+  {k:'eyeTilt',n:'眼尾上揚',min:-16,max:18,step:.5,def:-7.5,t:'x'},
+  {k:'irisS',n:'瞳孔大小',min:0.8,max:1.5,step:.01,def:1.25,t:'x'},
   {k:'iris',n:'瞳色',opts:['墨褐','墨黑','青碧','琥珀','紫霧'],def:0,t:'x'},
   {k:'lash',n:'上眼線粗細',min:1.5,max:5,step:.1,def:3,t:'x'},
   {k:'shadow',n:'眼影',min:0,max:2.5,step:.1,def:1,t:'x'}]},
  {tab:'眉毛',items:[
-  {k:'browUp',n:'眉位高低',min:-8,max:14,step:1,def:-4,t:'x'},
-  {k:'browLen',n:'眉長',min:0.7,max:1.6,step:.01,def:1.25,t:'x'},
-  {k:'browThick',n:'眉粗細',min:0.8,max:5,step:.1,def:3.2,t:'x'},
-  {k:'browArch',n:'眉弧度',min:1,max:12,step:.5,def:3.5,t:'x'},
-  {k:'browTail',n:'眉尾上揚',min:-8,max:10,step:.5,def:3,t:'x'},
-  {k:'browDark',n:'眉色濃淡',min:0.3,max:2,step:.05,def:1.5,t:'x'}]},
+  {k:'browUp',n:'眉位高低',min:-8,max:14,step:1,def:-8,t:'x'},
+  {k:'browLen',n:'眉長',min:0.7,max:1.6,step:.01,def:1.23,t:'x'},
+  {k:'browThick',n:'眉粗細',min:0.8,max:5,step:.1,def:5,t:'x'},
+  {k:'browArch',n:'眉弧度',min:1,max:12,step:.5,def:6.5,t:'x'},
+  {k:'browTail',n:'眉尾上揚',min:-8,max:10,step:.5,def:-4.5,t:'x'},
+  {k:'browDark',n:'眉色濃淡',min:0.3,max:2,step:.05,def:0.95,t:'x'}]},
  {tab:'鼻子',items:[
-  {k:'noseUp',n:'鼻頭位置',min:-8,max:8,step:1,def:4,t:'gx'},
-  {k:'noseH',n:'鼻樑高度',min:0.3,max:4,step:.05,def:1.8,t:'g'},
-  {k:'noseTipP',n:'鼻頭突出',min:0,max:4,step:.1,def:1,t:'g'},
-  {k:'noseW',n:'鼻翼寬',min:0.7,max:2.2,step:.05,def:1.5,t:'gx'}]},
+  {k:'noseUp',n:'鼻頭位置',min:-8,max:8,step:1,def:-8,t:'gx'},
+  {k:'noseH',n:'鼻樑高度',min:0.3,max:4,step:.05,def:2.9,t:'g'},
+  {k:'noseTipP',n:'鼻頭突出',min:0,max:4,step:.1,def:1.4,t:'g'},
+  {k:'noseW',n:'鼻翼寬',min:0.7,max:2.2,step:.05,def:1.35,t:'gx'}]},
  {tab:'嘴唇',items:[
-  {k:'lipUp',n:'唇位置',min:-16,max:10,step:1,def:-10,t:'gx'},
+  {k:'lipUp',n:'唇位置',min:-16,max:10,step:1,def:-12,t:'gx'},
   {k:'lipW',n:'唇寬',min:0.7,max:2.4,step:.02,def:1.8,t:'gx'},
-  {k:'lipThick',n:'唇厚',min:0.6,max:3,step:.05,def:1.7,t:'gx'},
-  {k:'lipCorner',n:'嘴角上揚',min:-6,max:10,step:.5,def:5,t:'x'},
-  {k:'lipC',n:'唇色',opts:['朱砂','淡櫻','絳紅','裸粉'],def:1,t:'x'}]},
+  {k:'lipThick',n:'唇厚',min:0.6,max:3,step:.05,def:2.0,t:'gx'},
+  {k:'lipCorner',n:'嘴角上揚',min:-6,max:10,step:.5,def:1.5,t:'x'},
+  {k:'lipC',n:'唇色',opts:['朱砂','淡櫻','絳紅','裸粉'],def:0,t:'x'}]},
  {tab:'膚妝',items:[
-  {k:'skin',n:'膚色',opts:['自然','瓷白','暖玉','小麥'],def:0,t:'x'},
+  {k:'skin',n:'膚色',opts:['自然','瓷白','暖玉','小麥'],def:2,t:'x'},
   {k:'blush',n:'腮紅',min:0,max:4,step:.1,def:2.5,t:'x'},
   {k:'contour',n:'輪廓陰影',min:0,max:3,step:.1,def:2,t:'x'},
-  {k:'mark',n:'額間印記',opts:['無','青','朱'],def:2,t:'x'}]}];
+  {k:'mark',n:'額間印記',opts:['無','青','朱'],def:2,t:'x'}]},
+ {tab:'身形',cam:'body',items:[
+  {k:'height',n:'整體身高',min:0.7,max:1.0,step:.005,def:0.85,t:'b'},
+  {k:'legLen',n:'下半身長',min:0.55,max:1.01,step:.005,def:0.78,t:'b'},
+  {k:'torsoLen',n:'上身長',min:0.65,max:1.05,step:.005,def:0.85,t:'b'},
+  {k:'shoulderW',n:'肩寬',min:0.55,max:1.05,step:.005,def:0.8,t:'b'},
+  {k:'shoulderDrop',n:'溜肩',min:0,max:1,step:.05,def:.6,t:'b'},
+  {k:'bodyW',n:'身材胖瘦',min:0.5,max:1.1,step:.005,def:0.8,t:'b'},
+  {k:'armLen',n:'手臂長',min:0.7,max:1.0,step:.005,def:0.85,t:'b'}]}];
+// t: b=身形（applyBody 重排身體各部件）
 const FACE_DEF={};FACE_SPEC.forEach(s=>s.items.forEach(i=>{FACE_DEF[i.k]=i.def}));
 const FACE_HASH=JSON.stringify(FACE_DEF),FACE_KEY='zk-face-v1';
 const F=Object.assign({},FACE_DEF);
@@ -417,11 +426,11 @@ const anchor=(name,parent,x,y,z)=>{const o=new THREE.Object3D();o.position.set(x
 // inner robe (lower) and open outer coat — both deformed every frame
 const skirtPts=[[.262,.03],[.252,.18],[.226,.38],[.196,.56],[.168,.72],[.148,.86],[.136,.96],[.133,1.03]].map(p=>new THREE.Vector2(p[0],p[1]*K));
 const skirtGeo=new THREE.LatheGeometry(skirtPts,48,Math.PI,Math.PI*2);skirtGeo.scale(1,1,.84);skirtGeo.computeVertexNormals();
-const skirtBase=skirtGeo.attributes.position.array.slice();
+const skirtBase=skirtGeo.attributes.position.array.slice(),skirt0=skirtBase.slice();
 part(skirtGeo,M.innerS,body);
 const coatPts=[[.268,.27],[.24,.42],[.212,.56],[.184,.72],[.164,.86],[.152,.96],[.148,1.0],[.152,1.06],[.161,1.14],[.172,1.22],[.179,1.3],[.18,1.37],[.166,1.42],[.134,1.455]].map(p=>new THREE.Vector2(p[0],p[1]*K));
 const coatGeo=new THREE.LatheGeometry(coatPts,56,.5,Math.PI*2-1.0);coatGeo.scale(1,1,.86);coatGeo.computeVertexNormals();
-const coatBase=coatGeo.attributes.position.array.slice();
+const coatBase=coatGeo.attributes.position.array.slice(),coat0=coatBase.slice();
 part(coatGeo,M.coat,body);
 // boots
 const bootL=part(new THREE.SphereGeometry(1,14,10),M.boot,body,{p:[.07,.035,.03],s:[.045,.034,.085]});
@@ -439,8 +448,8 @@ anchor('tassel',body,.07,.84*K,.108);
 anchor('sashL',body,.112,.99*K,-.07);anchor('sashR',body,-.112,.99*K,-.07);
 // neck & shoulders
 part(new THREE.CylinderGeometry(.041,.048,.13,16),M.skin,body,{p:[0,SH+.085,0]});
-part(new THREE.SphereGeometry(.074,18,12),M.outer,body,{p:[.152,SH-.008,0],s:[1,.82,.92]});
-part(new THREE.SphereGeometry(.074,18,12),M.outer,body,{p:[-.152,SH-.008,0],s:[1,.82,.92]});
+const pads=[part(new THREE.SphereGeometry(.074,18,12),M.outer,body,{p:[.152,SH-.008,0],s:[1,.82,.92]}),
+  part(new THREE.SphereGeometry(.074,18,12),M.outer,body,{p:[-.152,SH-.008,0],s:[1,.82,.92]})];
 
 // arms
 function makeArm(side){const sh=new THREE.Group();sh.position.set(side*.168,SH,0);body.add(sh);
@@ -472,7 +481,7 @@ function shapeHead(){
  const nTip=-.32+pyN(309-F.noseUp)-pyN(309),lipD=pyN(334-F.lipUp)-pyN(334);
  for(let i=0;i<p.count;i++){let nx=headBase[i*3]/.118,ny=headBase[i*3+1]/.118,nz=headBase[i*3+2]/.118;let d=0;
   // features as small bumps along the surface normal
-  if(nz>0){const ax=Math.abs(nx),dn=nTip+.32,nEnd=-.29+dn,t=Math.min(1,Math.max(0,(-.01-ny)/(-.01-nEnd))),nw=F.noseW,lw=F.lipW,lt=F.lipThick;
+  if(nz>0){const ax=Math.abs(nx),dn=nTip+.32,nEnd=-.29+dn,t=Math.min(1,Math.max(0,(-.01-ny)/(-.01-nEnd))),nw=F.noseW,lw=F.lipW,lt=Math.sqrt(F.lipThick);// thick lips are mostly painted; sqrt keeps them from pouting forward
     // nose: narrow bridge rising to a rounded tip, alar wings with a groove behind them
     d+=(.005+.051*F.noseH*Math.pow(t,1.8))*g(nx,(.026+.018*t)*nw)*(ny>nEnd-.01?1:g(ny-(nEnd-.01),.022));
     d+=.007*F.noseH*g(nx,.038*nw)*g(ny-(nEnd+.005),.03);
@@ -595,8 +604,8 @@ shadow.rotation.x=-Math.PI/2;shadow.position.y=.012;scene.add(shadow);
 /* ---------- soft-body: ropes (ribbons, hair) and sleeve drapes ---------- */
 const HERO={pos:new THREE.Vector3(),right:V(1,0,0),fwd:V(0,0,1),vel:new THREE.Vector3(),fly:0};
 const tmp=new THREE.Vector3(),tmp2=new THREE.Vector3(),tmp3=new THREE.Vector3();
-function pushOut(P){const by=P.y-HERO.pos.y;if(by<-.05||by>1.7)return;
-  let r;if(by<K)r=.28-(.28-.15)*Math.max(0,by-.03)/(K-.03);else if(by<SH+.06)r=.2;else r=.16;
+function pushOut(P){const by=(P.y-HERO.pos.y)/F.height,bk=K*F.legLen;if(by<-.05||by>1.7)return;
+  let r;if(by<bk)r=.28-(.28-.15)*Math.max(0,by-.03)/(bk-.03);else if(by<bodyY(SH)+.06)r=.2;else r=.16;r*=F.height*F.bodyW;
   const dx=P.x-HERO.pos.x,dz=P.z-HERO.pos.z,d=Math.hypot(dx,dz);
   if(d<r){if(d<1e-4){P.x-=HERO.fwd.x*r;P.z-=HERO.fwd.z*r}else{P.x=HERO.pos.x+dx/d*r;P.z=HERO.pos.z+dz/d*r}}
   if(P.y<.01)P.y=.01}
@@ -702,7 +711,8 @@ const up=e=>{ptrs.delete(e.pointerId);if(ptrs.size<2)pinch0=0};
 canvas.addEventListener('pointerup',up);canvas.addEventListener('pointercancel',up);
 canvas.addEventListener('wheel',e=>{e.preventDefault();want.d=Math.max(.9,Math.min(16,want.d*(1+e.deltaY*.0012)));hideHint()},{passive:false});
 function hideHint(){$('#hint').classList.add('gone')}
-function setView(v){view=v;const V0=VIEWS[v];want.d=V0.d;want.pitch=V0.p;want.ty=V0.ty;$$('[data-view]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.view===v)))}
+const viewTy=v=>v==='face'||v==='edit'?VIEWS[v].ty+bodyY(HY)*F.height-HY:VIEWS[v].ty*F.height;
+function setView(v){view=v;const V0=VIEWS[v];want.d=V0.d;want.pitch=V0.p;want.ty=viewTy(v);$$('[data-view]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.view===v)))}
 function setMode(m){mode=m;$$('[data-mode]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.mode===m)));lastDrag=-99}
 $$('[data-mode]').forEach(b=>b.addEventListener('click',()=>setMode(b.dataset.mode)));
 $$('[data-view]').forEach(b=>b.addEventListener('click',()=>setView(b.dataset.view)));
@@ -748,10 +758,10 @@ function frame(now){requestAnimationFrame(frame);let dt=Math.min(.05,(now-last)/
   sway.x=lerp(sway.x,-lx*.05+(mode==='walk'?.025*Math.sin(walkPh*2):.012*Math.sin(clock*1.2)),1-Math.exp(-dt*5));
   sway.z=lerp(sway.z,-lz*.05-fl*.16+(mode==='walk'?.02*Math.abs(sw):0),1-Math.exp(-dt*5));
   sway.lift=lerp(sway.lift,fl*.05,1-Math.exp(-dt*3));
-  {const a=skirtGeo.attributes.position.array;for(let i=0;i<a.length;i+=3){const by=skirtBase[i+1];const f=Math.pow(Math.max(0,(1.03*K-by)/K),1.6);
+  {const a=skirtGeo.attributes.position.array;for(let i=0;i<a.length;i+=3){const by=skirtBase[i+1];const f=Math.pow(Math.max(0,(1.03*K-skirt0[i+1])/K),1.6);
      const fr=fl*Math.sin(clock*9+skirtBase[i]*20)*.012*f;a[i]=skirtBase[i]+sway.x*f;a[i+1]=by+sway.lift*f+fr;a[i+2]=skirtBase[i+2]+sway.z*f}
    skirtGeo.attributes.position.needsUpdate=true;
-   const c=coatGeo.attributes.position.array;for(let i=0;i<c.length;i+=3){const by=coatBase[i+1];const f=Math.pow(Math.max(0,(1.03*K-by)/K),1.5);
+   const c=coatGeo.attributes.position.array;for(let i=0;i<c.length;i+=3){const by=coatBase[i+1];const f=Math.pow(Math.max(0,(1.03*K-coat0[i+1])/K),1.5);
      const fr=fl*Math.sin(clock*9+coatBase[i]*18+1)*.016*f;c[i]=coatBase[i]+sway.x*f*1.15;c[i+1]=by+sway.lift*f*1.2+fr;c[i+2]=coatBase[i+2]+sway.z*f*1.15}
    coatGeo.attributes.position.needsUpdate=true}
   // props
@@ -789,22 +799,47 @@ function frame(now){requestAnimationFrame(frame);let dt=Math.min(.05,(now-last)/
   camera.lookAt(camT);sky.position.copy(camera.position);
   renderer.render(scene,camera)}
 setView('full');requestAnimationFrame(t=>{last=t;frame(t)});
+/* ---------- 身形: heights are remapped (legs below the belt, torso belt→shoulder, the rest shifted), widths scaled below the neck ---------- */
+function bodyY(y){const L=F.legLen,T=F.torsoLen,BELT=K;return y<=BELT?y*L:y<=SH?BELT*L+(y-BELT)*T:BELT*L+(SH-BELT)*T+(y-SH)}
+const bodyKids=body.children.map(o=>({o,p:o.position.clone(),s:o.scale.clone()}));
+const torso0=torsoGeo.attributes.position.array.slice();
+function bodyX(y){return F.bodyW*(1+(F.shoulderW-1)*Math.min(1,Math.max(0,(y-1.15*K)/(.23*K))))}
+const smb=(a,b,v)=>{const t=Math.min(1,Math.max(0,(v-a)/(b-a)));return t*t*(3-2*t)};
+const slope=(x,y)=>-.05*F.shoulderDrop*smb(.05,.17,Math.abs(x))*smb(1.28*K,1.42*K,y);// 溜肩: lower the outer shoulder line
+function remapLathe(src,dst){for(let i=0;i<src.length;i+=3){const x=src[i],y=src[i+1];dst[i]=x*bodyX(y);dst[i+1]=bodyY(y)+slope(x,y);dst[i+2]=src[i+2]*F.bodyW}}
+function applyBody(){
+  body.scale.setScalar(F.height);
+  remapLathe(skirt0,skirtBase);remapLathe(coat0,coatBase);
+  const ta=torsoGeo.attributes.position;remapLathe(torso0,ta.array);ta.needsUpdate=true;torsoGeo.computeVertexNormals();torsoGeo.computeBoundingSphere();
+  skirtGeo.computeBoundingSphere();coatGeo.computeBoundingSphere();
+  for(const {o,p,s:sc} of bodyKids){
+    if(o===torso||o.geometry===skirtGeo||o.geometry===coatGeo)continue;
+    o.position.y=bodyY(p.y);
+    if(o===armL.sh||o===armR.sh){o.position.x=p.x*bodyX(p.y);o.position.y+=-.03*F.shoulderDrop;o.scale.setScalar(F.armLen);continue}
+    if(pads.includes(o)){o.position.x=p.x*bodyX(p.y);o.position.y+=-.035*F.shoulderDrop;o.scale.set(sc.x*F.bodyW,sc.y*(1-.3*F.shoulderDrop),sc.z*F.bodyW);continue}
+    if(o===headG||p.y>SH+.04)continue;// head and neck keep their size
+    const w=p.y>1.15*K?bodyX(p.y):F.bodyW;
+    o.position.x=p.x*w;o.position.z=p.z*F.bodyW;o.scale.set(sc.x*w,sc.y,sc.z*F.bodyW)}
+  if(document.body.classList.contains('editing'))editCam();else want.ty=viewTy(view)}
 /* ---------- 捏臉面板 ---------- */
 function applyFace(dirty){
   headG.scale.set(F.headS*F.faceW,F.headS,F.headS);
   if(dirty.g)shapeHead();
   if(dirty.x){redraw(faceTex,drawFace);M.skin.color.copy(LC(SKINS[F.skin][1]))}}
 const saveFace=()=>{try{localStorage.setItem(FACE_KEY,JSON.stringify({h:FACE_HASH,f:F}))}catch(e){}};
-let fdirty={g:0,x:0},ftimer=0;
+let fdirty={g:0,x:0,b:0},ftimer=0;
 function faceChanged(it){
-  if(it.t.includes('g'))fdirty.g=1;if(it.t.includes('x'))fdirty.x=1;
-  if(!ftimer)ftimer=setTimeout(()=>{ftimer=0;const d=fdirty;fdirty={g:0,x:0};applyFace(d);saveFace()},50)}
+  if(it.t.includes('g'))fdirty.g=1;if(it.t.includes('x'))fdirty.x=1;if(it.t.includes('b'))fdirty.b=1;
+  if(!ftimer)ftimer=setTimeout(()=>{ftimer=0;const d=fdirty;fdirty={g:0,x:0,b:0};applyFace(d);if(d.b)applyBody();saveFace()},50)}
 M.skin.color.copy(LC(SKINS[F.skin][1]));
 let curTab=0,ftoastT=0;
+applyBody();
 const ftoast=m=>{const e=$('#ftoast');e.textContent=m;clearTimeout(ftoastT);ftoastT=setTimeout(()=>{e.textContent=''},3200)};
 function renderTabs(){const box=$('#ftabs');box.innerHTML='';
   FACE_SPEC.forEach((s,i)=>{const b=document.createElement('button');b.textContent=s.tab;b.setAttribute('aria-pressed',String(i===curTab));
-    b.onclick=()=>{curTab=i;renderTabs();renderList()};box.appendChild(b)})}
+    b.onclick=()=>{curTab=i;renderTabs();renderList();editCam()};box.appendChild(b)})}
+// 身形 tab frames the whole figure above the sheet; other tabs frame the face
+function editCam(){if(FACE_SPEC[curTab].cam==='body'){const tot=(bodyY(HY)+.15)*F.height;want.d=tot*2.9;want.pitch=.08;want.ty=tot*.54}else{want.d=VIEWS.edit.d;want.pitch=VIEWS.edit.p;want.ty=viewTy('edit')}}
 function renderList(){const box=$('#flist');box.innerHTML='';box.scrollTop=0;
   FACE_SPEC[curTab].items.forEach(it=>{
     const row=document.createElement('div');row.className='ctl';
@@ -823,7 +858,7 @@ const packFace=()=>{const o={};FACE_SPEC.forEach(s=>s.items.forEach(i=>{o[i.k]=+
 function unpackFace(txt){const a=txt.indexOf('{'),b=txt.lastIndexOf('}');if(a<0||b<a)return 0;let o;try{o=JSON.parse(txt.slice(a,b+1))}catch(e){return 0}
   let n=0;FACE_SPEC.forEach(s=>s.items.forEach(i=>{const v=o[i.k];if(typeof v==='number'&&isFinite(v)){
     F[i.k]=i.opts?Math.max(0,Math.min(i.opts.length-1,Math.round(v))):Math.max(i.min,Math.min(i.max,v));n++}}));return n}
-const applyAllFace=()=>{applyFace({g:1,x:1});saveFace();renderList()};
+const applyAllFace=()=>{applyFace({g:1,x:1});applyBody();saveFace();renderList()};
 function showIO(hint,text){const io=$('#fio');io.hidden=false;$('#fiohint').textContent=hint;const ta=$('#fiota');ta.value=text||'';ta.focus();if(text){ta.select();try{ta.setSelectionRange(0,text.length)}catch(e){}}}
 $('#fcopy').onclick=async()=>{const t=packFace();
   try{await navigator.clipboard.writeText(t);ftoast('已複製！貼給 Claude 就能設成預設');$('#fio').hidden=true;return}catch(e){}
@@ -836,10 +871,10 @@ $('#fapply').onclick=()=>{if(unpackFace($('#fiota').value)){applyAllFace();ftoas
 $('#fioclose').onclick=()=>{$('#fio').hidden=true};
 $('#freset').onclick=()=>{Object.assign(F,FACE_DEF);applyAllFace();ftoast('已還原預設')};
 let editPrev=null;
-function openEdit(){editPrev={view,mode};document.body.classList.add('editing');setMode('idle');setView('edit');want.sh=.26;want.yaw=0;renderTabs();renderList()}
+function openEdit(){editPrev={view,mode};document.body.classList.add('editing');setMode('idle');setView('edit');want.sh=.26;want.yaw=0;renderTabs();renderList();editCam()}
 function closeEdit(){document.body.classList.remove('editing');$('#fio').hidden=true;if(editPrev){setMode(editPrev.mode);setView(VIEWS[editPrev.view]?editPrev.view:'full')}want.sh=0;editPrev=null}
 $('#fedit').onclick=openEdit;$('#fdone').onclick=closeEdit;
 $$('[data-fyaw]').forEach(b=>b.addEventListener('click',()=>{want.yaw=+b.dataset.fyaw}));
-window.__hero={setMode,setView,applyPal,setYaw:y=>{want.yaw=y},openEdit,closeEdit,F,applyAllFace,setTab:i=>{curTab=i;renderTabs();renderList()}};
+window.__hero={setMode,setView,applyPal,setYaw:y=>{want.yaw=y},openEdit,closeEdit,F,applyAllFace,setTab:i=>{curTab=i;renderTabs();renderList();editCam()}};
 })();
 </script>
