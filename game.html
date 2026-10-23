@@ -939,10 +939,10 @@ const lghGeo=merged([{g:new THREE.LatheGeometry(lanternPts,14),c:'#ffad5a',p:[0,
 /* ================= 妖怪 ================= */
 // hp/dmg are at minute 0; scaled by (1+.25*minute)^1.5 when spawned. sc: size next to the hero (models were built for a 1.4 m figure)
 const ET={
-  ghost:{n:'遊魂',geo:ghostGeo,cap:120,hp:10,spd:1.5,r:.32,dmg:4,soul:1,float:1,sc:.62,mat:{transparent:true,opacity:.86,emissive:0x2a7a70}},
-  paper:{n:'紙人',geo:paperGeo,cap:110,hp:18,spd:2.3,r:.3,dmg:5,soul:1,sway:1,sc:.66,mat:{side:THREE.DoubleSide,emissive:0x3a3428}},
-  jiang:{n:'跳跳殭屍',geo:jiangGeo,cap:80,hp:42,spd:2.0,r:.36,dmg:8,soul:2,hop:1,sc:.64,mat:{emissive:0x1e2a48}},
-  lgh:{n:'燈籠鬼',geo:lghGeo,cap:60,hp:28,spd:2.1,r:.34,dmg:6,soul:2,float:1,sc:.62,mat:{emissive:0x9a3a0a}}};
+  ghost:{n:'遊魂',geo:ghostGeo,cap:120,hp:15,spd:1.6,r:.32,dmg:6,soul:1,float:1,sc:.62,mat:{transparent:true,opacity:.86,emissive:0x2a7a70}},
+  paper:{n:'紙人',geo:paperGeo,cap:110,hp:27,spd:2.4,r:.3,dmg:7,soul:1,sway:1,sc:.66,mat:{side:THREE.DoubleSide,emissive:0x3a3428}},
+  jiang:{n:'跳跳殭屍',geo:jiangGeo,cap:80,hp:64,spd:2.1,r:.36,dmg:11,soul:2,hop:1,sc:.64,mat:{emissive:0x1e2a48}},
+  lgh:{n:'燈籠鬼',geo:lghGeo,cap:60,hp:42,spd:2.2,r:.34,dmg:8,soul:2,float:1,sc:.62,mat:{emissive:0x9a3a0a}}};
 for(const k in ET){const t=ET[k];t.mesh=new THREE.InstancedMesh(t.geo,toon('#ffffff',Object.assign({vertexColors:true,roughness:.7},t.mat)),t.cap);
   t.mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);t.mesh.count=0;t.mesh.frustumCulled=false;
   for(let i=0;i<t.cap;i++)t.mesh.setColorAt(i,new THREE.Color(1,1,1));scene.add(t.mesh);t.list=[]}
@@ -997,7 +997,7 @@ const realmOf=x=>{const l=Math.min(8,Math.floor(x/LV_NEED));return {name:`煉氣
 let G=null;// the current night
 function newNight(len){return {len,boost:len<480?2.5:1,t:0,over:false,paused:true,kills:0,souls:0,wu:0,wuNeed:6,lv:0,spawnAcc:0,waveAt:60,
   hp:100,maxhp:100,iframe:0,regenAcc:0,eliteDone:false,bossDone:false,bossKilled:false,eliteKilled:false,
-  s:{dmg:1,rate:1,count:2,pierce:1,range:6.5,move:3.2,magnet:1.7,regen:0,orbit:0,talis:0,lamp:0},
+  s:{dmg:1,rate:1,count:2,pierce:1,range:5,move:3.2,magnet:1.7,regen:0,orbit:0,talis:0,lamp:0},
   skills:{},volley:0,orbitHit:new Map(),talisCd:2,lampCd:1.5,stand:0,auto:false}}
 const minute=()=>G.t/G.len*8;// night progress in "minutes" of an 8-minute night
 const hpScale=()=>Math.pow(1+.25*minute(),1.5);
@@ -1011,17 +1011,17 @@ const CARDS=[
   {k:'count',ic:'劍',n:'分光劍',d:r=>`飛劍 +${[1,1,2][r]} 把${r===1?'，傷害 +10%':''}`,f:r=>{G.s.count=Math.min(10,G.s.count+[1,1,2][r]);if(r===1)G.s.dmg*=1.1}},
   {k:'dmg',ic:'鋒',n:'劍氣凝鋒',d:r=>`飛劍傷害 +${[20,35,60][r]}%`,f:r=>{G.s.dmg*=1+[.2,.35,.6][r]}},
   {k:'rate',ic:'疾',n:'疾風出劍',d:r=>`出劍速度 +${[15,25,40][r]}%`,f:r=>{G.s.rate*=1+[.15,.25,.4][r]}},
-  {k:'pierce',ic:'穿',n:'穿雲',d:r=>`飛劍多穿透 ${[1,1,2][r]} 隻${r===1?'，劍速更快':''}`,f:r=>{G.s.pierce+=[1,1,2][r]}},
-  {k:'range',ic:'眼',n:'天眼',d:r=>`索敵範圍 +${[15,25,40][r]}%`,f:r=>{G.s.range=Math.min(12,G.s.range*(1+[.15,.25,.4][r]))}},
+  {k:'pierce',ic:'穿',n:'穿雲',d:r=>`飛劍多穿透 ${[1,1,2][r]} 隻${r===1?'，劍速更快':''}`,f:r=>{G.s.pierce=Math.min(6,G.s.pierce+[1,1,2][r])}},
+  {k:'range',ic:'眼',n:'天眼',d:r=>`索敵範圍 +${[15,25,40][r]}%`,f:r=>{G.s.range=Math.min(8,G.s.range*(1+[.15,.25,.4][r]))}},
   {k:'move',ic:'步',n:'踏雲步',d:r=>`走路速度 +${[10,15,25][r]}%`,f:r=>{G.s.move*=1+[.1,.15,.25][r]}},
-  {k:'magnet',ic:'攝',n:'攝魂',d:r=>`吸魂火範圍 +${[40,70,120][r]}%`,f:r=>{G.s.magnet*=1+[.4,.7,1.2][r]}},
+  {k:'magnet',ic:'攝',n:'攝魂',d:r=>`吸魂火範圍 +${[40,70,120][r]}%`,f:r=>{G.s.magnet=Math.min(7,G.s.magnet*(1+[.4,.7,1.2][r]))}},
   {k:'heal',ic:'春',n:'回春',d:r=>`立刻回復 ${[30,50,100][r]}% 生命${r===2?'，之後慢慢回血':''}`,f:r=>{G.hp=Math.min(G.maxhp,G.hp+G.maxhp*[.3,.5,1][r]);if(r===2)G.s.regen+=1.5}},
   {k:'orbit',ic:'陣',n:'劍陣',d:r=>G.s.orbit?`劍陣 +${[1,1,2][r]} 把`:`新招：${[2,3,4][r]} 把飛劍繞身斬妖`,f:r=>{G.s.orbit=Math.min(6,G.s.orbit+(G.s.orbit?[1,1,2][r]:[2,3,4][r]))}},
   {k:'talis',ic:'符',n:'雷火符',d:r=>G.s.talis?`符籙威力 +${[30,50,90][r]}%`:`新招：每 3 秒丟一張爆炸符籙`,f:r=>{G.s.talis=G.s.talis?G.s.talis*(1+[.3,.5,.9][r]):[1,1.4,2][r]}},
   {k:'lamp',ic:'燈',n:'燈燈助陣',d:r=>G.s.lamp?`燈燈火球更快更痛 +${[30,50,90][r]}%`:`新招：燈燈會吐火球`,f:r=>{G.s.lamp=G.s.lamp?G.s.lamp*(1+[.3,.5,.9][r]):[1,1.4,2][r]}}];
 const RAR=['凡品','靈品','仙品'];
 let offer=[];
-function openCards(){G.paused=true;const pool=CARDS.filter(c=>!(c.k==='orbit'&&G.s.orbit>=6)&&!(c.k==='range'&&G.s.range>=12)&&!(c.k==='count'&&G.s.count>=10));offer=[];
+function openCards(){G.paused=true;const pool=CARDS.filter(c=>!(c.k==='orbit'&&G.s.orbit>=6)&&!(c.k==='range'&&G.s.range>=8)&&!(c.k==='pierce'&&G.s.pierce>=6)&&!(c.k==='magnet'&&G.s.magnet>=7)&&!(c.k==='count'&&G.s.count>=10));offer=[];
   while(offer.length<3&&pool.length){const c=pool.splice(Math.floor(Math.random()*pool.length),1)[0];const x=Math.random();offer.push({c,r:x<.06?2:x<.32?1:0})}
   const box=$('#cards');box.innerHTML='';
   offer.forEach((o,i)=>{const b=document.createElement('button');b.className='card r'+o.r;b.innerHTML=`<span class="ic">${o.c.ic}</span><b>${o.c.n}<em>${RAR[o.r]}</em></b><span>${o.c.d(o.r)}</span>`;
@@ -1037,7 +1037,7 @@ function spawn(type,x,z,o={}){const t=ET[type];if(enemies.length>=CAP||t.list.le
   const e=Object.assign({type,t,x,z,y:0,vx:0,vz:0,hp:t.hp*hpScale(),r:t.r*t.sc,spd:t.spd*(.9+Math.random()*.2),dmg:t.dmg*(1+.15*minute()),flash:0,ph:Math.random()*6,kb:0,s:1},o);
   e.max=e.hp;enemies.push(e);t.list.push(e);return e}
 function spawnRing(type,n,r){for(let i=0;i<n;i++){const a=i/n*Math.PI*2;spawn(type,HERO.pos.x+Math.sin(a)*r,HERO.pos.z+Math.cos(a)*r)}}
-function spawnTick(dt){const m=minute(),rate=.8+1.1*m+.13*m*m;G.spawnAcc+=dt*rate;
+function spawnTick(dt){const m=minute(),rate=1+1.3*m+.15*m*m;G.spawnAcc+=dt*rate;
   while(G.spawnAcc>=1){G.spawnAcc-=1;const w=[['ghost',3],['paper',m>.8?2.2:0],['jiang',m>2.2?1.6:0],['lgh',m>4.5?1.2:0]];let tot=w.reduce((a,b)=>a+b[1],0),x=Math.random()*tot,k='ghost';
     for(const [n,v] of w){x-=v;if(x<=0){k=n;break}}
     const a=Math.random()*Math.PI*2,r=11+Math.random()*3;spawn(k,HERO.pos.x+Math.sin(a)*r,HERO.pos.z+Math.cos(a)*r)}
@@ -1049,9 +1049,15 @@ function killEnemy(e){G.kills++;e.dead=true;
   fx({p:tmp.set(e.x,.6,e.z),col:0x0a0d0e,life:.7,s0:.5,s1:1.6,op:.75,vy:.9});fx({p:tmp.set(e.x,.6,e.z),col:0x6fffd0,add:true,life:.35,s0:.8,s1:.2,op:.9,vy:0});
   dropSoul(e.x,e.z,e.t.soul);if(e.elite){G.eliteKilled=true;for(let i=0;i<14;i++)dropSoul(e.x+(Math.random()-.5)*2,e.z+(Math.random()-.5)*2,1);banner('精英伏誅','殺氣大漲')}
   $('#power').classList.add('pop')}
-function dropSoul(x,z,v){if(souls.length>=SOULCAP){souls[0].v+=v;return}souls.push({x,z,y:.3,v,t:0,pull:false})}
-function nearest(x,z,maxR,skip){let best=null,bd=maxR*maxR;for(const e of enemies){if(e.dead||(skip&&skip.has(e)))continue;const d=(e.x-x)**2+(e.z-z)**2;if(d<bd){bd=d;best=e}}
-  if(boss.alive&&!(skip&&skip.has(boss))){const d=(boss.x-x)**2+(boss.z-z)**2;if(d<bd)best=boss}return best}
+function dropSoul(x,z,v){if(souls.length>=SOULCAP){souls[0].v+=v;return}
+  const r=Math.hypot(x,z),R=ARENA-.6;if(r>R){x*=R/r;z*=R/r}// never outside the village
+  for(const h of HOUSES){const dx=x-h.x,dz=z-h.z,d=Math.hypot(dx,dz),rr=h.r+.35;if(d<rr&&d>1e-4){x=h.x+dx/d*rr;z=h.z+dz/d*rr}}
+  souls.push({x,z,y:.3,v,t:0,pull:false})}
+// only what the player can see: inside the range AND on screen (so nothing dies off-screen)
+const ndc=new THREE.Vector3();
+function onScreen(x,y,z){ndc.set(x,y,z).project(camera);return Math.abs(ndc.x)<.94&&ndc.y>-.94&&ndc.y<.8&&ndc.z<1}
+function nearest(x,z,maxR,skip){let best=null,bd=maxR*maxR;for(const e of enemies){if(e.dead||(skip&&skip.has(e)))continue;const d=(e.x-x)**2+(e.z-z)**2;if(d<bd&&onScreen(e.x,.4,e.z)){bd=d;best=e}}
+  if(boss.alive&&!(skip&&skip.has(boss))){const d=(boss.x-x)**2+(boss.z-z)**2;if(d<bd+boss.r*boss.r&&onScreen(boss.x,1.5,boss.z))best=boss}return best}
 function hurtBoss(dmg){if(!boss.alive)return;boss.hp-=dmg;boss.flash=.08;if(boss.hp<=0){boss.alive=false;G.bossKilled=true;G.kills+=1;
   for(let i=0;i<10;i++)fx({p:tmp.set(boss.x+(Math.random()-.5)*2,1+Math.random()*2,boss.z+(Math.random()-.5)*2),col:0x0a0d0e,life:1.2,s0:1,s1:3,op:.8,vy:1});
   for(let i=0;i<30;i++)dropSoul(boss.x+(Math.random()-.5)*3,boss.z+(Math.random()-.5)*3,2);boss.g.visible=false;$('#bossBox').classList.remove('on');banner('燈籠大王伏誅！','殺氣 +5%');shake=.6}}
@@ -1168,7 +1174,7 @@ function endNight(win,gaveUp=false){if(G.over)return;G.over=true;G.paused=true;
 renderRealm('#realmText','#realmBar');
 
 /* ================= 主迴圈 ================= */
-function resize(){const w=innerWidth,h=innerHeight;renderer.setSize(w,h,false);camera.aspect=w/h;camera.fov=w/h<.75?36:30;camera.updateProjectionMatrix()}
+function resize(){const w=innerWidth,h=innerHeight;renderer.setSize(w,h,false);camera.aspect=w/h;camera.fov=w/h<.75?42:32;camera.updateProjectionMatrix()}
 addEventListener('resize',resize);resize();
 let last=performance.now();const camT=new THREE.Vector3(),bubP=new THREE.Vector3();
 mode='idle';
@@ -1179,16 +1185,17 @@ function frame(now){requestAnimationFrame(frame);let dt=Math.min(.05,(now-last)/
   else if(!G){root.rotation.y+=dt*.25;mode='idle'}
   animateHero(dt);
   fogs.forEach((m,i)=>{m.rotation.z+=m.userData.s*dt});
-  // camera: high and behind, following the hero
-  const zoom=G?1:.45;const D=(isTouch?13.5:13)*zoom,P=G?.9:.42;
-  camT.lerp(tmp.set(HERO.pos.x,HERO.pos.y+(G?.4:1),HERO.pos.z),1-Math.exp(-dt*6));
-  const sx=shake>0?(Math.random()-.5)*shake*.5:0,sz=shake>0?(Math.random()-.5)*shake*.5:0;shake=Math.max(0,shake-dt*1.6);
-  camera.position.set(camT.x+sx,camT.y+Math.sin(P)*D,camT.z+Math.cos(P)*D+sz);camera.lookAt(camT);sky.position.copy(camera.position);
+  updateCamera(dt,false);
   // UI that follows the scene
   if(bannerT>0){bannerT-=dt;if(bannerT<=0)$('#banner').classList.remove('on')}
   if(sayT>0){sayT-=dt;if(sayT<=0)$('#bubble').classList.remove('on');bubP.copy(lantern.position);bubP.y+=.35;bubP.project(camera);
     const b=$('#bubble');b.style.left=Math.max(120,Math.min(innerWidth-120,(bubP.x*.5+.5)*innerWidth))+'px';b.style.top=((-bubP.y*.5+.5)*innerHeight-8)+'px'}
   renderer.render(scene,camera)}
+// camera: high and behind, following the hero (snap = jump straight there, for sim())
+function updateCamera(dt,snap){const zoom=G?1:.45;const D=(isTouch?14:13.5)*zoom,P=G?.9:.42;
+  tmp.set(HERO.pos.x,HERO.pos.y+(G?.4:1),HERO.pos.z);if(snap)camT.copy(tmp);else camT.lerp(tmp,1-Math.exp(-dt*6));
+  const sx=shake>0?(Math.random()-.5)*shake*.5:0,sz=shake>0?(Math.random()-.5)*shake*.5:0;shake=Math.max(0,shake-dt*1.6);
+  camera.position.set(camT.x+sx,camT.y+Math.sin(P)*D,camT.z+Math.cos(P)*D+sz);camera.lookAt(camT);camera.updateMatrixWorld();sky.position.copy(camera.position)}
 function stepGame(dt){const g=G;
   // move
   const inp=inputDir();const moving=inp.l>.12;
@@ -1253,7 +1260,7 @@ requestAnimationFrame(t=>{last=t;frame(t)});
 // test hooks (Playwright)
 // fast-forward without rendering (tests / balance bots): advances the night by `sec` in 1/30 s steps
 function sim(sec){const n=Math.round(sec*30);for(let i=0;i<n&&G&&!G.over;i++){if(G.paused){if($('#cardOv').classList.contains('on'))pickCard(0);else break}
-  G.t+=1/30;stepGame(1/30);HERO.pos.copy(root.position)}return G&&{t:Math.round(G.t),kills:G.kills,lv:G.lv,hp:Math.round(G.hp),en:enemies.length,boss:boss.alive?Math.round(boss.hp/boss.max*100)+'%':G.bossKilled?'killed':'-',over:G.over}}
+  G.t+=1/30;stepGame(1/30);HERO.pos.copy(root.position);updateCamera(1/30,true)}return G&&{t:Math.round(G.t),kills:G.kills,lv:G.lv,hp:Math.round(G.hp),en:enemies.length,boss:boss.alive?Math.round(boss.hp/boss.max*100)+'%':G.bossKilled?'killed':'-',over:G.over}}
 window.__game={start:(quick)=>startNight(quick?150:480),get G(){return G},setT:s=>{if(G)G.t=s},auto:v=>{if(G)G.auto=v},pick:i=>pickCard(i),god:()=>{if(G){G.maxhp=G.hp=1e9}},
   spawnRing,setWho:pickChar,sim,dbg:()=>({en:enemies.length,near:enemies.filter(e=>Math.hypot(e.x-HERO.pos.x,e.z-HERO.pos.z)<6.5).length,sw:swords.filter(s=>s.on).length,hero:[HERO.pos.x,HERO.pos.z],e0:enemies[0]&&[enemies[0].x,enemies[0].z,enemies[0].hp],vol:G&&G.volley})};
 })();
