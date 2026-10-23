@@ -166,15 +166,15 @@ const LC=c=>new THREE.Color(c).convertSRGBToLinear();
 /* ================= 序章・白石村 ================= */
 scene.fog.density=.034;
 const DAWN_FOG=LC(0x6f7f8c),NIGHT_FOG=FOG.clone();
-const groundTex=ctex(512,512,(x,w,h)=>{x.fillStyle='#1d221d';x.fillRect(0,0,w,h);
+const groundTex=ctex(512,512,(x,w,h)=>{x.fillStyle='#211f1b';x.fillRect(0,0,w,h);
   for(let i=0;i<220;i++){const r=8+rnd()*42;x.fillStyle=`rgba(${rnd()<.5?'10,14,11':'52,56,46'},${.08+rnd()*.12})`;x.beginPath();x.arc(rnd()*w,rnd()*h,r,0,7);x.fill()}
   x.strokeStyle='rgba(80,96,70,.28)';x.lineWidth=1.3;for(let i=0;i<600;i++){const px=rnd()*w,py=rnd()*h;x.beginPath();x.moveTo(px,py);x.lineTo(px+(rnd()-.5)*5,py-3-rnd()*6);x.stroke()}});
 groundTex.wrapS=groundTex.wrapT=THREE.RepeatWrapping;groundTex.repeat.set(22,22);
 const ground=new THREE.Mesh(new THREE.PlaneGeometry(160,160),new THREE.MeshLambertMaterial({map:groundTex}));ground.rotation.x=-Math.PI/2;scene.add(ground);
 // stone-paved square in the middle of the village
 const paveTex=ctex(256,256,(x,w,h)=>{x.fillStyle='#2f322e';x.fillRect(0,0,w,h);// worn flagstones: uneven sizes, moss, dark joints
-  for(let r=0;r<6;r++){let cx=-(rnd()*30);const hh=256/6;while(cx<w){const ww=30+rnd()*34,t=(rnd()-.5)*14;x.fillStyle=`rgb(${58+t},${61+t},${56+t})`;x.fillRect(cx+2,r*hh+2,ww-4,hh-4);cx+=ww}}
-  for(let i=0;i<220;i++){x.fillStyle=`rgba(${rnd()<.6?'38,58,40':'20,22,20'},${.12+rnd()*.2})`;x.beginPath();x.arc(rnd()*w,rnd()*h,2+rnd()*9,0,7);x.fill()}});
+  for(let r=0;r<6;r++){let cx=-(rnd()*30);const hh=256/6;while(cx<w){const ww=30+rnd()*34,t=(rnd()-.5)*14;x.fillStyle=`rgb(${50+t},${48+t},${45+t})`;x.fillRect(cx+2,r*hh+2,ww-4,hh-4);cx+=ww}}
+  for(let i=0;i<220;i++){x.fillStyle=`rgba(${rnd()<.6?'46,42,36':'18,18,18'},${.12+rnd()*.2})`;x.beginPath();x.arc(rnd()*w,rnd()*h,2+rnd()*9,0,7);x.fill()}});
 paveTex.wrapS=paveTex.wrapT=THREE.RepeatWrapping;paveTex.repeat.set(4,4);
 const pave=new THREE.Mesh(new THREE.CircleGeometry(9,48),new THREE.MeshLambertMaterial({map:paveTex}));pave.rotation.x=-Math.PI/2;pave.position.y=.01;scene.add(pave);
 
@@ -222,32 +222,57 @@ function merged(parts){const pos=[],nor=[],col=[];const m=new THREE.Matrix4(),q=
   const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));g.setAttribute('normal',new THREE.Float32BufferAttribute(nor,3));
   g.setAttribute('color',new THREE.Float32BufferAttribute(col,3));return g}
 const S0=new THREE.SphereGeometry(1,14,10),B0=new THREE.BoxGeometry(1,1,1),C0=new THREE.CylinderGeometry(1,1,1,12);
-const ghostGeo=(()=>{const pts=[[0,.95],[.18,.9],[.3,.75],[.34,.55],[.3,.35],[.2,.2],[.08,.08],[0,0]].map(p=>new THREE.Vector2(p[0],p[1]));
-  return merged([{g:new THREE.LatheGeometry(pts,16),c:'#cdf3ea'},{g:S0,c:'#0b1414',p:[-.1,.7,.27],s:[.055,.08,.04]},{g:S0,c:'#0b1414',p:[.1,.7,.27],s:[.055,.08,.04]},
-    {g:S0,c:'#0b1414',p:[0,.56,.3],s:[.06,.04,.03]}])})();
-const paperGeo=merged([{g:B0,c:'#ece4cf',p:[0,.42,0],s:[.42,.56,.05]},{g:B0,c:'#ece4cf',p:[0,.86,0],s:[.32,.3,.05]},{g:B0,c:'#1a1a1a',p:[0,1.05,0],s:[.36,.07,.06]},
-  {g:B0,c:'#111',p:[-.07,.88,.03],s:[.05,.05,.01]},{g:B0,c:'#111',p:[.07,.88,.03],s:[.05,.05,.01]},{g:S0,c:'#d23a32',p:[-.11,.8,.03],s:[.04,.04,.01]},{g:S0,c:'#d23a32',p:[.11,.8,.03],s:[.04,.04,.01]},
-  {g:B0,c:'#c0392b',p:[0,.74,.03],s:[.06,.015,.01]},{g:B0,c:'#ece4cf',p:[-.3,.5,0],s:[.18,.06,.05],r:[0,0,.5]},{g:B0,c:'#ece4cf',p:[.3,.5,0],s:[.18,.06,.05],r:[0,0,-.5]},
-  {g:B0,c:'#c0392b',p:[0,.3,.03],s:[.42,.04,.01]}]);
-const jiangGeo=merged([{g:B0,c:'#3d5688',p:[0,.5,0],s:[.42,.72,.3]},{g:B0,c:'#2b3d66',p:[0,.13,0],s:[.46,.1,.34]},{g:B0,c:'#b9c6a6',p:[0,1.02,0],s:[.3,.3,.28]},
-  {g:C0,c:'#16161c',p:[0,1.22,0],s:[.18,.12,.18]},{g:C0,c:'#16161c',p:[0,1.16,0],s:[.26,.02,.26]},{g:B0,c:'#e8c64a',p:[0,1.04,.15],s:[.12,.2,.01]},{g:B0,c:'#c0392b',p:[0,1.04,.16],s:[.02,.16,.01]},
-  {g:B0,c:'#3d5688',p:[-.17,.78,.25],s:[.1,.1,.42]},{g:B0,c:'#3d5688',p:[.17,.78,.25],s:[.1,.1,.42]},{g:B0,c:'#b9c6a6',p:[-.17,.78,.5],s:[.08,.07,.1]},{g:B0,c:'#b9c6a6',p:[.17,.78,.5],s:[.08,.07,.1]},
-  {g:B0,c:'#111',p:[-.07,1.05,.141],s:[.05,.03,.01]},{g:B0,c:'#111',p:[.07,1.05,.141],s:[.05,.03,.01]}]);
+// 遊魂: white-robed ghost, long black hair over the face with red eyes peeping through, sleeves reaching forward, no legs (robe trails off)
+const ghostGeo=(()=>{const robe=[[0,-.18],[.1,-.05],[.22,.12],[.27,.35],[.24,.6],[.19,.8],[.13,.9],[.07,.94]].map(p=>new THREE.Vector2(p[0],p[1]));
+  const W='#eef6f4',S='#dfe8e4',H='#07070a';
+  return merged([{g:new THREE.LatheGeometry(robe,14),c:W},{g:S0,c:S,p:[0,1.03,0],s:[.13,.15,.13]},
+    {g:S0,c:H,p:[0,1.1,-.01],s:[.15,.12,.15]},{g:B0,c:H,p:[0,.93,.1],s:[.24,.34,.05],r:[.12,0,0]},{g:B0,c:H,p:[0,.8,-.1],s:[.28,.62,.06]},
+    {g:B0,c:H,p:[-.12,.86,.04],s:[.06,.42,.12]},{g:B0,c:H,p:[.12,.86,.04],s:[.06,.42,.12]},
+    {g:S0,c:'#ff3a2a',p:[-.04,1.02,.135],s:[.022,.018,.01]},{g:S0,c:'#ff3a2a',p:[.04,1.02,.135],s:[.022,.018,.01]},
+    {g:C0,c:W,p:[-.15,.72,.18],s:[.065,.32,.065],r:[1.35,0,.1]},{g:C0,c:W,p:[.15,.72,.18],s:[.065,.32,.065],r:[1.35,0,-.1]},
+    {g:S0,c:S,p:[-.16,.68,.36],s:[.035,.03,.05]},{g:S0,c:S,p:[.16,.68,.36],s:[.035,.03,.05]}])})();
+// 紙人: paper effigy in red paper clothes, chalk-white face, round red cheeks, painted black hair
+const paperGeo=(()=>{const R='#c8463a',P='#f4efe2',K='#141414';
+  return merged([{g:new THREE.CylinderGeometry(.13,.26,.62,4),c:R,p:[0,.36,0],s:[1,1,.3],r:[0,Math.PI/4,0]},{g:B0,c:'#e8c35a',p:[0,.28,.04],s:[.36,.04,.02]},
+    {g:B0,c:P,p:[0,.62,.02],s:[.2,.06,.04]},{g:new THREE.CylinderGeometry(.17,.16,.32,10),c:P,p:[0,.84,0],s:[1,1,.35]},
+    {g:new THREE.CylinderGeometry(.18,.18,.12,10,1,false,0,Math.PI),c:K,p:[0,.97,0],s:[1,1,.4],r:[0,Math.PI/2,0]},
+    {g:S0,c:K,p:[-.065,.86,.06],s:[.028,.02,.01]},{g:S0,c:K,p:[.065,.86,.06],s:[.028,.02,.01]},
+    {g:S0,c:'#e0303a',p:[-.1,.78,.058],s:[.045,.045,.01]},{g:S0,c:'#e0303a',p:[.1,.78,.058],s:[.045,.045,.01]},{g:S0,c:'#b8202a',p:[0,.74,.06],s:[.03,.015,.01]},
+    {g:B0,c:P,p:[-.28,.48,0],s:[.22,.07,.03],r:[0,0,.75]},{g:B0,c:P,p:[.28,.48,0],s:[.22,.07,.03],r:[0,0,-.75]},
+    {g:C0,c:'#5a4030',p:[0,.02,0],s:[.02,.08,.02]}])})();
+// 跳跳殭屍: Qing-official robe with gold trim, official's hat with a red tassel ball, yellow talisman over the face, arms stiff and straight out, a queue down the back
+const jiangGeo=(()=>{const B='#3a4f80',G='#d9b04a',F='#a9bd98',K='#141418';
+  return merged([{g:B0,c:B,p:[0,.48,0],s:[.42,.7,.28]},{g:B0,c:G,p:[0,.48,.142],s:[.06,.7,.01]},{g:B0,c:G,p:[0,.15,0],s:[.44,.06,.3]},{g:B0,c:G,p:[0,.8,0],s:[.44,.05,.3]},
+    {g:B0,c:K,p:[-.1,.05,.03],s:[.12,.1,.2]},{g:B0,c:K,p:[.1,.05,.03],s:[.12,.1,.2]},
+    {g:B0,c:F,p:[0,.98,0],s:[.26,.28,.25]},{g:C0,c:K,p:[0,1.13,0],s:[.22,.03,.22]},{g:new THREE.ConeGeometry(.15,.16,12),c:K,p:[0,1.22,0]},{g:S0,c:'#d22a26',p:[0,1.31,0],s:[.05,.05,.05]},
+    {g:B0,c:'#f2d24a',p:[0,1.0,.13],s:[.13,.26,.01]},{g:B0,c:'#c0302a',p:[0,1.02,.136],s:[.025,.18,.005]},{g:B0,c:'#c0302a',p:[0,.95,.136],s:[.08,.02,.005]},
+    {g:B0,c:B,p:[-.17,.74,.24],s:[.11,.11,.44]},{g:B0,c:B,p:[.17,.74,.24],s:[.11,.11,.44]},{g:B0,c:G,p:[-.17,.74,.45],s:[.12,.12,.03]},{g:B0,c:G,p:[.17,.74,.45],s:[.12,.12,.03]},
+    {g:B0,c:F,p:[-.17,.74,.52],s:[.08,.07,.12]},{g:B0,c:F,p:[.17,.74,.52],s:[.08,.07,.12]},{g:B0,c:K,p:[0,.75,-.15],s:[.04,.5,.03]}])})();
 const lanternPts=[[.1,-.3],[.24,-.24],[.32,-.1],[.34,.04],[.3,.18],[.2,.28],[.1,.32]].map(p=>new THREE.Vector2(p[0],p[1]));
+// 燈籠鬼: a paper lantern come alive: big round eyes, a long red tongue lolling out, wooden handle
 const lghGeo=merged([{g:new THREE.LatheGeometry(lanternPts,14),c:'#ffad5a',p:[0,.65,0]},{g:C0,c:'#2a1a12',p:[0,.98,0],s:[.12,.05,.12]},{g:C0,c:'#2a1a12',p:[0,.33,0],s:[.12,.05,.12]},
-  {g:S0,c:'#2a0c06',p:[-.11,.72,.3],s:[.06,.07,.03]},{g:S0,c:'#2a0c06',p:[.11,.72,.3],s:[.06,.07,.03]},{g:B0,c:'#2a0c06',p:[0,.56,.32],s:[.2,.05,.03]},{g:B0,c:'#d03020',p:[0,.2,0],s:[.03,.22,.03]}]);
+  {g:new THREE.TorusGeometry(.09,.012,6,14,Math.PI),c:'#2a1a12',p:[0,1.0,0]},
+  {g:S0,c:'#fff6e0',p:[-.12,.74,.29],s:[.085,.095,.04]},{g:S0,c:'#fff6e0',p:[.12,.74,.29],s:[.085,.095,.04]},{g:S0,c:'#140604',p:[-.11,.73,.33],s:[.04,.05,.02]},{g:S0,c:'#140604',p:[.11,.73,.33],s:[.04,.05,.02]},
+  {g:S0,c:'#2a0c06',p:[0,.55,.32],s:[.12,.05,.03]},{g:B0,c:'#e0303a',p:[0,.43,.36],s:[.08,.2,.025],r:[-.25,0,0]},{g:S0,c:'#e0303a',p:[0,.33,.39],s:[.04,.03,.02]},
+  {g:B0,c:'#d03020',p:[0,.2,0],s:[.03,.22,.03]}]);
 
 /* ================= 妖怪 ================= */
 // hp/dmg are at minute 0; scaled by (1+.25*minute)^1.5 when spawned. sc: size next to the hero (models were built for a 1.4 m figure)
 const ET={
-  ghost:{n:'遊魂',geo:ghostGeo,cap:120,hp:15,spd:1.6,r:.32,dmg:6,soul:1,float:1,sc:.62,mat:{transparent:true,opacity:.86,emissive:0x2a7a70}},
-  paper:{n:'紙人',geo:paperGeo,cap:110,hp:27,spd:2.4,r:.3,dmg:7,soul:1,sway:1,sc:.66,mat:{side:THREE.DoubleSide,emissive:0x3a3428}},
-  jiang:{n:'跳跳殭屍',geo:jiangGeo,cap:80,hp:64,spd:2.1,r:.36,dmg:11,soul:2,hop:1,sc:.64,mat:{emissive:0x1e2a48}},
-  lgh:{n:'燈籠鬼',geo:lghGeo,cap:60,hp:42,spd:2.2,r:.34,dmg:8,soul:2,float:1,sc:.62,mat:{emissive:0x9a3a0a}}};
-for(const k in ET){const t=ET[k];t.mesh=new THREE.InstancedMesh(t.geo,toon('#ffffff',Object.assign({vertexColors:true,roughness:.7},t.mat)),t.cap);
-  t.mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);t.mesh.count=0;t.mesh.frustumCulled=false;
-  for(let i=0;i<t.cap;i++)t.mesh.setColorAt(i,new THREE.Color(1,1,1));scene.add(t.mesh);t.list=[]}
+  ghost:{n:'遊魂',geo:ghostGeo,cap:120,hp:15,spd:1.6,r:.32,dmg:6,soul:1,float:1,sc:.78,glow:.22,mat:{transparent:true,opacity:.92}},
+  paper:{n:'紙人',geo:paperGeo,cap:110,hp:27,spd:2.4,r:.3,dmg:7,soul:1,sway:1,sc:.85,glow:.25,mat:{side:THREE.DoubleSide}},
+  jiang:{n:'跳跳殭屍',geo:jiangGeo,cap:80,hp:50,spd:2.1,r:.36,dmg:10,soul:2,hop:1,sc:.78,glow:.25,mat:{}},
+  lgh:{n:'燈籠鬼',geo:lghGeo,cap:60,hp:42,spd:2.2,r:.34,dmg:8,soul:2,float:1,sc:.82,glow:.45,mat:{}}};
+// self-lit by their own vertex colours (glow = how much), so the painted colours still read at night
+function paintedMat(o,glow){const m=toon('#ffffff',Object.assign({vertexColors:true,roughness:.7},o));
+  m.onBeforeCompile=sh=>{sh.fragmentShader=sh.fragmentShader.replace('#include <emissivemap_fragment>','#include <emissivemap_fragment>\n\ttotalEmissiveRadiance += vColor.rgb * '+glow.toFixed(2)+';')};return m}
+for(const k in ET){const t=ET[k];t.mesh=new THREE.InstancedMesh(t.geo,paintedMat(t.mat,t.glow),t.cap);
+  t.mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);t.mesh.frustumCulled=false;
+  for(let i=0;i<t.cap;i++)t.mesh.setColorAt(i,new THREE.Color(1,1,1));// r128 sizes instanceColor from .count, so colour first, then empty it
+  t.mesh.count=0;scene.add(t.mesh);t.list=[]}
 const CAP=220;let enemies=[];
+const shadowMesh=new THREE.InstancedMesh(new THREE.PlaneGeometry(1,1).rotateX(-Math.PI/2),new THREE.MeshBasicMaterial({map:glowTex,color:0x000000,transparent:true,opacity:.7,depthWrite:false}),CAP);
+shadowMesh.count=0;shadowMesh.frustumCulled=false;scene.add(shadowMesh);// dark spot under each monster so they read against the ground
 const WHITE=new THREE.Color(1,1,1),FLASH=new THREE.Color(4,4,4),dummy=new THREE.Object3D();
 
 /* ================= 燈籠大王 ================= */
@@ -335,11 +360,11 @@ function renderBuffs(){const n={count:'劍',dmg:'鋒',rate:'疾',pierce:'穿',ra
 
 /* ================= 生妖 ================= */
 function spawn(type,x,z,o={}){const t=ET[type];if(enemies.length>=CAP||t.list.length>=t.cap)return null;
-  const e=Object.assign({type,t,x,z,y:0,vx:0,vz:0,hp:t.hp*hpScale(),r:t.r*t.sc,spd:t.spd*(.9+Math.random()*.2),dmg:t.dmg*(1+.15*minute()),flash:0,ph:Math.random()*6,kb:0,s:1},o);
+  const e=Object.assign({type,t,x,z,y:0,vx:0,vz:0,hp:t.hp*1.3*hpScale(),r:t.r*t.sc,spd:t.spd*(.9+Math.random()*.2),dmg:t.dmg*(1+.15*minute()),flash:0,ph:Math.random()*6,kb:0,s:1},o);
   e.max=e.hp;enemies.push(e);t.list.push(e);return e}
 function spawnRing(type,n,r){for(let i=0;i<n;i++){const a=i/n*Math.PI*2;spawn(type,HERO.pos.x+Math.sin(a)*r,HERO.pos.z+Math.cos(a)*r)}}
 function spawnTick(dt){const m=minute(),rate=1+1.3*m+.15*m*m;G.spawnAcc+=dt*rate;
-  while(G.spawnAcc>=1){G.spawnAcc-=1;const w=[['ghost',3],['paper',m>.8?2.2:0],['jiang',m>2.2?1.6:0],['lgh',m>4.5?1.2:0]];let tot=w.reduce((a,b)=>a+b[1],0),x=Math.random()*tot,k='ghost';
+  while(G.spawnAcc>=1){G.spawnAcc-=1;const w=[['ghost',3],['paper',m>.8?2.2:0],['jiang',m>2.8?1.4:0],['lgh',m>4.5?1.2:0]];let tot=w.reduce((a,b)=>a+b[1],0),x=Math.random()*tot,k='ghost';
     for(const [n,v] of w){x-=v;if(x<=0){k=n;break}}
     const a=Math.random()*Math.PI*2,r=11+Math.random()*3;spawn(k,HERO.pos.x+Math.sin(a)*r,HERO.pos.z+Math.cos(a)*r)}
   if(G.t>=G.waveAt*G.len/480&&!G.over){G.waveAt+=60;spawnRing(m>3?'paper':'ghost',16+Math.floor(m*3),10.5)}}
@@ -356,7 +381,7 @@ function dropSoul(x,z,v){if(souls.length>=SOULCAP){souls[0].v+=v;return}
   souls.push({x,z,y:.3,v,t:0,pull:false})}
 // only what the player can see: inside the range AND on screen (so nothing dies off-screen)
 const ndc=new THREE.Vector3();
-function onScreen(x,y,z){ndc.set(x,y,z).project(camera);return Math.abs(ndc.x)<.94&&ndc.y>-.94&&ndc.y<.8&&ndc.z<1}
+function onScreen(x,y,z){ndc.set(x,y,z).project(camera);return Math.abs(ndc.x)<.78&&ndc.y>-.72&&ndc.y<.55&&ndc.z<1}// inner part: monsters walk into view before the swords take them
 function nearest(x,z,maxR,skip){let best=null,bd=maxR*maxR;for(const e of enemies){if(e.dead||(skip&&skip.has(e)))continue;const d=(e.x-x)**2+(e.z-z)**2;if(d<bd&&onScreen(e.x,.4,e.z)){bd=d;best=e}}
   if(boss.alive&&!(skip&&skip.has(boss))){const d=(boss.x-x)**2+(boss.z-z)**2;if(d<bd+boss.r*boss.r&&onScreen(boss.x,1.5,boss.z))best=boss}return best}
 function hurtBoss(dmg){if(!boss.alive)return;boss.hp-=dmg;boss.flash=.08;if(boss.hp<=0){boss.alive=false;G.bossKilled=true;G.kills+=1;
@@ -453,13 +478,13 @@ function pickChar(c){if(c!==who){useChar(c);applyFace({g:1,x:1});applyBody();bui
   $$('[data-who]').forEach(b=>b.setAttribute('aria-pressed',String(+b.dataset.who===who)))}
 $$('[data-who]').forEach(b=>b.onclick=()=>pickChar(+b.dataset.who));pickChar(who);
 function startNight(len){resetWorld();G=newNight(len);G.paused=false;$('#startOv').classList.remove('on');$('#endOv').classList.remove('on');$('#hud').hidden=false;
-  $('#bossMark').style.left=(.85*100)+'%';renderBuffs();tipShown=false;say('拖著畫面就能走路，放開就站樁！飛劍會自己斬妖。',6);
+  $('#bossMark').style.left=(.85*100)+'%';spawnRing('ghost',8,7.5);// an opening ring so the first monsters are seen walking inrenderBuffs();tipShown=false;say('拖著畫面就能走路，放開就站樁！飛劍會自己斬妖。',6);
   setTimeout(()=>{if(G&&!G.over&&G.kills<3)say('吸青色的魂火可以頓悟喔！',4)},9000)}
 $('#startNight').onclick=()=>startNight(480);$('#startQuick').onclick=()=>startNight(150);
 $('#again').onclick=()=>startNight(G?G.len:480);$('#toTitle').onclick=()=>{$('#endOv').classList.remove('on');$('#startOv').classList.add('on');$('#hud').hidden=true;renderRealm('#realmText','#realmBar');resetWorld();G=null};
 function resetWorld(){for(const e of enemies)e.dead=true;enemies=[];for(const k in ET)ET[k].list=[];souls=[];shots.length=0;
   swords.forEach(s=>{s.on=false;s.g.visible=false;s.tr.build(0)});warnPool.forEach(w=>{w.on=false;w.m.visible=w.f.visible=false});fxPool.forEach(f=>{f.on=false;f.s.visible=false});
-  for(const k in ET)ET[k].mesh.count=0;soulMesh.count=0;
+  for(const k in ET)ET[k].mesh.count=0;soulMesh.count=0;shadowMesh.count=0;
   boss.alive=false;boss.g.visible=false;$('#bossBox').classList.remove('on');orbitBlades.forEach(g=>g.visible=false);root.position.set(0,0,0);
   scene.fog.color.copy(NIGHT_FOG);scene.background.copy(NIGHT_FOG);hemi.intensity=.55}
 function endNight(win,gaveUp=false){if(G.over)return;G.over=true;G.paused=true;
@@ -493,8 +518,9 @@ function frame(now){requestAnimationFrame(frame);let dt=Math.min(.05,(now-last)/
     const b=$('#bubble');b.style.left=Math.max(120,Math.min(innerWidth-120,(bubP.x*.5+.5)*innerWidth))+'px';b.style.top=((-bubP.y*.5+.5)*innerHeight-8)+'px'}
   renderer.render(scene,camera)}
 // camera: high and behind, following the hero (snap = jump straight there, for sim())
-function updateCamera(dt,snap){const zoom=G?1:.45;const D=(isTouch?14:13.5)*zoom,P=G?.9:.42;
-  tmp.set(HERO.pos.x,HERO.pos.y+(G?.4:1),HERO.pos.z);if(snap)camT.copy(tmp);else camT.lerp(tmp,1-Math.exp(-dt*6));
+let camOverride=0;
+function updateCamera(dt,snap){const zoom=G?1:.45;const D=camOverride||(isTouch?11.5:11)*zoom,P=camOverride?.5:G?.92:.42;
+  if(camOverride)tmp.set(0,.55,-.4);else tmp.set(HERO.pos.x,HERO.pos.y+(G?.4:1),HERO.pos.z);if(snap)camT.copy(tmp);else camT.lerp(tmp,1-Math.exp(-dt*6));
   const sx=shake>0?(Math.random()-.5)*shake*.5:0,sz=shake>0?(Math.random()-.5)*shake*.5:0;shake=Math.max(0,shake-dt*1.6);
   camera.position.set(camT.x+sx,camT.y+Math.sin(P)*D,camT.z+Math.cos(P)*D+sz);camera.lookAt(camT);camera.updateMatrixWorld();sky.position.copy(camera.position)}
 function stepGame(dt){const g=G;
@@ -549,10 +575,13 @@ function stepEnemies(dt){grid.clear();for(const e of enemies){if(e.dead)continue
     if(d<e.r+.32){hurtHero(e.dmg,dx/d,dz/d);e.x-=dx/d*.9;e.z-=dz/d*.9}
     e.flash-=dt}
   if(enemies.some(e=>e.dead)){enemies=enemies.filter(e=>!e.dead);for(const k in ET)ET[k].list=ET[k].list.filter(e=>!e.dead)}}
+// monsters face the camera (turned a little toward the hero) and lean back so their faces show from above
 function writeInstances(){for(const k in ET){const t=ET[k];let i=0;
-    for(const e of t.list){dummy.position.set(e.x,e.y,e.z);dummy.rotation.set(-.32,Math.atan2(HERO.pos.x-e.x,HERO.pos.z-e.z),t.sway?Math.sin(e.ph*5)*.12:0,'YXZ');dummy.scale.setScalar(e.s*t.sc);dummy.updateMatrix();
+    for(const e of t.list){dummy.position.set(e.x,e.y,e.z);dummy.rotation.set(-.6,Math.max(-.7,Math.min(.7,(HERO.pos.x-e.x)*.35)),t.sway?Math.sin(e.ph*5)*.12:0,'YXZ');dummy.scale.setScalar(e.s*t.sc);dummy.updateMatrix();
       t.mesh.setMatrixAt(i,dummy.matrix);t.mesh.setColorAt(i,e.flash>0?FLASH:e.elite?ELITE:WHITE);i++}
     t.mesh.count=i;t.mesh.instanceMatrix.needsUpdate=true;if(t.mesh.instanceColor)t.mesh.instanceColor.needsUpdate=true}
+  {let j=0;for(const e of enemies){if(e.dead)continue;dummy.position.set(e.x,.02,e.z);dummy.rotation.set(0,0,0);dummy.scale.setScalar(e.r*3.2);dummy.updateMatrix();shadowMesh.setMatrixAt(j++,dummy.matrix)}
+   shadowMesh.count=j;shadowMesh.instanceMatrix.needsUpdate=true}
   let i=0;for(const s of souls){dummy.position.set(s.x,s.y+Math.sin(s.t*5+i)*.08,s.z);dummy.rotation.set(0,s.t*3,0);dummy.scale.setScalar(s.v>1?1.4:1);dummy.updateMatrix();soulMesh.setMatrixAt(i++,dummy.matrix)}
   soulMesh.count=i;soulMesh.instanceMatrix.needsUpdate=true}
 const ELITE=new THREE.Color(1.6,.8,.6);
@@ -562,7 +591,7 @@ requestAnimationFrame(t=>{last=t;frame(t)});
 // fast-forward without rendering (tests / balance bots): advances the night by `sec` in 1/30 s steps
 function sim(sec){const n=Math.round(sec*30);for(let i=0;i<n&&G&&!G.over;i++){if(G.paused){if($('#cardOv').classList.contains('on'))pickCard(0);else break}
   G.t+=1/30;stepGame(1/30);HERO.pos.copy(root.position);updateCamera(1/30,true)}return G&&{t:Math.round(G.t),kills:G.kills,lv:G.lv,hp:Math.round(G.hp),en:enemies.length,boss:boss.alive?Math.round(boss.hp/boss.max*100)+'%':G.bossKilled?'killed':'-',over:G.over}}
-window.__game={start:(quick)=>startNight(quick?150:480),get G(){return G},setT:s=>{if(G)G.t=s},auto:v=>{if(G)G.auto=v},pick:i=>pickCard(i),god:()=>{if(G){G.maxhp=G.hp=1e9}},
-  spawnRing,setWho:pickChar,sim,dbg:()=>({en:enemies.length,near:enemies.filter(e=>Math.hypot(e.x-HERO.pos.x,e.z-HERO.pos.z)<6.5).length,sw:swords.filter(s=>s.on).length,hero:[HERO.pos.x,HERO.pos.z],e0:enemies[0]&&[enemies[0].x,enemies[0].z,enemies[0].hp],vol:G&&G.volley})};
+window.__game={ic:()=>{const m=ET.paper.mesh;return {cnt:m.count,ic:[...m.instanceColor.array.slice(0,9)],attr:Object.keys(m.geometry.attributes),vc:m.material.vertexColors,prog:renderer.info.programs.map(p=>p.name)}},cols:k=>{const a=ET[k].geo.attributes.color.array,u=new Set();for(let i=0;i<a.length;i+=3)u.add(a[i].toFixed(2)+','+a[i+1].toFixed(2)+','+a[i+2].toFixed(2));return [...u].concat([ET[k].mesh.material.vertexColors,!!ET[k].mesh.instanceColor])},gallery:()=>{G.paused=true;resetWorld();G.paused=true;['ghost','paper','jiang','lgh'].forEach((k,i)=>spawn(k,-1.5+i,-.4));root.position.set(2.4,0,1.4);root.rotation.y=0;writeInstances()},camD:d=>{camOverride=d},start:(quick)=>startNight(quick?150:480),get G(){return G},setT:s=>{if(G)G.t=s},auto:v=>{if(G)G.auto=v},pick:i=>pickCard(i),god:()=>{if(G){G.maxhp=G.hp=1e9}},
+  spawnRing,setWho:pickChar,sim,mat:k=>[...ET[k].mesh.instanceMatrix.array.slice(0,16)].map(v=>+v.toFixed(3)).concat(ET[k].list.slice(0,3).map(e=>[e.x,e.y,e.z,e.s,e.flash])),dbg:()=>({cnt:Object.keys(ET).map(k=>k+':'+ET[k].mesh.count+(ET[k].mesh.instanceColor?'c':'')+(ET[k].mesh.visible?'v':'')),pr:renderer.getPixelRatio(),gl2:renderer.capabilities.isWebGL2,prog:renderer.info.programs.length,en:enemies.length,near:enemies.filter(e=>Math.hypot(e.x-HERO.pos.x,e.z-HERO.pos.z)<6.5).length,sw:swords.filter(s=>s.on).length,hero:[HERO.pos.x,HERO.pos.z],e0:enemies[0]&&[enemies[0].x,enemies[0].z,enemies[0].hp],vol:G&&G.volley})};
 })();
 </script>
