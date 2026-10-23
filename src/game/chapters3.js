@@ -1,8 +1,8 @@
 /* ================= 第 6～8 章：御劍天空篇（雲海、雷澤、天河）=================
    主角站在飛劍上一直往前飛（鏡頭在背後斜上），左搖桿在前進方向的平面上移動；妖從前方與兩側來，落到後面的就放掉。 */
 const SKY_SPEED=2.6;
-function skyMap(cloud,haze,stormy){pave.visible=false;const puffs=[];const m=new THREE.MeshLambertMaterial({color:cloud,transparent:true,opacity:.9}),g0=new THREE.IcosahedronGeometry(1,1);
-  for(let i=0;i<46;i++){const p=new THREE.Mesh(g0,m);const s=1.6+rnd()*3.2;p.scale.set(s*1.6,s*.55,s);p.position.set((rnd()-.5)*70,-.8-rnd()*.8,(rnd()-.5)*70);mapG.add(p);puffs.push(p)}
+function skyMap(cloud,haze,stormy){pave.visible=false;const puffs=[];const m=new THREE.MeshLambertMaterial({color:cloud,transparent:true,opacity:.55,depthWrite:false}),g0=new THREE.IcosahedronGeometry(1,1);
+  for(let i=0;i<40;i++){const p=new THREE.Mesh(g0,m);const s=1.2+rnd()*2.2;p.scale.set(s*1.6,s*.45,s);p.position.set((rnd()-.5)*70,-2.2-rnd()*1.2,(rnd()-.5)*70);mapG.add(p);puffs.push(p)}
   for(let i=0;i<7;i++){const r=new THREE.Mesh(new THREE.ConeGeometry(1.4+rnd(),9+rnd()*6,6),toon(stormy?0x2a2838:0x6a7a88));r.rotation.x=Math.PI;r.position.set((rnd()-.5)*60,-3,(rnd()-.5)*60);mapG.add(r);puffs.push(r);r.userData.rock=1}
   mapG.userData.puffs=puffs;mapG.userData.stormy=stormy}
 MAPS[6]=()=>skyMap(0xdde8f2,0,false);MAPS[7]=()=>skyMap(0x4a4660,0,true);
@@ -27,15 +27,15 @@ const tmqGeo=merged([{g:B0,c:'#2a2a3a',p:[0,.6,0],s:[.3,.3,.7]},{g:B0,c:'#2a2a3a
   {g:B0,c:'#5a1a1a',p:[0,1.05,-.05],s:[.3,.5,.22]},{g:S0,c:'#d8c8a8',p:[0,1.5,-.05],s:[.13,.14,.12]},{g:cone(.1,.02,.3,4),c:'#e22',p:[0,1.72,-.05]},{g:cone(.015,.01,1.2,5),c:'#cfd8d0',p:[.3,1.1,.3],r:[1.3,0,0]},
   ...[[-.1,.3],[.1,.3],[-.1,-.3],[.1,-.3]].map(([x,z])=>({g:C0,c:'#1a1a22',p:[x,.25,z],s:[.03,.5,.03]}))]);
 function addFly(k,def){def.fly=1;addMob(k,def)}
-addFly('bird',{n:'飛天妖鳥',geo:birdGeo,cap:90,hp:24,spd:3,r:.34,dmg:8,soul:1,sc:1,glow:.35,mat:{side:THREE.DoubleSide},
+addFly('bird',{n:'飛天妖鳥',geo:birdGeo,cap:90,hp:24,spd:3,r:.3,dmg:8,soul:1,sc:.75,glow:.35,mat:{side:THREE.DoubleSide},
   ai:(e,dt,d,ux,uz)=>{e.y=1.1+Math.sin(e.ph*3)*.3;const w=Math.sin(e.ph*2.4)*.7,c=Math.cos(w),s=Math.sin(w);return {v:e.t.spd*(d<4?1.5:1),x:ux*c-uz*s,z:ux*s+uz*c}}});
-addFly('crow',{n:'雷鴉',geo:crowGeo,cap:90,hp:22,spd:3.2,r:.32,dmg:9,soul:1,sc:1,glow:.4,mat:{side:THREE.DoubleSide},
+addFly('crow',{n:'雷鴉',geo:crowGeo,cap:90,hp:22,spd:3.2,r:.3,dmg:9,soul:1,sc:.75,glow:.4,mat:{side:THREE.DoubleSide},
   ai:(e,dt,d,ux,uz)=>{e.y=1.2+Math.sin(e.ph*3)*.25;if((e.special||e.elite)&&(e.cd2=(e.cd2??2+Math.random()*2)-dt)<=0&&d<9){e.cd2=3.5;warn(HERO.pos.x+HERO.vel.x*.4,HERO.pos.z+HERO.vel.z*.4+.5,1.2,.9,e.dmg*1.3,null,0xb784ff)}return {v:e.t.spd,x:ux,z:uz}}});
-addFly('cloud',{n:'雷雲',geo:cloudGeo,cap:60,hp:44,spd:1.3,r:.45,dmg:9,soul:2,sc:1.2,glow:.35,mat:{},
+addFly('cloud',{n:'雷雲',geo:cloudGeo,cap:60,hp:44,spd:1.3,r:.42,dmg:9,soul:2,sc:.95,glow:.35,mat:{},
   ai:(e,dt,d,ux,uz)=>{e.y=1.4+Math.sin(e.ph*1.5)*.2;if((e.cd2=(e.cd2??1.5+Math.random()*2)-dt)<=0&&d<10){e.cd2=e.special||e.elite?2.4:4;const x=HERO.pos.x+(Math.random()-.5)*2,z=HERO.pos.z+1.5+Math.random()*2;warn(x,z,1.4,1,e.dmg*1.5,null,0xb784ff);act(1,null,()=>{if(G&&!G.over)boltAt(x,z,0,0,0xd8c8ff,.1,14)})}return {v:d<5?.2:e.t.spd,x:ux,z:uz}}});
-addFly('jiaoling',{n:'雲中蛟',geo:jiaoGeo,cap:80,hp:34,spd:2.6,r:.36,dmg:9,soul:1,sc:1.1,glow:.3,mat:{},
+addFly('jiaoling',{n:'雲中蛟',geo:jiaoGeo,cap:80,hp:34,spd:2.6,r:.33,dmg:9,soul:1,sc:.85,glow:.3,mat:{},
   ai:(e,dt,d,ux,uz)=>{e.y=.9+Math.sin(e.ph*2)*.3;if((e.special||e.elite)&&(e.cd2=(e.cd2??2)-dt)<=0&&d<9){e.cd2=3.2;enemyShot(e.x,.9,e.z,ux,uz,3.4,e.dmg*.8,0x6ac8ff)}const w=Math.sin(e.ph*3.2)*.6,c=Math.cos(w),s=Math.sin(w);return {v:e.t.spd,x:ux*c-uz*s,z:ux*s+uz*c}}});
-addFly('tmq',{n:'天魔騎',geo:tmqGeo,cap:60,hp:48,spd:2,r:.4,dmg:11,soul:2,sc:1,glow:.3,mat:{},
+addFly('tmq',{n:'天魔騎',geo:tmqGeo,cap:60,hp:48,spd:2,r:.36,dmg:11,soul:2,sc:.8,glow:.3,mat:{},
   ai:(e,dt,d,ux,uz)=>{e.y=.9;e.gt=(e.gt??Math.random())-dt;if(e.gt<=0){if(e.run){e.run=false;e.gt=.6}else{e.run=true;e.gt=1.1;e.gx=ux;e.gz=uz}}return e.run?{v:e.t.spd*(e.special||e.elite?2.8:2.2),x:e.gx,z:e.gz}:{v:.3,x:ux,z:uz}}});
 // ---------- 魔王 ----------
 const skyFollow=(b,dt,ahead,side)=>{const tx=HERO.pos.x+Math.sin(b.t*.5)*side,tz=HERO.pos.z+ahead+Math.cos(b.t*.4)*2,k=Math.min(1,dt*1.3);b.x+=(tx-b.x)*k;b.z+=(tz-b.z)*k};
