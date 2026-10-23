@@ -421,7 +421,7 @@ const ebGlow=new THREE.InstancedMesh(new THREE.PlaneGeometry(1,1),new THREE.Mesh
 let ebs=[];
 function enemyShot(x,y,z,vx,vz,spd,dmg){if(ebs.length>=EBCAP)return;ebs.push({x,y,z,vx:vx*spd,vz:vz*spd,t:0,dmg})}
 function stepEnemyShots(dt){for(let i=ebs.length-1;i>=0;i--){const b=ebs[i];b.t+=dt;b.x+=b.vx*dt;b.z+=b.vz*dt;
-    if((b.x-HERO.pos.x)**2+(b.z-HERO.pos.z)**2<.16){hurtHero(b.dmg,0,0);fx({p:tmp.set(b.x,b.y,b.z),col:0xff6a2a,add:true,life:.3,s0:.4,s1:1,op:.9,vy:0});ebs.splice(i,1);continue}
+    if((b.x-HERO.pos.x)**2+(b.z-HERO.pos.z)**2<.16){hurtHero(b.dmg,0,0,'火球');fx({p:tmp.set(b.x,b.y,b.z),col:0xff6a2a,add:true,life:.3,s0:.4,s1:1,op:.9,vy:0});ebs.splice(i,1);continue}
     if(b.t>4||Math.hypot(b.x,b.z)>ARENA+4)ebs.splice(i,1)}}
 const dashPool=[];function dashLine(e,on){let L=dashPool.find(l=>l.e===e);if(!on){if(L){L.e=null;L.m.visible=false}return}
   if(!L){L=dashPool.find(l=>!l.e);if(!L){L={m:new THREE.Mesh(new THREE.PlaneGeometry(1,1).rotateX(-Math.PI/2).translate(0,0,.5),new THREE.MeshBasicMaterial({color:0xff3b2a,transparent:true,opacity:.35,depthWrite:false}))};scene.add(L.m);dashPool.push(L)}}
@@ -610,17 +610,17 @@ function stepBoss(dt){if(!boss.alive)return;boss.t+=dt;boss.allow=Math.min(boss.
   if(boss.rage){boss.ring-=dt;if(boss.ring<=0){boss.ring=5;for(let j=0;j<10;j++){const a=j/10*Math.PI*2+boss.t;enemyShot(boss.x,1.2,boss.z,Math.sin(a),Math.cos(a),3,14)}}
     boss.body.scale.setScalar(3.4*(1+Math.sin(boss.t*10)*.03))}
   boss.sum-=dt;if(boss.sum<=0){boss.sum=6;for(let i=0;i<6;i++){const a=i/6*Math.PI*2;spawn('ghost',boss.x+Math.sin(a)*1.8,boss.z+Math.cos(a)*1.8)}}
-  if(d<boss.r+.4)hurtHero(boss.dmg,dx/d,dz/d);
+  if(d<boss.r+.4)hurtHero(boss.dmg,dx/d,dz/d,'魔王');
   $('#bossHp').style.width=(100*Math.max(0,boss.hp/boss.max))+'%'}
 function stepWarns(dt){for(const w of warnPool){if(!w.on)continue;w.t+=dt;const k=Math.min(1,w.t/w.delay);w.f.scale.setScalar(Math.max(.01,w.r*k));w.m.material.opacity=.5+.5*Math.sin(w.t*18);
   if(k>=1){w.on=false;w.m.visible=w.f.visible=false;fx({p:tmp.set(w.x,.5,w.z),col:0xff6a2a,add:true,life:.4,s0:1,s1:w.r*2.6,op:1,vy:.5});
-    if((HERO.pos.x-w.x)**2+(HERO.pos.z-w.z)**2<w.r*w.r)hurtHero(w.dmg*(1+.1*minute()),0,0)}}}
+    if((HERO.pos.x-w.x)**2+(HERO.pos.z-w.z)**2<w.r*w.r)hurtHero(w.dmg*(1+.1*minute()),0,0,'紅圈')}}}
 
 /* ================= 主角受傷 ================= */
 let shake=0;
-function hurtHero(dmg,kx,kz){if(G.iframe>0||G.over)return;
+function hurtHero(dmg,kx,kz,src='碰撞'){if(G.iframe>0||G.over)return;
   if(G.bellOn){G.bellOn=false;G.iframe=.5;SFX.play('bell');shake=Math.max(shake,.2);fx({p:tmp.set(HERO.pos.x,1,HERO.pos.z),col:0xffd65a,add:true,life:.5,s0:1.5,s1:4,op:.9,vy:0});
-    for(const e of enemies){const dx=e.x-HERO.pos.x,dz=e.z-HERO.pos.z,d=Math.hypot(dx,dz);if(d<2.8){e.x+=dx/(d||1)*2;e.z+=dz/(d||1)*2;hurtEnemy(e,swordDmg()*1.5)}}return}G.hp-=dmg;G.iframe=.85;shake=Math.max(shake,.25);SFX.play('hurt');buzz(30);const h=$('#hurt');h.classList.add('on');setTimeout(()=>h.classList.remove('on'),60);
+    for(const e of enemies){const dx=e.x-HERO.pos.x,dz=e.z-HERO.pos.z,d=Math.hypot(dx,dz);if(d<2.8){e.x+=dx/(d||1)*2;e.z+=dz/(d||1)*2;hurtEnemy(e,swordDmg()*1.5)}}return}G.hurtBy=G.hurtBy||{};G.hurtBy[src]=Math.round((G.hurtBy[src]||0)+dmg);G.hp-=dmg;G.iframe=.85;shake=Math.max(shake,.25);SFX.play('hurt');buzz(30);const h=$('#hurt');h.classList.add('on');setTimeout(()=>h.classList.remove('on'),60);
   if(G.hp<=0){G.hp=0;endNight(false)}}
 
 /* ================= 操作：全畫面拖曳 ================= */
@@ -634,6 +634,7 @@ addEventListener('keydown',e=>{keys.add(e.key.toLowerCase());if(e.key==='Escape'
 function inputDir(){let x=joy.x,y=joy.y;if(keys.has('a')||keys.has('arrowleft'))x-=1;if(keys.has('d')||keys.has('arrowright'))x+=1;if(keys.has('w')||keys.has('arrowup'))y-=1;if(keys.has('s')||keys.has('arrowdown'))y+=1;
   if(G.auto){// test pilot (world space): drift around the square, steer away from nearby monsters and red circles
     const a=G.t*.4;x=Math.cos(a)*.5-HERO.pos.x*.05;y=Math.sin(a)*.5-HERO.pos.z*.05;
+    if(G.auto==='wander'){const l=Math.hypot(x,y)||1;return {x:x/l,y:y/l,l:.8}}
     for(const e of enemies){const dx=HERO.pos.x-e.x,dz=HERO.pos.z-e.z,d2=dx*dx+dz*dz;if(d2<9){const w=1/Math.max(.3,d2);x+=dx*w;y+=dz*w}}
     if(boss.alive){const dx=HERO.pos.x-boss.x,dz=HERO.pos.z-boss.z,d2=dx*dx+dz*dz;if(d2<16){x+=dx*3/d2;y+=dz*3/d2}}
     for(const b of ebs){const dx=HERO.pos.x-b.x,dz=HERO.pos.z-b.z,d2=dx*dx+dz*dz;if(d2<4){const side=Math.sign(b.vx*dz-b.vz*dx)||1;x+=-b.vz*side*.6;y+=b.vx*side*.6}}
