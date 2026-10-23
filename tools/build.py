@@ -41,7 +41,7 @@ PAGES = [('hero.src.html', 'index.html', 'hero.test.html'), ('game.src.html', 'g
 
 
 def include(text):
-    return re.sub(r'/\*@include ([\w.]+)\*/', lambda m: open(os.path.join(ROOT, 'src', m.group(1)), encoding='utf8').read(), text)
+    return re.sub(r'/\*@include ([\w./]+)\*/', lambda m: open(os.path.join(ROOT, 'src', m.group(1)), encoding='utf8').read(), text)
 
 
 def build(src_name, out_name, test_name):
