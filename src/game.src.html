@@ -30,7 +30,11 @@ html,body{height:100%;margin:0;background:var(--night);color:var(--ink);overflow
 .hud[hidden]{display:none}
 .wu{height:5px;border-radius:99px;background:rgba(127,227,198,.12);overflow:hidden}
 .wu i{display:block;height:100%;width:0;background:linear-gradient(90deg,#3fbfa0,#a8ffe6);box-shadow:0 0 8px var(--jade)}
-.row1{display:grid;grid-template-columns:auto 1fr auto auto auto auto;align-items:center;gap:8px}
+.hrow{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.7fr) minmax(0,1fr);gap:14px;align-items:start}
+.row1{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:8px}
+.mid{display:grid;gap:4px}
+.side{display:grid;justify-items:end;gap:4px}
+.btns{display:flex;gap:6px}
 .night{position:relative;height:16px;border-radius:99px;background:rgba(9,18,19,.7);border:1px solid var(--line);overflow:hidden}
 .night i{position:absolute;inset:0 auto 0 0;width:0;background:linear-gradient(90deg,#1b2f45,#5f6f8f 70%,#f2c27a)}
 .night b{position:absolute;top:50%;width:10px;height:10px;margin:-5px 0 0 -5px;border-radius:50%;background:var(--cinnabar);box-shadow:0 0 6px var(--cinnabar)}
@@ -44,14 +48,45 @@ html,body{height:100%;margin:0;background:var(--night);color:var(--ink);overflow
 .kills{font-size:13px;color:var(--ink);text-align:right;text-shadow:0 1px 3px #000;max-width:46vw}
 .kills .tag{white-space:normal;letter-spacing:.05em;line-height:1.3}
 .kills b{font-size:18px;color:var(--jade)}
-.hp{height:8px;border-radius:99px;background:rgba(229,72,58,.15);border:1px solid rgba(229,72,58,.35);overflow:hidden;width:min(46vw,200px)}
+.hp{height:8px;border-radius:99px;background:rgba(229,72,58,.15);border:1px solid rgba(229,72,58,.35);overflow:hidden;width:min(100%,220px)}
 .hp i{display:block;height:100%;width:100%;background:linear-gradient(90deg,#c43a2e,#ff7a5c)}
 .boss{display:none;gap:3px;justify-items:center;margin-top:2px}
 .boss.on{display:grid}
 .boss span{font-size:13px;letter-spacing:.3em;color:var(--lantern);text-shadow:0 0 8px rgba(255,179,90,.6)}
-.boss .hp{width:min(80vw,360px);height:9px}
+.boss .hp{width:100%;height:9px}
 .boss .hp i{background:linear-gradient(90deg,#d2691e,#ffcf7a)}
 
+/* left stick (floating, visible) and right-hand skill buttons, 傳說對決 style */
+.joy{position:fixed;left:0;top:0;width:120px;height:120px;margin:-60px 0 0 -60px;border-radius:50%;border:2px solid rgba(127,227,198,.4);
+  background:radial-gradient(circle,rgba(127,227,198,.1),rgba(127,227,198,.02));pointer-events:none;opacity:.4;transition:opacity .2s}
+.joy.on{opacity:1}
+.joy i{position:absolute;left:50%;top:50%;width:52px;height:52px;margin:-26px 0 0 -26px;border-radius:50%;background:radial-gradient(circle at 40% 35%,rgba(210,255,242,.75),rgba(127,227,198,.35));box-shadow:0 0 12px rgba(127,227,198,.5)}
+#safeL{position:fixed;left:env(safe-area-inset-left,0px);top:0;width:0;height:0;pointer-events:none}
+.joy[hidden],.skills[hidden]{display:none}
+.skills{position:fixed;right:calc(env(safe-area-inset-right,0px) + 8px);bottom:calc(env(safe-area-inset-bottom,0px) + 4px);width:236px;height:206px;pointer-events:none}
+.sk{all:unset;pointer-events:auto;position:absolute;width:62px;height:62px;border-radius:50%;box-sizing:border-box;display:grid;place-items:center;cursor:pointer;touch-action:none;
+  background:radial-gradient(circle at 50% 40%,rgba(30,62,60,.92),rgba(8,18,19,.92));border:2px solid rgba(127,227,198,.75);box-shadow:0 0 12px rgba(127,227,198,.35);color:#eafff8;font-family:var(--f-ui)}
+.sk .ic{font-size:27px;line-height:1;text-shadow:0 0 8px rgba(127,227,198,.85)}
+.sk em{position:absolute;bottom:-15px;left:50%;transform:translateX(-50%);font-style:normal;font-size:10px;color:var(--dim);white-space:nowrap;text-shadow:0 1px 2px #000;letter-spacing:.1em}
+.sk .cd{position:absolute;inset:0;border-radius:50%;background:conic-gradient(rgba(0,0,0,.72) var(--p,0%),transparent 0);pointer-events:none}
+.sk b{position:absolute;inset:0;display:grid;place-items:center;font-size:20px;color:#fff;text-shadow:0 1px 3px #000;pointer-events:none}
+.sk.ult{width:84px;height:84px;border-color:#f2c75c;box-shadow:0 0 16px rgba(242,199,92,.45);background:radial-gradient(circle at 50% 40%,rgba(84,62,20,.94),rgba(22,15,6,.94))}
+.sk.ult .ic{font-size:38px;color:#ffe9a8;text-shadow:0 0 10px rgba(242,199,92,.9)}
+.sk.ult .cd{background:conic-gradient(transparent var(--p,0%),rgba(0,0,0,.72) 0)}
+.sk.ult em{color:#f2c75c}
+.sk.ult.ready{animation:ultPulse 1s ease-in-out infinite}
+@keyframes ultPulse{50%{box-shadow:0 0 34px rgba(242,199,92,1);transform:scale(1.06)}}
+.sk.aiming{border-color:#fff;box-shadow:0 0 22px rgba(170,240,255,.9)}
+.sk.no{animation:skNo .25s}
+@keyframes skNo{25%{translate:-4px 0}75%{translate:4px 0}}
+.cancel{position:fixed;right:calc(env(safe-area-inset-right,0px) + 26px);top:calc(env(safe-area-inset-top,0px) + 74px);width:64px;height:64px;border-radius:50%;display:none;place-items:center;
+  font-size:14px;letter-spacing:.1em;color:#ffd9d2;background:rgba(40,8,6,.7);border:2px solid rgba(229,72,58,.8);pointer-events:none}
+.cancel.on{display:grid}.cancel.hot{background:rgba(229,72,58,.65);color:#fff;transform:scale(1.12)}
+.ultFx{position:fixed;inset:0;pointer-events:none;opacity:0;background:radial-gradient(ellipse at 50% 55%,rgba(255,216,106,0) 35%,rgba(255,190,60,.5) 100%)}
+.ultFx.on{animation:ultFx 2s ease-out}
+@keyframes ultFx{0%{opacity:0}8%{opacity:1}100%{opacity:0}}
+.banner.ult b{font-family:var(--f-title);font-size:46px;padding:8px 30px;border-color:#f2c75c;color:#fff1c2;background:rgba(30,20,4,.72);text-shadow:0 0 18px rgba(242,199,92,.95),0 3px 0 #2a1a04}
+.banner.ult small{color:#f2c75c}
 /* overlays */
 .ov{position:fixed;inset:0;display:none;place-items:center;padding:20px;background:rgba(3,8,9,.62);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px)}
 .ov.on{display:grid}
@@ -76,6 +111,27 @@ h2{margin:0;font-size:22px;font-weight:400;letter-spacing:.2em}
 .card{all:unset;box-sizing:border-box;cursor:pointer;display:grid;grid-template-columns:52px 1fr;gap:4px 12px;align-items:center;text-align:left;padding:12px 14px;
   border-radius:14px;border:1px solid var(--line);background:var(--panel);animation:flip .35s ease-out backwards}
 .card:nth-child(2){animation-delay:.08s}.card:nth-child(3){animation-delay:.16s}
+/* phone rotation hint */
+.ov.rot{z-index:50;background:rgba(3,8,9,.94)}
+.phone{width:46px;height:78px;border:3px solid var(--jade);border-radius:9px;animation:turn 2s ease-in-out infinite}
+@keyframes turn{0%,20%{transform:rotate(0)}60%,100%{transform:rotate(-90deg)}}
+/* landscape phones: two-column overlays, three cards side by side, slimmer HUD */
+@media (orientation:landscape) and (max-height:560px){
+  .ov{padding:10px calc(env(safe-area-inset-right,0px) + 18px) 10px calc(env(safe-area-inset-left,0px) + 18px)}
+  .box{width:min(100%,780px);gap:8px}
+  .box.two{grid-template-columns:1.1fr 1fr;align-items:center;column-gap:30px}
+  .box.two>.col{display:grid;gap:9px;justify-items:center;width:100%}
+  h1{font-size:clamp(36px,12vh,62px)}
+  h2{font-size:20px}
+  .txt{font-size:13px;line-height:1.55}
+  .cards{grid-template-columns:repeat(3,1fr)}
+  .card{grid-template-columns:1fr;justify-items:center;text-align:center;padding:10px 8px;gap:4px}
+  .card .ic{grid-row:auto;width:44px;height:44px;font-size:22px}
+  .btn{min-height:42px;font-size:16px}
+  #skipCard{width:auto;padding:0 44px}
+  .power b{font-size:20px}
+  .hud{gap:4px}
+}
 @keyframes flip{from{transform:rotateY(80deg) scale(.9);opacity:0}}
 .card .ic{grid-row:span 2;width:52px;height:52px;border-radius:12px;display:grid;place-items:center;font-size:26px;background:rgba(127,227,198,.1);color:var(--jade)}
 .card b{font-size:17px;letter-spacing:.08em}.card span{font-size:13px;color:var(--dim);line-height:1.5}
@@ -103,32 +159,39 @@ h2{margin:0;font-size:22px;font-weight:400;letter-spacing:.2em}
 
 <div class="hud" id="hud" hidden>
   <div class="wu" title="頓悟"><i id="wu"></i></div>
-  <div class="row1">
-    <span class="tag">子時</span>
-    <div class="night"><i id="nightBar"></i><b id="bossMark"></b></div>
-    <span class="tag" id="clock">雞啼 8:00</span>
-    <button class="pause" id="sfxBtn" aria-label="音效開關">音</button>
-    <button class="pause" id="viewBtn" aria-label="切換視角">視</button>
-    <button class="pause" id="pauseBtn" aria-label="暫停">❚❚</button>
-  </div>
-  <div class="row2">
+  <div class="hrow">
     <div class="power">戰力<b id="power">0</b><div class="hp" aria-label="生命"><i id="hp"></i></div></div>
-    <div class="kills">斬妖 <b id="kills">0</b><br><span class="tag" id="buffs"></span></div>
+    <div class="mid">
+      <div class="row1"><span class="tag">子時</span><div class="night"><i id="nightBar"></i><b id="bossMark"></b></div><span class="tag" id="clock">雞啼 3:00</span></div>
+      <div class="boss" id="bossBox"><span id="bossName">燈籠大王</span><div class="hp"><i id="bossHp"></i></div></div>
+    </div>
+    <div class="side">
+      <div class="btns"><button class="pause" id="sfxBtn" aria-label="音效開關">音</button><button class="pause" id="viewBtn" aria-label="切換視角">視</button><button class="pause" id="pauseBtn" aria-label="暫停">❚❚</button></div>
+      <div class="kills">斬妖 <b id="kills">0</b><br><span class="tag" id="buffs"></span></div>
+    </div>
   </div>
-  <div class="boss" id="bossBox"><span id="bossName">燈籠大王</span><div class="hp"><i id="bossHp"></i></div></div>
 </div>
+<div id="safeL"></div>
+<div class="joy" id="joy" hidden><i id="joyKnob"></i></div>
+<div class="skills" id="skills" hidden></div>
+<div class="cancel" id="cancelZone">取消</div>
+<div class="ultFx" id="ultFx"></div>
 <div class="banner" id="banner"><b><small id="bannerSmall"></small><span id="bannerText"></span></b></div>
 <div class="bubble" id="bubble"></div>
 
 <div class="ov on" id="startOv">
-  <div class="box">
-    <h1>午夜來<span class="zhan">斬</span>妖</h1>
-    <div class="sub">序章・雞不啼的村子</div>
-    <div class="txt">子時一到，白石村的燈籠全滅了，連公雞都不啼。<br>提著燈燈下山斬妖，撐到雞啼天亮！</div>
-    <div class="pair" role="group" aria-label="角色"><button class="btn" data-who="0">女主角</button><button class="btn" data-who="1">男主角</button></div>
-    <button class="btn go" id="startNight">開始・一夜<small>3 分鐘：1 分多鐘出精英，2 分鐘燈籠大王登場</small></button>
-    <div class="realm"><span id="realmText">煉氣一層・修為 0</span><div class="wu"><i id="realmBar"></i></div></div>
-    <div class="tag">走路＝劍罡護體、吸魂更遠；站樁＝出劍更快。每斬 250 隻妖多一把飛劍。右上「視」切換視角</div>
+  <div class="box two">
+    <div class="col">
+      <h1>午夜來<span class="zhan">斬</span>妖</h1>
+      <div class="sub">序章・雞不啼的村子</div>
+      <div class="txt">子時一到，白石村的燈籠全滅了，連公雞都不啼。<br>提著燈燈下山斬妖，撐到雞啼天亮！</div>
+    </div>
+    <div class="col">
+      <div class="pair" role="group" aria-label="角色"><button class="btn" data-who="0">女主角</button><button class="btn" data-who="1">男主角</button></div>
+      <button class="btn go" id="startNight">開始・一夜<small>3 分鐘：1 分多鐘出精英，2 分鐘燈籠大王登場</small></button>
+      <div class="realm"><span id="realmText">煉氣一層・修為 0</span><div class="wu"><i id="realmBar"></i></div></div>
+      <div class="tag">左手搖桿走路；右手技能：點一下自動放，按住拖曳自己瞄準。斬妖會讓「萬」大絕充能</div>
+    </div>
   </div>
 </div>
 
@@ -151,13 +214,25 @@ h2{margin:0;font-size:22px;font-weight:400;letter-spacing:.2em}
 </div>
 
 <div class="ov" id="endOv">
+  <div class="box two">
+    <div class="col">
+      <h2 id="endTitle">雞啼了，天亮了！</h2>
+      <div class="txt" id="endText"></div>
+      <dl class="stat" id="endStat"></dl>
+    </div>
+    <div class="col">
+      <div class="realm"><span id="realmText2"></span><div class="wu"><i id="realmBar2"></i></div></div>
+      <button class="btn go" id="again">再一夜</button>
+      <button class="btn" id="toTitle">回標題</button>
+    </div>
+  </div>
+</div>
+
+<div class="ov rot" id="rotOv">
   <div class="box">
-    <h2 id="endTitle">雞啼了，天亮了！</h2>
-    <div class="txt" id="endText"></div>
-    <dl class="stat" id="endStat"></dl>
-    <div class="realm"><span id="realmText2"></span><div class="wu"><i id="realmBar2"></i></div></div>
-    <button class="btn go" id="again">再一夜</button>
-    <button class="btn" id="toTitle">回標題</button>
+    <div class="phone" aria-hidden="true"></div>
+    <h2>請把手機轉成橫向</h2>
+    <div class="txt">左手搖桿走路，右手放技能</div>
   </div>
 </div>
 
@@ -249,6 +324,10 @@ const SFX=(()=>{let ac=null,out=null,nb=null,on=true;const last={};try{on=localS
       case 'boss':tone(110,65,1,'sawtooth',.22);tone(164,80,1,'square',.08);noise(.8,300,.6,.2,'lowpass');break;
       case 'bossDie':noise(1.2,500,.4,.5,'lowpass');tone(220,40,1.2,'sawtooth',.2);[784,988,1175,1568].forEach((f,i)=>tone(f,f,.5,'triangle',.14,.4+i*.09));break;
       case 'win':[[600,900],[640,960],[700,1150]].forEach(([a,b],i)=>tone(a,b,.28,'square',.07,i*.32));[392,523,659,784,1047].forEach((f,i)=>tone(f,f,.6,'triangle',.16,1+i*.12));break;
+      case 'sweep':noise(.35,900,.5,.3,'bandpass');noise(.3,2600,1,.15,'bandpass',.05);tone(300,900,.25,'triangle',.08);break;
+      case 'beam':tone(500,1800,.22,'sawtooth',.06);noise(.3,4000,.8,.16,'highpass');break;
+      case 'ready':[784,1175,1568].forEach((f,i)=>tone(f,f,.3,'sine',.14,i*.08));break;
+      case 'ult':[262,330,392,523,659,784].forEach((f,i)=>tone(f,f,1.2,'triangle',.12,i*.05));noise(1.4,1200,.5,.3,'bandpass');tone(80,40,1.2,'sawtooth',.18);break;
       case 'lose':[392,330,262].forEach((f,i)=>tone(f,f*.98,.5,'triangle',.14,i*.2));break}}
   return {resume,play,toggle(){on=!on;try{localStorage.setItem('zk-sfx',on?'1':'0')}catch(e){}return on},get on(){return on}}})();
 const buzz=ms=>{try{if(isTouch&&navigator.vibrate&&!simming)navigator.vibrate(ms)}catch(e){}};
@@ -393,10 +472,11 @@ const warnPool=[];function warn(x,z,r,delay,dmg){let w=warnPool.find(w=>!w.on);i
     f:new THREE.Mesh(new THREE.CircleGeometry(1,32).rotateX(-Math.PI/2),new THREE.MeshBasicMaterial({color:0xff3b2a,transparent:true,opacity:.18,depthWrite:false}))};scene.add(w.m,w.f);warnPool.push(w)}
   Object.assign(w,{on:true,x,z,r,t:0,delay,dmg});w.m.position.set(x,.04,z);w.f.position.set(x,.03,z);w.m.scale.setScalar(r);w.f.scale.setScalar(.01);w.m.visible=w.f.visible=true}
 const shots=[];
-const bolts=[];function bolt(x,z){if(!G||G.over)return;const pts=[];let px=x,pz=z;for(let y=9;y>=0;y-=.9){pts.push(new THREE.Vector3(px,y,pz));px=x+(Math.random()-.5)*.5;pz=z+(Math.random()-.5)*.5}pts.push(new THREE.Vector3(x,0,z));
+const bolts=[];function bolt(x,z){boltAt(x,z,swordDmg()*3*(G.s.thunderP||1),1.14)}
+function boltAt(x,z,dmg,r){if(!G||G.over)return;const pts=[];let px=x,pz=z;for(let y=9;y>=0;y-=.9){pts.push(new THREE.Vector3(px,y,pz));px=x+(Math.random()-.5)*.5;pz=z+(Math.random()-.5)*.5}pts.push(new THREE.Vector3(x,0,z));
   const g=new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts),24,.06,5);const m=new THREE.Mesh(g,new THREE.MeshBasicMaterial({color:0xd8f0ff,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false}));scene.add(m);bolts.push({m,t:0});
   fx({p:tmp.set(x,.4,z),col:0xbfe4ff,add:true,life:.35,s0:1.5,s1:3.4,op:1,vy:0});shake=Math.max(shake,.1);
-  const dmg=swordDmg()*3*(G.s.thunderP||1);for(const e of enemies){if(!e.dead&&(e.x-x)**2+(e.z-z)**2<1.3)hurtEnemy(e,dmg,0,0)}if(boss.alive&&(boss.x-x)**2+(boss.z-z)**2<(1.1+boss.r)**2)hurtBoss(dmg)}
+  for(const e of enemies){if(!e.dead&&(e.x-x)**2+(e.z-z)**2<r*r)hurtEnemy(e,dmg,0,0)}if(boss.alive&&(boss.x-x)**2+(boss.z-z)**2<(r+boss.r)**2)hurtBoss(dmg)}
 const bellMesh=new THREE.Mesh(new THREE.LatheGeometry(V2([[0,1.9],[.35,1.85],[.5,1.6],[.6,1.1],[.72,.4],[.9,.05],[.92,0]]),24),new THREE.MeshBasicMaterial({color:0xffd65a,transparent:true,opacity:.3,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide}));
 bellMesh.visible=false;scene.add(bellMesh);
 // 萬劍歸宗: giant swords dropping point-first from the sky
@@ -444,6 +524,140 @@ function qiBurst(){const r=1.9;const m=new THREE.Mesh(ringGeo,new THREE.MeshBasi
 function stepQi(dt){for(let i=qiRings.length-1;i>=0;i--){const q=qiRings[i];q.t+=dt;const k=q.t/.35;q.m.scale.setScalar(.3+q.r*Math.min(1,k));q.m.material.opacity=.9*(1-k);q.m.position.set(HERO.pos.x,.08,HERO.pos.z);
   if(k>=1){scene.remove(q.m);q.m.material.dispose();qiRings.splice(i,1)}}}// fireballs / talismans thrown by skills: {kind,pos,vel,t,life,target,dmg,aoe}
 
+/* ================= 主動技能（右手）：點一下＝自動瞄準放出；按住拖曳＝自己瞄準；拖到「取消」放開＝不放 ================= */
+// shape: fan 扇形 / line 直線 / circle 指定地點。大絕之後每章可以換不同招式（例如三昧真火＝扇形、九天神雷＝大圓），序章是萬劍歸宗
+const SK={
+  sweep:{n:'青竹劍',ic:'竹',shape:'fan',ang:2.3,range:()=>4.6*G.k.sweepR,cd:()=>6*G.k.sweepCd},
+  beam:{n:'劍氣長虹',ic:'虹',shape:'line',w:1.1,range:()=>9,cd:()=>4.5*G.k.beamCd},
+  thunder:{n:'五雷符',ic:'雷',shape:'circle',r:()=>2.4*G.k.thR,range:()=>7,cd:()=>9},
+  ult:{n:'萬劍歸宗',ic:'萬',shape:'circle',ult:1,r:()=>3.8,range:()=>8}};
+const SK_POS={sweep:[45,119],beam:[78,40],thunder:[157,7],ult:[146,108]};// inside the 236×206 cluster at the bottom right
+const skBtn={};let aim=null;
+for(const k of ['sweep','beam','thunder','ult']){const S=SK[k],b=document.createElement('button');b.className='sk'+(S.ult?' ult':'');b.dataset.sk=k;b.setAttribute('aria-label',S.n);
+  b.innerHTML=`<span class="ic">${S.ic}</span><i class="cd"></i><b></b><em>${S.n}</em>`;b.style.left=SK_POS[k][0]+'px';b.style.top=SK_POS[k][1]+'px';$('#skills').appendChild(b);skBtn[k]=b;
+  b.addEventListener('pointerdown',e=>{e.preventDefault();if(!G||G.paused||G.over)return;SFX.resume();
+    if(!ready(k)){b.classList.remove('no');void b.offsetWidth;b.classList.add('no');return}
+    try{b.setPointerCapture(e.pointerId)}catch(_){}const r=b.getBoundingClientRect();aim={k,id:e.pointerId,cx:r.left+r.width/2,cy:r.top+r.height/2,dx:0,dy:0,moved:false,cancel:false};
+    b.classList.add('aiming');$('#cancelZone').classList.add('on');hideTip()});
+  b.addEventListener('pointermove',e=>{if(!aim||e.pointerId!==aim.id)return;aim.dx=e.clientX-aim.cx;aim.dy=e.clientY-aim.cy;if(Math.hypot(aim.dx,aim.dy)>14)aim.moved=true;
+    const c=$('#cancelZone').getBoundingClientRect();aim.cancel=e.clientX>c.left-8&&e.clientX<c.right+8&&e.clientY>c.top-8&&e.clientY<c.bottom+8;$('#cancelZone').classList.toggle('hot',aim.cancel)});
+  const up=e=>{if(!aim||e.pointerId!==aim.id)return;const a=aim;cancelAim();if(e.type==='pointerup'&&!a.cancel)castSkill(a.k,a.moved?aimInfo(a.k,a):null)};
+  b.addEventListener('pointerup',up);b.addEventListener('pointercancel',up)}
+function cancelAim(){if(aim&&skBtn[aim.k])skBtn[aim.k].classList.remove('aiming');aim=null;$('#cancelZone').classList.remove('on','hot')}
+const ready=k=>!!G&&(k==='ult'?G.ult>=G.k.ultNeed:G.cd[k]<=0);
+const facing=()=>[Math.sin(root.rotation.y),Math.cos(root.rotation.y)];
+function screenToWorld(dx,dy){const c=Math.cos(camYaw),s=Math.sin(camYaw);return [dx*c+dy*s,-dx*s+dy*c]}
+function autoAim(k){const S=SK[k],hx=HERO.pos.x,hz=HERO.pos.z;
+  if(S.shape==='circle'){const R=S.range(),r=S.r();
+    if(S.ult&&boss.alive&&Math.hypot(boss.x-hx,boss.z-hz)<R+2){const dx=boss.x-hx,dz=boss.z-hz,l=Math.hypot(dx,dz)||1,f=Math.min(l,R);return {pt:[hx+dx/l*f,hz+dz/l*f]}}
+    // the most crowded spot in range
+    const cand=enemies.filter(e=>!e.dead&&(e.x-hx)**2+(e.z-hz)**2<R*R&&onScreen(e.x,.4,e.z));let best=null,bn=0;const step=Math.max(1,Math.floor(cand.length/40));
+    for(let i=0;i<cand.length;i+=step){const e=cand[i];let n=0;for(const o of cand)if((o.x-e.x)**2+(o.z-e.z)**2<r*r)n++;if(n>bn){bn=n;best=e}}
+    if(best)return {pt:[best.x,best.z]};const f=facing();return {pt:[hx+f[0]*R*.5,hz+f[1]*R*.5]}}
+  const tg=(boss.alive&&bossOnScreen()&&Math.hypot(boss.x-hx,boss.z-hz)<S.range()+1)?boss:nearest(hx,hz,S.range()+1);
+  if(tg){const dx=tg.x-hx,dz=tg.z-hz,l=Math.hypot(dx,dz)||1;return {dir:[dx/l,dz/l]}}return {dir:facing()}}
+function aimInfo(k,a){if(!a||!a.moved)return autoAim(k);const S=SK[k];const [wx,wz]=screenToWorld(a.dx,a.dy),l=Math.hypot(wx,wz)||1;
+  if(S.shape==='circle'){const f=Math.min(1,Math.hypot(a.dx,a.dy)/90)*S.range();return {pt:[HERO.pos.x+wx/l*f,HERO.pos.z+wz/l*f]}}
+  return {dir:[wx/l,wz/l]}}
+// ground indicators (light blue = yours; gold for the 大絕; red while over 取消)
+const indMat=()=>new THREE.MeshBasicMaterial({color:0x8fe6ff,transparent:true,opacity:.26,depthWrite:false});
+const IND={range:new THREE.Mesh(ringGeo,indMat()),fan:new THREE.Mesh(new THREE.CircleGeometry(1,40,-Math.PI/2-SK.sweep.ang/2,SK.sweep.ang).rotateX(-Math.PI/2),indMat()),
+  line:new THREE.Mesh(new THREE.PlaneGeometry(1,1).rotateX(-Math.PI/2).translate(0,0,.5),indMat()),circ:new THREE.Mesh(new THREE.CircleGeometry(1,48).rotateX(-Math.PI/2),indMat()),
+  edge:new THREE.Mesh(ringGeo,indMat())};
+for(const m of Object.values(IND)){m.visible=false;m.renderOrder=5;scene.add(m)}IND.range.material.opacity=.45;IND.edge.material.opacity=.8;
+function showAim(){for(const m of Object.values(IND))m.visible=false;if(!aim||!G||G.paused||G.over)return;
+  const S=SK[aim.k],A=aimInfo(aim.k,aim),hx=HERO.pos.x,hz=HERO.pos.z,col=aim.cancel?0xff6a5a:S.ult?0xffd86a:0x8fe6ff;
+  for(const m of Object.values(IND))m.material.color.setHex(col);
+  IND.range.visible=true;IND.range.position.set(hx,.05,hz);IND.range.scale.setScalar(S.range());
+  if(S.shape==='fan'){IND.fan.visible=true;IND.fan.position.set(hx,.06,hz);IND.fan.rotation.y=Math.atan2(A.dir[0],A.dir[1]);IND.fan.scale.setScalar(S.range())}
+  else if(S.shape==='line'){IND.line.visible=true;IND.line.position.set(hx,.06,hz);IND.line.rotation.y=Math.atan2(A.dir[0],A.dir[1]);IND.line.scale.set(S.w*(G.k.beamN>1?1.6:1),1,S.range())}
+  else{IND.circ.visible=IND.edge.visible=true;IND.circ.position.set(A.pt[0],.06,A.pt[1]);IND.circ.scale.setScalar(S.r());IND.edge.position.set(A.pt[0],.07,A.pt[1]);IND.edge.scale.setScalar(S.r())}}
+function castSkill(k,A){if(!G||G.paused||G.over||!ready(k))return false;A=A||autoAim(k);
+  const d=A.dir||[A.pt[0]-HERO.pos.x,A.pt[1]-HERO.pos.z];if(d[0]||d[1])root.rotation.y=Math.atan2(d[0],d[1]);G.castT=.45;
+  if(k==='ult'){G.ult=0;ultCast(A.pt)}else{G.cd[k]=SK[k].cd();({sweep:sweepCast,beam:beamCast,thunder:thunderCast})[k](A)}
+  G.casts=(G.casts||0)+1;return true}
+// timed skill effects that follow game time (so pause / slow motion apply)
+const acts=[];const act=(life,step,end)=>{acts.push({t:0,life,step,end})};
+function stepActs(dt){for(let i=acts.length-1;i>=0;i--){const a=acts[i];a.t+=dt;if(a.step)a.step(a.t,dt);if(a.t>=a.life){if(a.end)a.end();acts.splice(i,1)}}}
+const angDiff=(a,b)=>{const d=a-b;return Math.atan2(Math.sin(d),Math.cos(d))};
+// 青竹劍・橫掃: a giant green bamboo sword swings across the fan
+const bamboo=(()=>{const g=new THREE.Group();g.visible=false;scene.add(g);
+  const gM=toon('#5cc46e',{emissive:'#1f7a3a',roughness:.4}),nM=toon('#2f7a3c',{emissive:'#0f3a1a'}),hM=toon('#5a3a20');
+  for(let i=0;i<5;i++){const c=new THREE.Mesh(new THREE.CylinderGeometry(.075-.006*i,.08-.006*i,.78,10),gM);c.rotation.x=Math.PI/2;c.position.z=.7+i*.8;g.add(c);
+    const n=new THREE.Mesh(new THREE.CylinderGeometry(.097-.006*i,.097-.006*i,.07,10),nM);n.rotation.x=Math.PI/2;n.position.z=.3+i*.8;g.add(n)}
+  const tip=new THREE.Mesh(new THREE.ConeGeometry(.055,.55,10),gM);tip.rotation.x=Math.PI/2;tip.position.z=4.55;g.add(tip);
+  const hd=new THREE.Mesh(new THREE.CylinderGeometry(.05,.05,.4,8),hM);hd.rotation.x=Math.PI/2;hd.position.z=.05;g.add(hd);
+  for(let i=0;i<6;i++){const s=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex,color:0x7dffa0,opacity:.55,blending:THREE.AdditiveBlending,depthWrite:false}));s.scale.set(1.2,1.2,1);s.position.z=.6+i*.8;g.add(s)}
+  return g})();
+function sweepCast(A){const S=SK.sweep,ang=S.ang,R=S.range(),a0=Math.atan2(A.dir[0],A.dir[1]),hx=HERO.pos.x,hz=HERO.pos.z,dmg=swordDmg()*7*G.k.sweepD;
+  SFX.play('sweep');shake=Math.max(shake,.22);buzz(20);
+  const arc=new THREE.Mesh(new THREE.RingGeometry(R*.15,R,48,1,-Math.PI/2-ang/2,ang).rotateX(-Math.PI/2),new THREE.MeshBasicMaterial({color:0x9dffb8,transparent:true,opacity:0,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide}));
+  arc.position.set(hx,.07,hz);arc.rotation.y=a0;scene.add(arc);bamboo.visible=true;bamboo.scale.setScalar(R/4.6);let hit=false;
+  act(.55,t=>{const k=Math.min(1,t/.26),e=1-Math.pow(1-k,3);bamboo.position.set(HERO.pos.x,.9,HERO.pos.z);bamboo.rotation.y=a0+ang*.55-ang*1.1*e;
+    arc.material.opacity=t<.26?.8*k:Math.max(0,.8*(1-(t-.26)/.25));if(t>.4)bamboo.scale.setScalar(R/4.6*Math.max(.05,1-(t-.4)/.15));
+    if(!hit&&t>=.12){hit=true;for(const en of enemies){if(en.dead)continue;const dx=en.x-hx,dz=en.z-hz,d=Math.hypot(dx,dz);
+        if(d<R+en.r&&(d<.9||Math.abs(angDiff(Math.atan2(dx,dz),a0))<=ang/2+.1))hurtEnemy(en,dmg,dx/(d||1)*1.6,dz/(d||1)*1.6,false)}
+      if(boss.alive){const dx=boss.x-hx,dz=boss.z-hz,d=Math.hypot(dx,dz);if(d<R+boss.r&&Math.abs(angDiff(Math.atan2(dx,dz),a0))<=ang/2+.35)hurtBoss(dmg)}}},
+    ()=>{bamboo.visible=false;scene.remove(arc);arc.geometry.dispose();arc.material.dispose()})}
+// 劍氣長虹: a straight beam of sword qi that cuts through everything in the line
+const beamTex=ctex(64,16,(x,w,h)=>{const g=x.createLinearGradient(0,0,w,0);g.addColorStop(0,'rgba(120,255,230,0)');g.addColorStop(.28,'rgba(150,255,235,.55)');g.addColorStop(.5,'rgba(255,255,255,1)');
+  g.addColorStop(.72,'rgba(150,255,235,.55)');g.addColorStop(1,'rgba(120,255,230,0)');x.fillStyle=g;x.fillRect(0,0,w,h)});
+const beamGeo=new THREE.PlaneGeometry(1,1).rotateX(-Math.PI/2).translate(0,0,.5);
+function beamCast(A){const S=SK.beam,n=G.k.beamN,L=S.range(),W=S.w,a0=Math.atan2(A.dir[0],A.dir[1]),hx=HERO.pos.x,hz=HERO.pos.z,dmg=swordDmg()*5*G.k.beamD;
+  SFX.play('beam');shake=Math.max(shake,.15);
+  for(let j=0;j<n;j++){const a=a0+(j-(n-1)/2)*.22,dx=Math.sin(a),dz=Math.cos(a);
+    const m=new THREE.Mesh(beamGeo,new THREE.MeshBasicMaterial({map:beamTex,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide}));
+    m.position.set(hx,.55,hz);m.rotation.y=a;m.scale.set(W,1,.01);scene.add(m);const tip=fx({p:tmp.set(hx,.6,hz),col:0xdffff8,add:true,life:.32,s0:1.5,s1:1.5,op:1,vy:0});let hit=false;
+    act(.45,t=>{const k=Math.min(1,t/.1),f=t>.15?Math.max(0,1-(t-.15)/.3):1;m.scale.set(W*Math.max(.05,f),1,L*k);m.material.opacity=f;tip.s.position.set(hx+dx*L*k,.6,hz+dz*L*k);
+      if(!hit&&t>=.05){hit=true;const inside=(x,z,r)=>{const px=x-hx,pz=z-hz,al=px*dx+pz*dz,pe=Math.abs(px*dz-pz*dx);return al>-r&&al<L+r&&pe<W/2+r};
+        for(const en of enemies)if(!en.dead&&inside(en.x,en.z,en.r))hurtEnemy(en,dmg,dx*.5,dz*.5,false);if(boss.alive&&inside(boss.x,boss.z,boss.r))hurtBoss(dmg)}},
+      ()=>{scene.remove(m);m.material.dispose()})}}
+// 五雷符: a talisman flies to the spot, then thunder strikes all over the circle and stuns what is inside
+function thunderCast(A){const [x,z]=A.pt,r=SK.thunder.r(),n=G.k.thN,dmg=swordDmg()*3.2*G.k.thD;const card=talCard(),from=HERO.pos.clone().setY(1.2);
+  const ring=new THREE.Mesh(ringGeo,new THREE.MeshBasicMaterial({color:0xa8d8ff,transparent:true,opacity:.85,blending:THREE.AdditiveBlending,depthWrite:false}));ring.position.set(x,.06,z);ring.scale.setScalar(r);scene.add(ring);
+  let fired=0;const T=.3+n*.08+.3;
+  act(T,t=>{if(t<.3){const k=t/.3;card.position.lerpVectors(from,tmp.set(x,.3,z),k);card.position.y+=Math.sin(k*Math.PI)*1.2;card.rotation.set(-.6,t*14,0)}
+      else{card.visible=false;const want=Math.min(n,Math.floor((t-.3)/.08)+1);while(fired<want){const a=Math.random()*Math.PI*2,rr=fired===0?0:Math.sqrt(Math.random())*r*.85;
+        if(fired===0){SFX.play('thunder');shake=Math.max(shake,.3);for(const e of enemies)if(!e.dead&&(e.x-x)**2+(e.z-z)**2<r*r)e.stun=Math.max(e.stun||0,1.5)}
+        boltAt(x+Math.sin(a)*rr,z+Math.cos(a)*rr,dmg,1.25);fired++}}
+      ring.material.opacity=.85*(1-Math.max(0,t-.3)/(T-.3))},
+    ()=>{scene.remove(card);scene.remove(ring);ring.material.dispose()})}
+// 大絕・萬劍歸宗: a golden sword formation on the ground, a pillar of light, then waves of giant golden swords and one colossal sword
+const formTex=ctex(512,512,(x)=>{x.translate(256,256);x.strokeStyle=x.fillStyle='#ffd86a';x.lineWidth=7;x.beginPath();x.arc(0,0,244,0,7);x.stroke();x.lineWidth=3;
+  for(const r of [204,96]){x.beginPath();x.arc(0,0,r,0,7);x.stroke()}
+  for(let i=0;i<32;i++){const a=i/32*Math.PI*2;x.beginPath();x.moveTo(Math.cos(a)*206,Math.sin(a)*206);x.lineTo(Math.cos(a)*(i%4?226:242),Math.sin(a)*(i%4?226:242));x.stroke()}
+  for(let i=0;i<8;i++){const a=i/8*Math.PI*2;x.beginPath();x.moveTo(Math.cos(a)*96,Math.sin(a)*96);x.lineTo(Math.cos(a+Math.PI/8)*204,Math.sin(a+Math.PI/8)*204);x.lineTo(Math.cos(a+Math.PI/4)*96,Math.sin(a+Math.PI/4)*96);x.stroke();
+    x.save();x.rotate(a+Math.PI/8+Math.PI/2);x.font='bold 42px serif';x.textAlign='center';x.textBaseline='middle';x.fillText('劍',0,-150);x.restore()}
+  x.font='bold 100px serif';x.textAlign='center';x.textBaseline='middle';x.fillText('萬',0,6)});
+const form=new THREE.Mesh(new THREE.PlaneGeometry(2,2).rotateX(-Math.PI/2),new THREE.MeshBasicMaterial({map:formTex,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false,opacity:0}));form.visible=false;form.renderOrder=4;scene.add(form);
+const pillarTex=ctex(4,64,(x,w,h)=>{const g=x.createLinearGradient(0,0,0,h);g.addColorStop(0,'rgba(255,220,120,0)');g.addColorStop(1,'rgba(255,220,120,1)');x.fillStyle=g;x.fillRect(0,0,w,h)});
+const pillar=new THREE.Mesh(new THREE.CylinderGeometry(1,1,1,40,1,true),new THREE.MeshBasicMaterial({map:pillarTex,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide,opacity:0}));pillar.visible=false;scene.add(pillar);
+const goldMat=new THREE.MeshBasicMaterial({color:0xffd86a,transparent:true,opacity:.95,blending:THREE.AdditiveBlending,depthWrite:false});
+function goldSword(){const g=new THREE.Group();g.visible=false;scene.add(g);part(new THREE.BoxGeometry(.12,.03,1.8),goldMat,g,{ol:false});
+  const tp=new THREE.ConeGeometry(.09,.32,4);tp.rotateX(Math.PI/2);part(tp,goldMat,g,{p:[0,0,1.05],ol:false});part(new THREE.BoxGeometry(.5,.06,.1),goldMat,g,{p:[0,0,-.85],ol:false});
+  const s=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex,color:0xffc94a,opacity:.8,blending:THREE.AdditiveBlending,depthWrite:false}));s.scale.set(1.6,1.6,1);g.add(s);g.rotation.x=Math.PI/2;return g}
+const ultSwords=[];for(let i=0;i<40;i++)ultSwords.push({g:goldSword(),on:false});const colossus=goldSword();
+function ultHit(x,z,r,dmg){for(const e of enemies)if(!e.dead&&(e.x-x)**2+(e.z-z)**2<(r+e.r)**2)hurtEnemy(e,dmg,(e.x-x)*.3,(e.z-z)*.3,true);
+  // the 大絕 may take up to 30% of the boss's HP per cast, past its usual per-second limit
+  if(boss.alive&&(boss.x-x)**2+(boss.z-z)**2<(r+boss.r)**2){const room=boss.max*.3-G.ultBoss;if(room>0){const d=Math.min(dmg,room);G.ultBoss+=d;boss.allow+=d;hurtBoss(d,true)}}}
+function ultCast(pt){const [x,z]=pt,r=SK.ult.r(),N=Math.round(30*G.k.ultN),dmg=swordDmg()*8;G.ultBoss=0;
+  G.slow=.6;shake=Math.max(shake,.5);SFX.play('ult');buzz(60);const u=$('#ultFx');u.classList.remove('on');void u.offsetWidth;u.classList.add('on');banner('萬劍歸宗','大絕',true);
+  form.visible=pillar.visible=true;form.position.set(x,.08,z);form.scale.setScalar(r);pillar.position.set(x,4.5,z);pillar.scale.set(r*.9,9,r*.9);
+  const drops=[];for(let i=0;i<N;i++){const a=Math.random()*Math.PI*2,rr=Math.sqrt(Math.random())*r;drops.push({x:x+Math.sin(a)*rr,z:z+Math.cos(a)*rr,t0:.35+(i/N)*1.15,done:false,s:null})}
+  let big=0;
+  act(2.4,(t,dt)=>{form.rotation.y+=dt*1.3;form.material.opacity=Math.min(1,t/.25)*(t>2?Math.max(0,1-(t-2)/.4):1);pillar.material.opacity=.55*Math.min(1,t/.2)*(t>.7?Math.max(0,1-(t-.7)/.6):1);
+      for(const d of drops){if(d.done||t<d.t0)continue;if(!d.s){d.s=ultSwords.find(s=>!s.on);if(!d.s){d.done=true;continue}d.s.on=true;d.s.g.visible=true;d.s.g.scale.setScalar(2.3)}
+        const k=Math.min(1,(t-d.t0)/.18);d.s.g.position.set(d.x,9*(1-k)+.9,d.z);
+        if(k>=1){d.done=true;d.s.on=false;d.s.g.visible=false;ultHit(d.x,d.z,1.4,dmg);fx({p:tmp.set(d.x,.3,d.z),col:0xffd86a,add:true,life:.4,s0:.8,s1:3,op:1,vy:0});SFX.play('boom');shake=Math.max(shake,.25)}}
+      if(!big&&t>=1.7){big=1;colossus.visible=true;colossus.scale.setScalar(5)}
+      if(big===1){const k=Math.min(1,(t-1.7)/.2);colossus.position.set(x,14*(1-k)+2.2,z);if(k>=1){big=2;colossus.visible=false;ultHit(x,z,r,dmg*4);shake=Math.max(shake,1);buzz(90);SFX.play('bossDie');
+        fx({p:tmp.set(x,.5,z),col:0xffe9a8,add:true,life:.7,s0:2,s1:r*3.2,op:1,vy:0});fx({p:tmp.set(x,.5,z),col:0x1a1208,life:1,s0:1,s1:r*2.4,op:.6,vy:1})}}},
+    ()=>{form.visible=pillar.visible=colossus.visible=false;ultSwords.forEach(s=>{s.on=false;s.g.visible=false})})}
+function updSkillUI(){for(const k in SK){const b=skBtn[k];let p,txt='';
+    if(k==='ult'){p=Math.min(1,G.ult/G.k.ultNeed);b.classList.toggle('ready',p>=1);b.style.setProperty('--p',(p*100).toFixed(1)+'%')}
+    else{const c=G.cd[k];p=c>0?c/SK[k].cd():0;b.style.setProperty('--p',(p*100).toFixed(1)+'%');txt=c>0?String(Math.ceil(c)):''}
+    if(b._t!==txt){b._t=txt;b.querySelector('b').textContent=txt}}}
+
 /* ================= 狀態 ================= */
 const SAVE_KEY='zk-game-v1';
 let save={xiuwei:0,nights:0,wins:0,best:0};try{Object.assign(save,JSON.parse(localStorage.getItem(SAVE_KEY)||'{}'))}catch(e){}
@@ -457,7 +671,8 @@ const NIGHT=180;
 function newNight(len){return {nextPill:67,walked:0,moving:false,len,boost:480/len*.75,t:0,over:false,paused:true,kills:0,souls:0,wu:0,wuNeed:25,lv:0,slow:0,pendingGold:0,spawnAcc:0,waveAt:60,
   hp:150,maxhp:150,iframe:0,regenAcc:0,eliteDone:false,bossDone:false,bossKilled:false,eliteKilled:false,
   s:{dmg:1,rate:1,count:3,pierce:1,range:7.5,move:3.2,magnet:1.8,regen:0,orbit:0,talis:0,talisN:0,lamp:0,size:1,crit:.12},
-  skills:{},volley:0,orbitHit:new Map(),talisCd:2,lampCd:1.5,stand:0,auto:false}}
+  skills:{},volley:0,orbitHit:new Map(),talisCd:2,lampCd:1.5,stand:0,auto:false,castT:0,ult:40,ultBoss:0,cd:{sweep:0,beam:0,thunder:0},
+  k:{sweepR:1,sweepD:1,sweepCd:1,beamN:1,beamD:1,beamCd:1,thN:6,thR:1,thD:1,ultNeed:120,ultN:1}}}
 const minute=()=>G.t/G.len*8;// night progress in "minutes" of an 8-minute night
 const hpScale=()=>Math.pow(1+.2*minute(),1.3);
 // 殺氣凝劍: every 250 kills adds a flying sword (up to +5), so the slaughter itself makes you visibly stronger
@@ -479,24 +694,25 @@ const CARDS=[
   {k:'talis',ic:'符',n:'雷火符',skill:1,d:r=>G.s.talis?`符籙威力 +${[40,70,120][r]}%，一次多丟一張`:`新招：每 2.5 秒丟出會爆炸的符籙`,
     f:r=>{if(G.s.talis){G.s.talis*=1+[.4,.7,1.2][r];G.s.talisN=Math.min(4,G.s.talisN+1)}else{G.s.talis=[1,1.4,2][r];G.s.talisN=1}}},
   {k:'lamp',ic:'燈',n:'燈燈助陣',skill:1,d:r=>G.s.lamp?`燈燈火球更快更痛 +${[40,70,120][r]}%`:`新招：燈燈會吐火球`,f:r=>{G.s.lamp=G.s.lamp?G.s.lamp*(1+[.4,.7,1.2][r]):[1,1.4,2][r]}},
-  {k:'thunder',ic:'雷',n:'引雷訣',skill:1,d:r=>G.s.thunder?`天雷多劈 ${[1,2,3][r]} 道、更痛`:`新招：每 3 秒天雷劈下 ${[3,4,5][r]} 道`,
-    f:r=>{if(G.s.thunder){G.s.thunder=Math.min(12,G.s.thunder+[1,2,3][r]);G.s.thunderP*=1.25}else{G.s.thunder=[3,4,5][r];G.s.thunderP=1}},max:()=>G.s.thunder>=12},
   {k:'bell',ic:'鐘',n:'金鐘罩',skill:1,d:r=>G.s.bell?`金鐘罩回復更快，震開範圍更大`:`新招：金鐘罩擋下一次傷害並震開周圍的妖，${[8,6,5][r]} 秒回復`,f:r=>{G.s.bell=G.s.bell?Math.max(3,G.s.bell*.75):[8,6,5][r];G.bellT=0}},
-  // evolution: shows up (always 仙品) once you have 5 swords
-  {k:'wan',ic:'萬',n:'萬劍歸宗',skill:1,evo:1,d:r=>G.s.wan?`萬劍歸宗更快、落下更多劍`:`絕招：每 6 秒萬劍從天而降，斬盡畫面上的妖`,f:r=>{G.s.wan=Math.min(3,(G.s.wan||0)+1)},when:()=>effCount()>=5,max:()=>G.s.wan>=3}];
+  // upgrades for the four right-hand skills
+  {k:'sweepUp',ic:'竹',n:'青竹劍・精進',up:1,d:r=>`青竹劍範圍 +${[15,25,40][r]}%、傷害 +${[30,50,80][r]}%、冷卻 -15%`,f:r=>{G.k.sweepR=Math.min(1.9,G.k.sweepR*(1+[.15,.25,.4][r]));G.k.sweepD*=1+[.3,.5,.8][r];G.k.sweepCd=Math.max(.45,G.k.sweepCd*.85)}},
+  {k:'beamUp',ic:'虹',n:'劍氣長虹・精進',up:1,d:r=>`劍氣多射 ${[1,2,2][r]} 道${r===2?'、傷害 +60%':''}、冷卻 -10%`,f:r=>{G.k.beamN=Math.min(5,G.k.beamN+[1,2,2][r]);if(r===2)G.k.beamD*=1.6;G.k.beamCd=Math.max(.5,G.k.beamCd*.9)},max:()=>G.k.beamN>=5},
+  {k:'thUp',ic:'雷',n:'五雷符・精進',up:1,d:r=>`多劈 ${[2,3,5][r]} 道雷、範圍 +20%、雷更痛`,f:r=>{G.k.thN=Math.min(20,G.k.thN+[2,3,5][r]);G.k.thR=Math.min(1.8,G.k.thR*1.2);G.k.thD*=1.2},max:()=>G.k.thN>=20},
+  {k:'ultUp',ic:'萬',n:'萬劍歸宗・精進',up:1,d:r=>`大絕充能快 ${[20,30,45][r]}%、落劍更多`,f:r=>{G.k.ultNeed=Math.max(40,Math.round(G.k.ultNeed*(1-[.2,.3,.45][r])));G.k.ultN=Math.min(1.6,G.k.ultN+.2)},max:()=>G.k.ultNeed<=40}];
 const RAR=['凡品','靈品','仙品'];
 let offer=[];
 // gold = 仙緣頓悟 after an elite or the boss: every card is 靈品 or better
-function openCards(gold){if(!G||G.over)return;if($('#cardOv').classList.contains('on')){G.pendingGold=(G.pendingGold||0)+(gold?1:0);return}
+function openCards(gold){if(!G||G.over)return;cancelAim();if($('#cardOv').classList.contains('on')){G.pendingGold=(G.pendingGold||0)+(gold?1:0);return}
   G.paused=true;const pool=CARDS.filter(c=>(!c.when||c.when())&&!(c.max&&c.max()));offer=[];
   const rar=c=>c.evo?2:gold?(Math.random()<.5?2:1):(()=>{const y=Math.random();return y<.08?2:y<.36?1:0})();
   const take=c=>{pool.splice(pool.indexOf(c),1);offer.push({c,r:rar(c)})};
   // the evolution, when it unlocks, is always offered first
   const evo=pool.find(c=>c.evo&&!G.s[c.k]);if(evo)take(evo);
   // keep it varied: while fewer than 3 techniques are known, one card is always a technique not learned yet
-  const known=['orbit','talis','lamp','thunder','bell'].filter(k=>G.s[k]).length,fresh=pool.filter(c=>c.skill&&!c.evo&&!G.s[c.k]);
-  if(known<3&&fresh.length)take(fresh[Math.floor(Math.random()*fresh.length)]);
-  while(offer.length<3&&pool.length){const w=pool.map(c=>c.skill?2:1),tot=w.reduce((a,b)=>a+b,0);let x=Math.random()*tot,i=0;while(x>w[i]){x-=w[i];i++}take(pool[i])}
+  const known=['orbit','talis','lamp','bell'].filter(k=>G.s[k]).length,fresh=pool.filter(c=>c.skill&&!c.evo&&!G.s[c.k]);
+  if(known<2&&fresh.length)take(fresh[Math.floor(Math.random()*fresh.length)]);
+  while(offer.length<3&&pool.length){const w=pool.map(c=>c.skill||c.up?2:1),tot=w.reduce((a,b)=>a+b,0);let x=Math.random()*tot,i=0;while(x>w[i]){x-=w[i];i++}take(pool[i])}
   $('#cardTitle').textContent=gold?'仙緣頓悟':'頓悟';$('#cardSub').textContent=gold?'斬了強敵，福至心靈':'三選一，只在這一夜有效';
   const box=$('#cards');box.innerHTML='';
   offer.forEach((o,i)=>{const b=document.createElement('button');b.className='card r'+o.r;b.innerHTML=`<span class="ic">${o.c.ic}</span><b>${o.c.n}<em>${RAR[o.r]}</em></b><span>${o.c.d(o.r)}</span>`;
@@ -507,7 +723,7 @@ function pickCard(i){if(!$('#cardOv').classList.contains('on'))return;if(i>=0){c
   $('#cardOv').classList.remove('on');G.paused=false;renderBuffs();
   if(G.pendingGold>0){G.pendingGold--;setTimeout(()=>openCards(true),400)}}
 $('#skipCard').onclick=()=>pickCard(-1);
-function renderBuffs(){const n={count:'劍',dmg:'鋒',rate:'疾',pierce:'穿',magnet:'攝',heal:'春',orbit:'陣',talis:'符',lamp:'燈',thunder:'雷',bell:'鐘',wan:'萬'};
+function renderBuffs(){const n={count:'劍',dmg:'鋒',rate:'疾',pierce:'穿',magnet:'攝',heal:'春',orbit:'陣',talis:'符',lamp:'燈',bell:'鐘',sweepUp:'竹',beamUp:'虹',thUp:'雷',ultUp:'萬'};
   $('#buffs').textContent=Object.entries(G.skills).map(([k,v])=>n[k]+(v>1?v:'')).join(' ')}
 
 /* ================= 生妖 ================= */
@@ -525,7 +741,7 @@ function spawnTick(dt){const m=minute(),rate=1.1*(1+1.1*m+.18*m*m);G.spawnAcc+=d
 
 /* ================= 戰鬥 ================= */
 function hurtEnemy(e,dmg,kx=0,kz=0,crit=false){if(e.hp<=0)return;e.hp-=dmg;e.flash=.1;e.x+=kx;e.z+=kz;showNum(e.x,1+e.y,e.z,dmg,crit?'c':e.elite?'b':'n');if(e.hp<=0)killEnemy(e)}
-function killEnemy(e){G.kills++;e.dead=true;SFX.play('kill');if(G.kills%250===0&&G.kills<=1250&&!simming){banner('殺氣凝劍','飛劍 +1');SFX.play('gold')}dashLine(e,false);if(G.kills>=G.nextPill){G.nextPill+=100;dropPill(e.x,e.z)}
+function killEnemy(e){G.kills++;e.dead=true;SFX.play('kill');if(G.ult<G.k.ultNeed&&++G.ult>=G.k.ultNeed&&!simming){SFX.play('ready');say('大絕好了！按右下角的「萬」！',3)}if(G.kills%250===0&&G.kills<=1250&&!simming){banner('殺氣凝劍','飛劍 +1');SFX.play('gold')}dashLine(e,false);if(G.kills>=G.nextPill){G.nextPill+=100;dropPill(e.x,e.z)}
   fx({p:tmp.set(e.x,.6,e.z),col:0x0a0d0e,life:.7,s0:.5,s1:1.6,op:.75,vy:.9});fx({p:tmp.set(e.x,.6,e.z),col:0x6fffd0,add:true,life:.35,s0:.8,s1:.2,op:.9,vy:0});
   dropSoul(e.x,e.z,e.t.soul);if(e.elite){G.eliteKilled=true;for(let i=0;i<14;i++)dropSoul(e.x+(Math.random()-.5)*2,e.z+(Math.random()-.5)*2,1);banner('精英伏誅','殺氣大漲・仙緣頓悟');SFX.play('boss');setTimeout(()=>openCards(true),700)}
   $('#power').classList.add('pop')}
@@ -581,7 +797,7 @@ function stepSkills(dt){
   if(G.s.bell){if(!G.bellOn){G.bellT=(G.bellT||0)+dt;if(G.bellT>=G.s.bell){G.bellOn=true;G.bellT=0}}bellMesh.visible=G.bellOn;bellMesh.position.set(HERO.pos.x,0,HERO.pos.z);bellMesh.rotation.y+=dt;
     bellMesh.material.opacity=.28+Math.sin(G.t*4)*.06}else bellMesh.visible=false;
   // 萬劍歸宗: a rain of giant swords onto everything on screen
-  if(G.s.wan){G.wanCd=(G.wanCd??1.5)-dt;if(G.wanCd<=0){G.wanCd=Math.max(3.5,6.5-G.s.wan);wanRain()}}
+  stepActs(dt);
   stepFalls(dt);
   for(let i=bolts.length-1;i>=0;i--){const b=bolts[i];b.t+=dt;b.m.material.opacity=Math.max(0,1-b.t/.25);if(b.t>.25){scene.remove(b.m);bolts.splice(i,1)}}
   for(let i=shots.length-1;i>=0;i--){const s=shots[i];s.t+=dt;const k=Math.max(0,Math.min(1,s.t/s.life));s.pos.lerpVectors(s.from,s.to,k);s.pos.y+=Math.sin(k*Math.PI)*1.2;
@@ -625,12 +841,16 @@ function hurtHero(dmg,kx,kz,src='碰撞'){if(G.iframe>0||G.over)return;
 
 /* ================= 操作：全畫面拖曳 ================= */
 const joy={id:null,ox:0,oy:0,x:0,y:0,on:false};const keys=new Set();
-canvas.addEventListener('pointerdown',e=>{if(!G||G.paused)return;if(e.clientY>innerHeight-30)return;// bottom 30px ignored (avoid the home bar)
-  canvas.setPointerCapture(e.pointerId);Object.assign(joy,{id:e.pointerId,ox:e.clientX,oy:e.clientY,x:0,y:0,on:true});hideTip()});
+canvas.addEventListener('pointerdown',e=>{if(!G||G.paused||joy.id!==null)return;if(e.clientY>innerHeight-20)return;// bottom edge ignored (home bar)
+  if(e.clientX>innerWidth*.55&&innerWidth>innerHeight)return;// right hand side is for the skill buttons
+  canvas.setPointerCapture(e.pointerId);Object.assign(joy,{id:e.pointerId,ox:e.clientX,oy:e.clientY,x:0,y:0,on:true});drawJoy();hideTip()});
 canvas.addEventListener('pointermove',e=>{if(e.pointerId!==joy.id)return;let dx=e.clientX-joy.ox,dy=e.clientY-joy.oy;const R=56,l=Math.hypot(dx,dy);
-  if(l>R){joy.ox+=dx*(1-R/l);joy.oy+=dy*(1-R/l);dx*=R/l;dy*=R/l}joy.x=dx/R;joy.y=dy/R});// floating stick: the origin follows a long drag
-const upJ=e=>{if(e.pointerId===joy.id){joy.on=false;joy.id=null;joy.x=joy.y=0}};canvas.addEventListener('pointerup',upJ);canvas.addEventListener('pointercancel',upJ);
-addEventListener('keydown',e=>{keys.add(e.key.toLowerCase());if(e.key==='Escape'&&G&&!G.over)togglePause();if(e.key.toLowerCase()==='v')setCam(camIdx+1)});addEventListener('keyup',e=>keys.delete(e.key.toLowerCase()));
+  if(l>R){joy.ox+=dx*(1-R/l);joy.oy+=dy*(1-R/l);dx*=R/l;dy*=R/l}joy.x=dx/R;joy.y=dy/R;drawJoy()});// floating stick: the origin follows a long drag
+const upJ=e=>{if(e.pointerId===joy.id){joy.on=false;joy.id=null;joy.x=joy.y=0;drawJoy()}};
+// at rest the stick waits faintly at the bottom left so the thumb knows where to go
+function drawJoy(){const el=$('#joy'),k=$('#joyKnob');const x=joy.on?joy.ox:$('#safeL').getBoundingClientRect().left+96,y=joy.on?joy.oy:innerHeight-96;
+  el.style.left=x+'px';el.style.top=y+'px';el.classList.toggle('on',joy.on);k.style.transform=`translate(${joy.x*50}px,${joy.y*50}px)`}canvas.addEventListener('pointerup',upJ);canvas.addEventListener('pointercancel',upJ);
+addEventListener('keydown',e=>{keys.add(e.key.toLowerCase());if(e.key==='Escape'&&G&&!G.over)togglePause();if(e.key.toLowerCase()==='v')setCam(camIdx+1);const sk={j:'sweep',k:'beam',l:'thunder',u:'ult',' ':'ult','1':'sweep','2':'beam','3':'thunder','4':'ult'}[e.key.toLowerCase()];if(sk&&G&&!G.paused){e.preventDefault();castSkill(sk,null)}});addEventListener('keyup',e=>keys.delete(e.key.toLowerCase()));
 function inputDir(){let x=joy.x,y=joy.y;if(keys.has('a')||keys.has('arrowleft'))x-=1;if(keys.has('d')||keys.has('arrowright'))x+=1;if(keys.has('w')||keys.has('arrowup'))y-=1;if(keys.has('s')||keys.has('arrowdown'))y+=1;
   if(G.auto){// test pilot (world space): drift around the square, steer away from nearby monsters and red circles
     const a=G.t*.4;x=Math.cos(a)*.5-HERO.pos.x*.05;y=Math.sin(a)*.5-HERO.pos.z*.05;
@@ -643,10 +863,10 @@ function inputDir(){let x=joy.x,y=joy.y;if(keys.has('a')||keys.has('arrowleft'))
   const l=Math.hypot(x,y);if(l>1){x/=l;y/=l}return {x,y,l:Math.min(1,l)}}
 
 /* ================= 介面 ================= */
-let bannerT=0;function banner(t,s=''){$('#bannerText').textContent=t;$('#bannerSmall').textContent=s;$('#banner').classList.add('on');bannerT=2.6}
+let bannerT=0;function banner(t,s='',big=false){$('#bannerText').textContent=t;$('#bannerSmall').textContent=s;$('#banner').classList.toggle('ult',big);$('#banner').classList.add('on');bannerT=big?2:2.6}
 let sayT=0;function say(t,s=4){const b=$('#bubble');b.textContent=t;b.classList.add('on');sayT=s}
 let tipShown=false;function hideTip(){if(!tipShown){tipShown=true;sayT=Math.min(sayT,1.2)}}
-function togglePause(){if(!G||G.over)return;if($('#cardOv').classList.contains('on'))return;const on=!$('#pauseOv').classList.contains('on');$('#pauseOv').classList.toggle('on',on);G.paused=on;
+function togglePause(){if(!G||G.over)return;if($('#cardOv').classList.contains('on'))return;cancelAim();const on=!$('#pauseOv').classList.contains('on');$('#pauseOv').classList.toggle('on',on);G.paused=on;
   if(on)$('#pauseInfo').textContent=`已斬 ${G.kills} 隻妖，離雞啼還有 ${clockText()}`}
 $('#viewBtn').onclick=()=>setCam(camIdx+1);$('#sfxBtn').onclick=()=>{SFX.resume();const on=SFX.toggle();$('#sfxBtn').textContent=on?'音':'靜'};$('#sfxBtn').textContent=SFX.on?'音':'靜';$('#pauseBtn').onclick=togglePause;$('#resume').onclick=togglePause;$('#giveUp').onclick=()=>{$('#pauseOv').classList.remove('on');endNight(false,true)};
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&G&&!G.paused&&!G.over)togglePause()});
@@ -655,20 +875,20 @@ function renderRealm(id,bar){const r=realmOf(save.xiuwei);$(id).textContent=`${r
 function pickChar(c){if(c!==who){useChar(c);applyFace({g:1,x:1});applyBody();buildHair();try{localStorage.setItem('zk-who',String(c))}catch(e){}}
   $$('[data-who]').forEach(b=>b.setAttribute('aria-pressed',String(+b.dataset.who===who)))}
 $$('[data-who]').forEach(b=>b.onclick=()=>pickChar(+b.dataset.who));pickChar(who);
-function startNight(len){SFX.resume();resetWorld();G=newNight(len);G.paused=false;$('#startOv').classList.remove('on');$('#endOv').classList.remove('on');$('#hud').hidden=false;
+function startNight(len){SFX.resume();tryLandscape();resetWorld();cancelAim();G=newNight(len);G.paused=false;$('#skills').hidden=$('#joy').hidden=false;drawJoy();$('#startOv').classList.remove('on');$('#endOv').classList.remove('on');$('#hud').hidden=false;
   $('#bossMark').style.left='67%';spawnRing('ghost',8,7.5);// an opening ring so the first monsters are seen walking in
-  renderBuffs();tipShown=false;say('拖著畫面走路：每走幾步放一圈劍罡、被撞只受一半傷；放開站樁：出劍更快！斬越多妖，飛劍越多！',7);
+  renderBuffs();tipShown=false;say('左手拖曳走路；右手按技能：點一下自動放，按住拖曳可以瞄準！斬妖會讓「萬」大絕充能。',7);
   setTimeout(()=>{if(G&&!G.over&&G.kills<3)say('吸青色的魂火可以頓悟喔！',4)},9000)}
 $('#startNight').onclick=()=>startNight(NIGHT);
-$('#again').onclick=()=>startNight(NIGHT);$('#toTitle').onclick=()=>{$('#endOv').classList.remove('on');$('#startOv').classList.add('on');$('#hud').hidden=true;renderRealm('#realmText','#realmBar');resetWorld();G=null};
-function resetWorld(){for(const e of enemies)e.dead=true;enemies=[];for(const k in ET)ET[k].list=[];souls=[];shots.length=0;
+$('#again').onclick=()=>startNight(NIGHT);$('#toTitle').onclick=()=>{$('#endOv').classList.remove('on');$('#skills').hidden=$('#joy').hidden=true;$('#startOv').classList.add('on');$('#hud').hidden=true;renderRealm('#realmText','#realmBar');resetWorld();G=null};
+function resetWorld(){acts.forEach(a=>{if(a.end)a.end()});acts.length=0;for(const m of Object.values(IND))m.visible=false;for(const e of enemies)e.dead=true;enemies=[];for(const k in ET)ET[k].list=[];souls=[];shots.length=0;
   swords.forEach(s=>{s.on=false;s.g.visible=false;s.tr.build(0)});warnPool.forEach(w=>{w.on=false;w.m.visible=w.f.visible=false});fxPool.forEach(f=>{f.on=false;f.s.visible=false});
   for(const k in ET)ET[k].mesh.count=0;soulMesh.count=0;shadowMesh.count=0;ebs=[];ebMesh.count=ebGlow.count=0;dashPool.forEach(l=>{l.e=null;l.m.visible=false});
   bolts.forEach(b=>scene.remove(b.m));bolts.length=0;falls.forEach(f=>{f.on=false;f.g.visible=false});bellMesh.visible=false;shots.forEach(s=>{if(s.card)scene.remove(s.card)});
   pills.forEach(p=>scene.remove(p.g));pills.length=0;qiRings.forEach(q=>scene.remove(q.m));qiRings.length=0;
   boss.alive=false;boss.g.visible=false;$('#bossBox').classList.remove('on');orbitBlades.forEach(g=>g.visible=false);root.position.set(0,0,0);
   scene.fog.color.copy(NIGHT_FOG);scene.background.copy(NIGHT_FOG);hemi.intensity=.55}
-function endNight(win,gaveUp=false){if(G.over)return;G.over=true;G.paused=true;
+function endNight(win,gaveUp=false){if(G.over)return;G.over=true;G.paused=true;cancelAim();showAim();
   // 修為: roughly one 煉氣 layer for a full night won; the quick night counts half
   let xw=G.kills*.1+(win?30:0)+(G.bossKilled?50:0)+(G.eliteKilled?15:0);xw*=480/G.len*.5;if(!win)xw*=.5;xw=Math.round(xw);
   save.xiuwei+=xw;save.nights++;if(win)save.wins++;save.best=Math.max(save.best,G.kills);writeSave();
@@ -683,7 +903,13 @@ renderRealm('#realmText','#realmBar');
 
 /* ================= 主迴圈 ================= */
 // portrait needs a wide angle or the sides of the fight are off screen
-function resize(){const w=innerWidth,h=innerHeight;renderer.setSize(w,h,false);camera.aspect=w/h;camera.fov=w/h<.75?64:36;camera.updateProjectionMatrix()}
+function resize(){const w=innerWidth,h=innerHeight;renderer.setSize(w,h,false);camera.aspect=w/h;camera.fov=w/h<.75?64:w/h>1.5?40:36;camera.updateProjectionMatrix();drawJoy();checkRot()}
+// the night is played sideways: on a phone held upright, pause and ask to turn it
+function checkRot(){const need=isTouch&&innerHeight>innerWidth;$('#rotOv').classList.toggle('on',need);if(!G||G.over)return;
+  if(need&&!G.paused){G.paused=true;G.rotPaused=true;cancelAim()}else if(!need&&G.rotPaused){G.rotPaused=false;if(!$('#cardOv').classList.contains('on')&&!$('#pauseOv').classList.contains('on'))G.paused=false}}
+// Android: go full screen and lock to landscape when the night starts (iPhone Safari cannot, so it just asks to turn the phone)
+function tryLandscape(){try{if(isTouch&&window.top===window&&/Android/i.test(navigator.userAgent)&&document.fullscreenEnabled&&!document.fullscreenElement)
+  document.documentElement.requestFullscreen().then(()=>screen.orientation&&screen.orientation.lock&&screen.orientation.lock('landscape')).catch(()=>{})}catch(e){}}
 addEventListener('resize',resize);resize();
 let last=performance.now();const camT=new THREE.Vector3(),bubP=new THREE.Vector3();
 mode='idle';
@@ -699,7 +925,7 @@ function frame(now){requestAnimationFrame(frame);let dt=Math.min(.05,(now-last)/
   if(bannerT>0){bannerT-=dt;if(bannerT<=0)$('#banner').classList.remove('on')}
   if(sayT>0){sayT-=dt;if(sayT<=0)$('#bubble').classList.remove('on');bubP.copy(lantern.position);bubP.y+=.35;bubP.project(camera);
     const b=$('#bubble');b.style.left=Math.max(120,Math.min(innerWidth-120,(bubP.x*.5+.5)*innerWidth))+'px';b.style.top=((-bubP.y*.5+.5)*innerHeight-8)+'px'}
-  updateEdges();renderer.render(scene,camera)}
+  showAim();updateEdges();renderer.render(scene,camera)}
 // camera: high and behind, following the hero (snap = jump straight there, for sim())
 // 視角: 俯視 (high, fixed north-up), 斜視 (lower, fixed), 追尾 (behind the hero, turns with them). camYaw = direction the camera sits in.
 const CAMS=[{n:'俯視',P:.95,D:11},{n:'斜視',P:.68,D:9.5},{n:'追尾',P:.45,D:6.8,follow:1}];
@@ -727,6 +953,8 @@ function stepGame(dt){const g=G;
   if(p>=1){endNight(true);if(boss.alive){boss.alive=false;boss.g.visible=false}for(const e of enemies)if(!e.dead){killEnemyQuiet(e)}return}
   spawnTick(dt);
   // attack: standing still (站樁) makes the swords 30% faster
+  for(const k in g.cd)g.cd[k]=Math.max(0,g.cd[k]-dt);if(g.castT>0){g.castT-=dt;mode='cast'}
+  if(g.auto)for(const k in SK)if(ready(k))castSkill(k,null);
   g.volley-=dt*g.s.rate*(moving?1:1.3);if(g.volley<=0){g.volley=.62;launchVolley()}
   stepSwords(dt);stepSkills(dt);stepBoss(dt);stepWarns(dt);stepEnemyShots(dt);stepPills(dt);stepQi(dt);
   // enemies
@@ -749,7 +977,7 @@ function stepGame(dt){const g=G;
   const pw=swordDmg()*g.s.count*g.s.rate*(1+(g.s.orbit||0)*.35+(g.s.talis||0)*.5+(g.s.lamp||0)*.4+(g.s.thunder||0)*.3+(g.s.bell?.3:0))*100;g.peak=Math.max(g.peak||0,pw);
   const pe=$('#power');pe.textContent=fmt(pw);if(pe.classList.contains('pop'))setTimeout(()=>pe.classList.remove('pop'),60);
   $('#kills').textContent=g.kills;$('#hp').style.width=(100*g.hp/g.maxhp)+'%';$('#wu').style.width=(100*Math.min(1,g.wu/g.wuNeed))+'%';
-  $('#nightBar').style.width=(100*p)+'%';$('#clock').textContent='雞啼 '+clockText()}
+  updSkillUI();$('#nightBar').style.width=(100*p)+'%';$('#clock').textContent='雞啼 '+clockText()}
 function killEnemyQuiet(e){e.dead=true;fx({p:tmp.set(e.x,.6,e.z),col:0xffffff,add:true,life:.6,s0:.4,s1:1.2,op:.6,vy:.8})}
 // spatial grid for separation
 const GRID=1.1,grid=new Map();
@@ -757,7 +985,8 @@ function stepEnemies(dt){grid.clear();for(const e of enemies){if(e.dead)continue
   for(const e of enemies){if(e.dead)continue;const t=e.t;e.ph+=dt;
     const dx=HERO.pos.x-e.x,dz=HERO.pos.z-e.z,d=Math.hypot(dx,dz)||1;
     let mv=e.spd,mx=dx/d,mz=dz/d;e.cd-=dt;e.squash=Math.max(0,(e.squash||0)-dt*4);
-    if(t.hop&&!e.leapT){const h=Math.abs(Math.sin(e.ph*3.2));e.y=h*.32*e.s;mv*=h>.15?1.6:0;if(h<.08)e.squash=.6}
+    if(e.stun>0){e.stun-=dt;mv=0;e.cd=Math.max(e.cd,.4);e.wind=0;e.dashT=0}
+    if(t.hop&&!e.leapT&&!(e.stun>0)){const h=Math.abs(Math.sin(e.ph*3.2));e.y=h*.32*e.s;mv*=h>.15?1.6:0;if(h<.08)e.squash=.6}
     if(t.float)e.y=.15+Math.sin(e.ph*2.4)*.1;
     if(e.elite)e.cd=Math.min(e.cd,9);
     // 燈籠鬼: keep at range and spit a slow fireball (it glows and swells first)
@@ -777,7 +1006,7 @@ function stepEnemies(dt){grid.clear();for(const e of enemies){if(e.dead)continue
     const gx=Math.floor(e.x/GRID),gz=Math.floor(e.z/GRID);for(let i=-1;i<=1;i++)for(let j=-1;j<=1;j++){const c=grid.get((gx+i)+','+(gz+j));if(!c)continue;
       for(const o of c){if(o===e)continue;const ox=e.x-o.x,oz=e.z-o.z,od=ox*ox+oz*oz,rr=e.r+o.r;if(od<rr*rr&&od>1e-6){const l=Math.sqrt(od),push=(rr-l)*.5;e.x+=ox/l*push;e.z+=oz/l*push}}}
     // bite the hero, then back off
-    if(d<e.r+.32&&!(e.leapT>0)){const mov=G.moving;hurtHero(e.dmg*(mov?.5:1),dx/d,dz/d);const kb=mov?1.6:.9;e.x-=dx/d*kb;e.z-=dz/d*kb;e.dashT=0;if(mov){e.flash=.1;e.hp-=swordDmg()*.5;if(e.hp<=0)killEnemy(e)}}
+    if(d<e.r+.32&&!(e.leapT>0)&&!(e.stun>0)){const mov=G.moving;hurtHero(e.dmg*(mov?.5:1),dx/d,dz/d);const kb=mov?1.6:.9;e.x-=dx/d*kb;e.z-=dz/d*kb;e.dashT=0;if(mov){e.flash=.1;e.hp-=swordDmg()*.5;if(e.hp<=0)killEnemy(e)}}
     e.flash-=dt}
   if(enemies.some(e=>e.dead)){enemies=enemies.filter(e=>!e.dead);for(const k in ET)ET[k].list=ET[k].list.filter(e=>!e.dead)}}
 // monsters turn to face the hero; from a high camera they lean back a little so their faces still show
@@ -807,7 +1036,7 @@ function updateEdges(){const th=[];if(G&&!G.paused&&!G.over){if(boss.alive)th.pu
     if(Math.abs(ep.x)<.97&&Math.abs(ep.y)<.97&&ep.z<1)continue;
     const k=1/Math.max(Math.abs(ep.x),Math.abs(ep.y)),ex=ep.x*k,ey=ep.y*k,px=(ex*.5+.5)*W,py=(-ey*.5+.5)*H;
     const el=edgeEls[n++];el.className='edge'+(isB?' boss':'');el.style.display='block';
-    el.style.transform=`translate(${Math.min(W-18,Math.max(18,px))}px,${Math.min(H-18,Math.max(110,py))}px) rotate(${Math.atan2(-ey,ex)}rad)`}
+    el.style.transform=`translate(${Math.min(W-18,Math.max(18,px))}px,${Math.min(H-18,Math.max(H>W?110:64,py))}px) rotate(${Math.atan2(-ey,ex)}rad)`}
   for(;n<edgeEls.length;n++)edgeEls[n].style.display='none'}
 requestAnimationFrame(t=>{last=t;frame(t)});
 
