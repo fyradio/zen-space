@@ -581,13 +581,13 @@ function stepEnemyShots(dt){for(let i=ebs.length-1;i>=0;i--){const b=ebs[i];b.t+
     if(b.home&&b.t<2.4){const want=Math.atan2(HERO.pos.x-b.x,HERO.pos.z-b.z),cur=Math.atan2(b.vx,b.vz),na=cur+Math.max(-b.home*dt,Math.min(b.home*dt,angDiff(want,cur)));b.vx=Math.sin(na)*b.spd;b.vz=Math.cos(na)*b.spd}
     b.x+=b.vx*dt;b.z+=b.vz*dt;
     if((b.x-HERO.pos.x)**2+(b.z-HERO.pos.z)**2<.16){hurtHero(b.dmg,0,0,'火球');fx({p:tmp.set(b.x,b.y,b.z),col:0xff6a2a,add:true,life:.3,s0:.4,s1:1,op:.9,vy:0});ebs.splice(i,1);continue}
-    if(b.t>4||Math.hypot(b.x,b.z)>ARENA+4)ebs.splice(i,1)}}
+    if(b.t>4||(G.sky?Math.hypot(b.x-HERO.pos.x,b.z-HERO.pos.z)>30:Math.hypot(b.x,b.z)>ARENA+4))ebs.splice(i,1)}}
 const dashPool=[];function dashLine(e,on){let L=dashPool.find(l=>l.e===e);if(!on){if(L){L.e=null;L.m.visible=false}return}
   if(!L){L=dashPool.find(l=>!l.e);if(!L){L={m:new THREE.Mesh(new THREE.PlaneGeometry(1,1).rotateX(-Math.PI/2).translate(0,0,.5),new THREE.MeshBasicMaterial({color:0xff3b2a,transparent:true,opacity:.35,depthWrite:false}))};scene.add(L.m);dashPool.push(L)}}
   L.e=e;L.m.visible=true;L.m.position.set(e.x,.03,e.z);L.m.rotation.y=Math.atan2(e.dx,e.dz);L.m.scale.set(.5,1,3.4)}
 // 回春丹: a red gourd that drops at 67, 167, 267... kills and heals 20%
 const pills=[];const pillGeo=merged([{g:S0,c:'#c8322a',p:[0,.13,0],s:[.13,.13,.13]},{g:S0,c:'#c8322a',p:[0,.3,0],s:[.085,.085,.085]},{g:C0,c:'#e8c35a',p:[0,.215,0],s:[.06,.03,.06]},{g:C0,c:'#5a3a20',p:[0,.4,0],s:[.025,.05,.025]}]);
-function dropPill(x,z){const r=Math.hypot(x,z),R=ARENA-.8;if(r>R){x*=R/r;z*=R/r}
+function dropPill(x,z){const r=Math.hypot(x,z),R=ARENA-.8;if(r>R&&!G.sky){x*=R/r;z*=R/r}
   const g=new THREE.Group();const m=new THREE.Mesh(pillGeo,ET.ghost.mesh.material.clone());m.material.transparent=false;m.material.opacity=1;g.add(m);
   const gl=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex,color:0xffd27a,opacity:.8,blending:THREE.AdditiveBlending,depthWrite:false}));gl.scale.set(1.1,1.1,1);gl.position.y=.25;g.add(gl);
   g.position.set(x,0,z);g.scale.setScalar(1.6);scene.add(g);pills.push({g,x,z,t:0})}
@@ -781,6 +781,7 @@ function updSkillUI(){for(const k in SK){const b=skBtn[k];let p,txt='';
 /*@include game/hazards.js*/
 /*@include game/chapters.js*/
 /*@include game/chapters2.js*/
+/*@include game/chapters3.js*/
 
 /* ================= 狀態 ================= */
 const SAVE_KEY='zk-game-v1';
@@ -890,7 +891,7 @@ function spawnTick(dt){const m=minute(),rate=1.25*(1+1.1*m+.18*m*m)*G.mod.spawn;
     for(const [n,v] of w){x-=v;if(x<=0){k=n;break}}
     // 竹精 burst out of the ground close by (a moment to react: they are stunned while climbing out)
     if(ET[k].popNear){const a=Math.random()*Math.PI*2,r=2.6+Math.random()*2;const e=spawn(k,HERO.pos.x+Math.sin(a)*r,HERO.pos.z+Math.cos(a)*r);if(e){e.stun=.7;e.y=-.5;e.rise=.7;if(!simming)fx({p:tmp.set(e.x,.2,e.z),col:0x3a2a1a,life:.6,s0:.4,s1:1.6,op:.8,vy:.6})}continue}
-    const a=Math.random()*Math.PI*2,r=11+Math.random()*3;spawn(k,HERO.pos.x+Math.sin(a)*r,HERO.pos.z+Math.cos(a)*r)}
+    const a=G.sky?(Math.random()-.5)*Math.PI*1.3:Math.random()*Math.PI*2,r=G.sky?13+Math.random()*3:11+Math.random()*3;spawn(k,HERO.pos.x+Math.sin(a)*r,HERO.pos.z+Math.cos(a)*r)}
   if(G.t>=G.waveAt*G.len/480&&!G.over){G.waveAt+=60;const rt=C.mobs[m>3&&C.mobs[1]?1:0][0];spawnRing(ET[rt].popNear?C.mobs[2][0]:rt,16+Math.floor(m*3),10.5)}}
 
 /* ================= 戰鬥 ================= */
@@ -901,7 +902,7 @@ function killEnemy(e,kx=0,kz=0,fly=0){if(e.t.revive&&!e.revived&&!fly){e.revived
   dropSoul(e.x,e.z,e.t.soul);if(e.elite){G.eliteKilled=true;for(let i=0;i<14;i++)dropSoul(e.x+(Math.random()-.5)*2,e.z+(Math.random()-.5)*2,1);banner('精英伏誅','殺氣大漲・仙緣頓悟');SFX.play('boss');setTimeout(()=>openCards(true),700)}
   $('#power').classList.add('pop')}
 function dropSoul(x,z,v){if(souls.length>=SOULCAP){souls[0].v+=v;return}
-  const r=Math.hypot(x,z),R=ARENA-.6;if(r>R){x*=R/r;z*=R/r}// never outside the village
+  const r=Math.hypot(x,z),R=ARENA-.6;if(r>R&&!G.sky){x*=R/r;z*=R/r}// never outside the village
   for(const h of HOUSES){const dx=x-h.x,dz=z-h.z,d=Math.hypot(dx,dz),rr=h.r+.35;if(d<rr&&d>1e-4){x=h.x+dx/d*rr;z=h.z+dz/d*rr}}
   souls.push({x,z,y:.3,v,t:0,pull:false})}
 // only what the player can see: inside the range AND on screen (so nothing dies off-screen)
@@ -977,10 +978,10 @@ function startBoss(){const key=(CHC[G.ch]||CHC[0]).boss,D=BOSSES[key];boss.def=D
   Object.assign(boss,{cd:3,sum:5,t:0,rage:false,ring:4,k:0,swing:0,stun:0});boss.g.visible=true;boss.g.position.set(boss.x,0,boss.z);
   $('#bossName').textContent=D.name;$('#bossBox').classList.add('on');banner(D.line,'頭目');shake=.8;say(D.tip,5)}
 function stepBoss(dt){if(!boss.alive)return;const D=boss.def,M=boss.m;boss.t+=dt;boss.allow=Math.min(boss.max/20*1.5,boss.allow+boss.max/20*dt);
-  const dx=HERO.pos.x-boss.x,dz=HERO.pos.z-boss.z,d=Math.hypot(dx,dz)||1;let sp=d>4?D.spd:.6;if(D.keep&&d<D.keep)sp=-D.spd*.7;
+  const dx=HERO.pos.x-boss.x,dz=HERO.pos.z-boss.z,d=Math.hypot(dx,dz)||1;let sp=d>4?D.spd:.6;if(D.keep&&d<D.keep)sp=-D.spd*.7;if(G.sky)sp=0;
   if(!(boss.stun>0)){boss.x+=dx/d*sp*dt;boss.z+=dz/d*sp*dt}else boss.stun-=dt;
-  const rr=Math.hypot(boss.x,boss.z);if(rr>ARENA){boss.x*=ARENA/rr;boss.z*=ARENA/rr}
-  boss.g.position.set(boss.x,D.bob?Math.sin(boss.t*D.bob)*.25:0,boss.z);boss.g.rotation.y=Math.atan2(dx,dz);if(M.spin)M.spin(boss);
+  if(!G.sky){const rr=Math.hypot(boss.x,boss.z);if(rr>ARENA){boss.x*=ARENA/rr;boss.z*=ARENA/rr}}
+  boss.g.position.set(boss.x,(D.y||0)+(D.bob?Math.sin(boss.t*D.bob)*.25:0),boss.z);boss.g.rotation.y=Math.atan2(dx,dz);if(M.spin)M.spin(boss);
   if(M.body&&M.body.material)M.body.material.emissiveIntensity=.8+(boss.flash>0?2:0)+Math.sin(boss.t*6)*.1;else M.g.scale.setScalar(boss.flash>0?1.06:1);
   boss.flash-=dt;if(M.L)M.L.intensity=(M.Li||2.2)+Math.sin(boss.t*9)*.3;
   if(!boss.rage&&boss.hp<boss.max*.5){boss.rage=true;banner(D.rage,'狂暴');shake=.6;boss.cd=.5}
@@ -1013,7 +1014,7 @@ function drawJoy(){const el=$('#joy'),k=$('#joyKnob');const x=joy.on?joy.ox:$('#
 addEventListener('keydown',e=>{keys.add(e.key.toLowerCase());if(e.key==='Escape'&&G&&!G.over)togglePause();if(e.key.toLowerCase()==='v')setCam(camIdx+1);const sk={j:'sweep',k:'beam',l:'thunder',u:'ult',' ':'ult','1':'sweep','2':'beam','3':'thunder','4':'ult'}[e.key.toLowerCase()];if(sk&&G&&!G.paused){e.preventDefault();castSkill(sk,null)}});addEventListener('keyup',e=>keys.delete(e.key.toLowerCase()));
 function inputDir(){let x=joy.x,y=joy.y;if(keys.has('a')||keys.has('arrowleft'))x-=1;if(keys.has('d')||keys.has('arrowright'))x+=1;if(keys.has('w')||keys.has('arrowup'))y-=1;if(keys.has('s')||keys.has('arrowdown'))y+=1;
   if(G.auto){// test pilot (world space): drift around the square, steer away from nearby monsters and red circles
-    const a=G.t*.4;x=Math.cos(a)*.5-HERO.pos.x*.05;y=Math.sin(a)*.5-HERO.pos.z*.05;
+    const a=G.t*.4;x=Math.cos(a)*.5-HERO.pos.x*.05;y=Math.sin(a)*.5-(G.sky?0:HERO.pos.z*.05);
     if(G.auto==='wander'){const l=Math.hypot(x,y)||1;return {x:x/l,y:y/l,l:.8}}
     for(const e of enemies){const dx=HERO.pos.x-e.x,dz=HERO.pos.z-e.z,d2=dx*dx+dz*dz;if(d2<9){const w=1/Math.max(.3,d2);x+=dx*w;y+=dz*w}}
     if(boss.alive){const dx=HERO.pos.x-boss.x,dz=HERO.pos.z-boss.z,d2=dx*dx+dz*dz;if(d2<16){x+=dx*3/d2;y+=dz*3/d2}}
@@ -1042,7 +1043,7 @@ function pickChar(c){if(c!==who){saveFace();useChar(c);applyFace({g:1,x:1});appl
   $$('[data-who]').forEach(b=>b.setAttribute('aria-pressed',String(+b.dataset.who===who)))}
 $$('[data-who]').forEach(b=>b.onclick=()=>pickChar(+b.dataset.who));pickChar(who);
 if(save.pal)applyPal(save.pal);
-function startNight(len,opt={}){BGM.play('night');bannerT=0;$('#banner').classList.remove('on');$('#breakBtn').hidden=true;SFX.resume();tryLandscape();buildMap(opt.ch||0);setUlt(save.ult);resetWorld();cancelAim();G=newNight(len);setSkills(G.tier=skillTier());G.ch=opt.ch||0;G.nt=opt.nt||0;G.mod=[{spawn:1,boss:1,elite2:0},{spawn:1.4,boss:1,elite2:1},{spawn:1.2,boss:1.5,elite2:0}][G.nt];G.paused=false;$('#pillBtn').hidden=!(save.inv.pill.hui>0);$('#pillN').textContent=save.inv.pill.hui;$('#skills').hidden=$('#joy').hidden=false;drawJoy();$('#startOv').classList.remove('on');$('#endOv').classList.remove('on');$('#hud').hidden=false;
+function startNight(len,opt={}){BGM.play('night');bannerT=0;$('#banner').classList.remove('on');$('#breakBtn').hidden=true;SFX.resume();tryLandscape();leaveSky();buildMap(opt.ch||0);setUlt(save.ult);resetWorld();cancelAim();G=newNight(len);G.sky=!!(CHC[opt.ch||0]&&CHC[opt.ch||0].sky);setSkills(G.tier=skillTier());G.ch=opt.ch||0;G.nt=opt.nt||0;G.mod=[{spawn:1,boss:1,elite2:0},{spawn:1.4,boss:1,elite2:1},{spawn:1.2,boss:1.5,elite2:0}][G.nt];G.paused=false;$('#pillBtn').hidden=!(save.inv.pill.hui>0);$('#pillN').textContent=save.inv.pill.hui;$('#skills').hidden=$('#joy').hidden=false;drawJoy();$('#startOv').classList.remove('on');$('#endOv').classList.remove('on');$('#hud').hidden=false;
   $('#bossMark').style.left='67%';spawnRing('ghost',8,7.5);// an opening ring so the first monsters are seen walking in
   renderBuffs();tipShown=false;say('左手走路，右手放技能！按住技能拖曳可以瞄準',6);
   setTimeout(()=>{if(G&&!G.over&&G.kills<3)say('吸青色的魂火可以頓悟喔！',4)},9000)}
@@ -1050,7 +1051,7 @@ let med=null;
 function stepMed(dt){med.t+=dt;mode='cast';const k=med.t;pillar.visible=true;pillar.position.set(HERO.pos.x,4.5,HERO.pos.z);pillar.scale.set(.9+Math.sin(k*6)*.08,9,.9+Math.sin(k*6)*.08);
   pillar.material.opacity=.5*Math.min(1,k/.6)*(k>2.8?Math.max(0,1-(k-2.8)/.6):1);
   if(k>=3.4){pillar.visible=false;med=null;realmUp();banner('突破成功！',REALMS[save.realm],true);SFX.play('gold');setTimeout(()=>{$('#startOv').classList.add('on');DF.render()},1400)}}
-$('#again').onclick=()=>startNight(NIGHT,{ch:G?G.ch:0,nt:G?G.nt:0});$('#toTitle').onclick=()=>{$('#breakBtn').hidden=true;$('#endOv').classList.remove('on');$('#skills').hidden=$('#joy').hidden=true;$('#startOv').classList.add('on');$('#hud').hidden=true;DF.render();resetWorld();G=null;$('#pillBtn').hidden=true};
+$('#again').onclick=()=>startNight(NIGHT,{ch:G?G.ch:0,nt:G?G.nt:0});$('#toTitle').onclick=()=>{leaveSky();$('#breakBtn').hidden=true;$('#endOv').classList.remove('on');$('#skills').hidden=$('#joy').hidden=true;$('#startOv').classList.add('on');$('#hud').hidden=true;DF.render();resetWorld();G=null;$('#pillBtn').hidden=true};
 function resetWorld(){corpses.length=0;acts.forEach(a=>{if(a.end)a.end()});acts.length=0;for(const m of Object.values(IND))m.visible=false;for(const e of enemies)e.dead=true;enemies=[];for(const k in ET)ET[k].list=[];souls=[];shots.length=0;
   swords.forEach(s=>{s.on=false;s.g.visible=false;s.tr.build(0)});warnPool.forEach(w=>{w.on=false;w.m.visible=w.f.visible=false});fxPool.forEach(f=>{f.on=false;f.s.visible=false});
   for(const k in ET)ET[k].mesh.count=0;soulMesh.count=0;shadowMesh.count=0;ebs=[];ebMesh.count=ebGlow.count=0;dashPool.forEach(l=>{l.e=null;l.m.visible=false});
@@ -1107,9 +1108,10 @@ let camIdx=0,camYaw=0,camP=CAMS[0].P,camD=CAMS[0].D;try{camIdx=+localStorage.get
 function setCam(i){camIdx=i%CAMS.length;try{localStorage.setItem('zk-cam',String(camIdx))}catch(e){}if(G&&!G.over)banner(CAMS[camIdx].n,'視角')}
 let camOverride=0,lookCam=null;// lookCam: 'face' | 'body' while the 洞府 造型 tab is open (close-up, figure held still)
 function updateCamera(dt,snap){const C=CAMS[camIdx],zoom=G?1:.45;let D=(camOverride||C.D*(isTouch?1:.96))*zoom,P=camOverride?.35:G?C.P:.42;
+  if(G&&G.sky){P=.5;D=7.6*(isTouch?1:.96)}
   let lookTy=null;if(!G&&lookCam){const tot=(bodyY(HY)+.15)*F.height;if(lookCam==='body'){D=tot*2.9;lookTy=tot*.54}else{D=1.2*F.height;lookTy=1.43+bodyY(HY)*F.height-HY}P=.08}
   const k=snap?1:1-Math.exp(-dt*4);camP=lerp(camP,P,k);camD=lerp(camD,D,k);
-  const wantYaw=C.follow&&G?root.rotation.y+Math.PI:0;camYaw=angLerp(camYaw,wantYaw,snap?1:1-Math.exp(-dt*(C.follow?1.8:5)));
+  const wantYaw=G&&G.sky?Math.PI:C.follow&&G?root.rotation.y+Math.PI:0;camYaw=angLerp(camYaw,wantYaw,snap?1:1-Math.exp(-dt*(C.follow?1.8:5)));
   if(camOverride)tmp.set(0,.5,0);else tmp.set(HERO.pos.x,HERO.pos.y+(lookTy!==null?lookTy:G?.4+(.92-camP)*.8:1),HERO.pos.z);if(snap)camT.copy(tmp);else camT.lerp(tmp,1-Math.exp(-dt*6));
   const sx=shake>0?(Math.random()-.5)*shake*.5:0,sz=shake>0?(Math.random()-.5)*shake*.5:0;shake=Math.max(0,shake-dt*1.6);
   camera.position.set(camT.x+Math.sin(camYaw)*Math.cos(camP)*camD+sx,camT.y+Math.sin(camP)*camD,camT.z+Math.cos(camYaw)*Math.cos(camP)*camD+sz);camera.lookAt(camT);camera.updateMatrixWorld();sky.position.copy(camera.position)}
@@ -1118,9 +1120,10 @@ function stepGame(dt){const g=G;
   for(const k of ['rootT','slowT','charm'])if(g[k]>0)g[k]-=dt;
   if((g.rootT>0||g.slowT>0||g.charm>0)&&!simming&&(g.stT=(g.stT||0)-dt)<=0){g.stT=.22;fx({p:tmp.set(HERO.pos.x+(Math.random()-.5)*.8,.3+Math.random()*.9,HERO.pos.z+(Math.random()-.5)*.8),col:g.rootT>0?0xffc860:g.charm>0?0xc07cff:0x5aff6a,add:true,life:.5,s0:.5,s1:.1,op:.9,vy:1})}
   const inp=inputDir();const moving=inp.l>.12&&!(g.rootT>0);g.moving=moving;
-  if(moving){const sp=g.s.move*inp.l*(g.slowT>0?.5:1);g.walked+=sp*dt;if(g.walked>=2.4){g.walked=0;qiBurst()}root.position.x+=inp.x*sp*dt;root.position.z+=inp.y*sp*dt;root.rotation.y=angLerp(root.rotation.y,Math.atan2(inp.x,inp.y),1-Math.exp(-dt*12));
+  if(moving){const sp=g.s.move*inp.l*(g.slowT>0?.5:1);g.walked+=sp*dt;if(g.walked>=2.4){g.walked=0;qiBurst()}root.position.x+=inp.x*sp*dt;root.position.z+=inp.y*sp*dt;if(!g.sky)root.rotation.y=angLerp(root.rotation.y,Math.atan2(inp.x,inp.y),1-Math.exp(-dt*12));
     walkPh+=dt*(4+3*inp.l);mode='walk';g.stand=0}else{mode='cast';g.stand+=dt;g.standQi=(g.standQi||0)+dt;if(g.standQi>=1.8){g.standQi=0;qiBurst()}}
-  const rr=Math.hypot(root.position.x,root.position.z);if(rr>ARENA){root.position.x*=ARENA/rr;root.position.z*=ARENA/rr}
+  if(g.sky){root.position.z+=SKY_SPEED*dt*(g.rootT>0?.4:1);root.position.y=1.15;root.rotation.y=angLerp(root.rotation.y,0,1-Math.exp(-dt*6));mode='fly';stepSky(dt)}
+  else{const rr=Math.hypot(root.position.x,root.position.z);if(rr>ARENA){root.position.x*=ARENA/rr;root.position.z*=ARENA/rr}}
   for(const h of HOUSES){const dx=root.position.x-h.x,dz=root.position.z-h.z,d=Math.hypot(dx,dz),r=h.r+.3;if(d<r&&d>1e-4){root.position.x=h.x+dx/d*r;root.position.z=h.z+dz/d*r}}
   // timeline
   const p=g.t/g.len;
@@ -1161,12 +1164,13 @@ const GRID=1.1,grid=new Map();
 function stepEnemies(dt){grid.clear();for(const e of enemies){if(e.dead)continue;const k=Math.floor(e.x/GRID)+','+Math.floor(e.z/GRID);let c=grid.get(k);if(!c)grid.set(k,c=[]);c.push(e)}
   for(const e of enemies){if(e.dead)continue;const t=e.t;e.ph+=dt;
     const dx=HERO.pos.x-e.x,dz=HERO.pos.z-e.z,d=Math.hypot(dx,dz)||1;
+    if(G.sky&&(d>24||(dz<-14&&!e.elite))){e.dead=true;continue}
     let mv=e.spd,mx=dx/d,mz=dz/d;e.cd-=dt;e.squash=Math.max(0,(e.squash||0)-dt*4);
     if(e.burn>0){e.burn-=dt;e.burnT=(e.burnT||0)-dt;if(e.burnT<=0){e.burnT=.5;hurtEnemy(e,e.burnD,0,0,false,3);if(!simming)fx({p:tmp.set(e.x,.6,e.z),col:0xff7a2a,add:true,life:.35,s0:.6,s1:.2,op:.9,vy:1.5});if(e.dead)continue}}
     if(e.rise>0){e.rise-=dt;e.y=-.5*Math.max(0,e.rise/.7)}else if(e.down>0)e.down-=dt;
     if(e.stun>0){e.stun-=dt;mv=0;e.cd=Math.max(e.cd,.4);e.wind=0;e.dashT=0}
     if(t.hop&&!e.leapT&&!(e.stun>0)){const h=Math.abs(Math.sin(e.ph*3.2));e.y=h*.32*e.s;mv*=h>.15?1.6:0;if(h<.08)e.squash=.6}
-    if(t.float)e.y=.15+Math.sin(e.ph*2.4)*.1;
+    if(t.float&&!t.fly)e.y=.15+Math.sin(e.ph*2.4)*.1;
     if(e.elite)e.cd=Math.min(e.cd,9);
     // 燈籠鬼: keep at range and spit a slow fireball (it glows and swells first)
     if(t.ranged&&(e.special||e.elite)){if(e.elite)mv*=d<2.5?0:.7;else if(d<4.5)mv*=-.6;else if(d<7)mv*=.15;

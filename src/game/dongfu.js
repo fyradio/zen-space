@@ -1,7 +1,7 @@
 /* ================= 洞府（取代標題畫面）=================
    分頁：出戰（選章、選夜）／靜室（突破、閉關收靈石）／藥園（真實時間種靈草）／丹房（控火煉丹）／藏經閣（選大絕）／坊市（買種子、替身紙人）。
    背包 save.inv：stone 靈石、seed/herb 種子與靈草、pill 丹藥、yaodan 妖丹、paper 替身紙人。 */
-const HERBS={ning:{n:'凝露草',min:10,price:15},chi:{n:'赤陽花',min:30,price:40},shen:{n:'千年參',min:120,price:120}};
+const HERBS={ning:{n:'凝露草',min:1,price:15},chi:{n:'赤陽花',min:3,price:40},shen:{n:'千年參',min:12,price:120}};
 const RECIPES=[
   {k:'hui',n:'回春丹',d:'夜裡左下角「丹」一按回 40% 生命',need:{ning:2}},
   {k:'juqi',n:'聚氣丹',d:'修行條件用（煉氣八、九層）',need:{ning:1,chi:1},st:'pill'},
@@ -13,7 +13,7 @@ const ULTS=[{k:'wan',n:'萬劍歸宗',ch:0,d:'金色劍陣，萬劍從天而降'
 const CH=[{n:'序章',p:'白石村',rec:0},{n:'第一章',p:'荒村夜',rec:0},{n:'第二章',p:'竹林小徑',rec:3},{n:'第三章',p:'古寺',rec:6},{n:'第四章',p:'鬼市',rec:10},{n:'第五章',p:'黃泉渡口',rec:11},
   {n:'第六章',p:'雲海',rec:12},{n:'第七章',p:'雷澤',rec:13},{n:'第八章',p:'天河',rec:14},{n:'第九章',p:'九霄魔域',rec:15},{n:'第十章',p:'渡劫長征',rec:17}];
 const NIGHTS=['夜一・一般','夜二・快攻','夜三・圍城'];
-let CH_READY=6;// how many chapters are playable so far (the rest show 製作中)
+let CH_READY=9;// how many chapters are playable so far (the rest show 製作中)
 save.inv=Object.assign({stone:0,seed:{ning:3,chi:1,shen:0},herb:{ning:0,chi:0,shen:0},pill:{hui:1,juqi:0,zhuji:0,ningdan:0,huaying:0},yaodan:0,paper:0},save.inv||{});
 save.garden=save.garden||[null,null,null,null];save.won=save.won||{};save.ults=save.ults||['wan'];save.ult=save.ult||'wan';save.lastSeen=save.lastSeen||Date.now();
 const chUnlocked=i=>i===0||[0,1,2].some(n=>save.won[`${i-1}-${n}`]);
