@@ -454,7 +454,7 @@ const realmOf=x=>{const l=Math.min(8,Math.floor(x/LV_NEED));return {name:`煉氣
 let G=null;// the current night
 // one night = NIGHT seconds; the difficulty curve is the 8-'minute' curve squeezed into it (minute() runs 0→8)
 const NIGHT=180;
-function newNight(len){return {nextPill:67,walked:0,moving:false,len,boost:480/len*.75,t:0,over:false,paused:true,kills:0,souls:0,wu:0,wuNeed:14,lv:0,slow:0,pendingGold:0,spawnAcc:0,waveAt:60,
+function newNight(len){return {nextPill:67,walked:0,moving:false,len,boost:480/len*.75,t:0,over:false,paused:true,kills:0,souls:0,wu:0,wuNeed:25,lv:0,slow:0,pendingGold:0,spawnAcc:0,waveAt:60,
   hp:150,maxhp:150,iframe:0,regenAcc:0,eliteDone:false,bossDone:false,bossKilled:false,eliteKilled:false,
   s:{dmg:1,rate:1,count:2,pierce:1,range:7.5,move:3.2,magnet:1.8,regen:0,orbit:0,talis:0,talisN:0,lamp:0,size:1,crit:.12},
   skills:{},volley:0,orbitHit:new Map(),talisCd:2,lampCd:1.5,stand:0,auto:false}}
@@ -591,7 +591,7 @@ function stepSkills(dt){
       if(boss.alive&&(boss.x-s.to.x)**2+(boss.z-s.to.z)**2<(s.aoe+boss.r)**2)hurtBoss(s.dmg);shots.splice(i,1)}}}
 
 /* ================= 頭目 ================= */
-const ELITE_HP=3200,BOSS_HP=14000;// fixed: a stronger build kills them faster (that is the point of getting stronger)
+const ELITE_HP=3000,BOSS_HP=9000;// fixed: a stronger build kills them faster (that is the point of getting stronger)
 function startElite(){G.eliteDone=true;const a=Math.random()*Math.PI*2;const e=spawn('lgh',HERO.pos.x+Math.sin(a)*9,HERO.pos.z+Math.cos(a)*9,{elite:true,s:2.4,r:.6,spd:1.6});
   if(e){e.hp=e.max=ELITE_HP;e.dmg*=1.6}banner('大燈籠鬼','精英來了，斬了牠掉一大把魂火');shake=.3}
 function startBoss(){G.bossDone=true;boss.alive=true;const a=Math.random()*Math.PI*2;boss.x=HERO.pos.x+Math.sin(a)*8;boss.z=HERO.pos.z+Math.cos(a)*8;
@@ -733,7 +733,7 @@ function stepGame(dt){const g=G;
   const mg=g.s.magnet*(moving?1.5:1);for(let i=souls.length-1;i>=0;i--){const s=souls[i];s.t+=dt;const dx=HERO.pos.x-s.x,dz=HERO.pos.z-s.z,d=Math.hypot(dx,dz);
     if(d<mg||s.pull||s.t>5){s.pull=true;const v=4+s.t*6;s.x+=dx/d*Math.min(d,v*dt);s.z+=dz/d*Math.min(d,v*dt)}
     if(d<.45){g.souls+=s.v;g.wu+=s.v;SFX.play('soul');souls.splice(i,1)}}
-  if(g.wu>=g.wuNeed&&!g.over){g.wu-=g.wuNeed;g.lv++;g.wuNeed=Math.round(14*Math.pow(1.7,g.lv));openCards()}
+  if(g.wu>=g.wuNeed&&!g.over){g.wu-=g.wuNeed;g.lv++;g.wuNeed=Math.round(25*Math.pow(1.75,g.lv));openCards()}
   // hero upkeep
   g.iframe=Math.max(0,g.iframe-dt);if(g.s.regen)g.hp=Math.min(g.maxhp,g.hp+g.s.regen*dt);
   // fx
