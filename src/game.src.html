@@ -877,7 +877,7 @@ function pickChar(c){if(c!==who){useChar(c);applyFace({g:1,x:1});applyBody();bui
 $$('[data-who]').forEach(b=>b.onclick=()=>pickChar(+b.dataset.who));pickChar(who);
 function startNight(len){SFX.resume();tryLandscape();resetWorld();cancelAim();G=newNight(len);G.paused=false;$('#skills').hidden=$('#joy').hidden=false;drawJoy();$('#startOv').classList.remove('on');$('#endOv').classList.remove('on');$('#hud').hidden=false;
   $('#bossMark').style.left='67%';spawnRing('ghost',8,7.5);// an opening ring so the first monsters are seen walking in
-  renderBuffs();tipShown=false;say('左手拖曳走路；右手按技能：點一下自動放，按住拖曳可以瞄準！斬妖會讓「萬」大絕充能。',7);
+  renderBuffs();tipShown=false;say('左手走路，右手放技能！按住技能拖曳可以瞄準',6);
   setTimeout(()=>{if(G&&!G.over&&G.kills<3)say('吸青色的魂火可以頓悟喔！',4)},9000)}
 $('#startNight').onclick=()=>startNight(NIGHT);
 $('#again').onclick=()=>startNight(NIGHT);$('#toTitle').onclick=()=>{$('#endOv').classList.remove('on');$('#skills').hidden=$('#joy').hidden=true;$('#startOv').classList.add('on');$('#hud').hidden=true;renderRealm('#realmText','#realmBar');resetWorld();G=null};
