@@ -478,10 +478,10 @@ function shapeHead(){
   // features as small bumps along the surface normal
   if(nz>0){const ax=Math.abs(nx),dn=nTip+.32,nEnd=-.29+dn,t=Math.min(1,Math.max(0,(-.01-ny)/(-.01-nEnd))),nw=F.noseW,lw=F.lipW,lt=F.lipThick;
     // nose: narrow bridge rising to a rounded tip, alar wings with a groove behind them
-    d+=(.005+.034*F.noseH*Math.pow(t,1.8))*g(nx,(.026+.018*t)*nw)*(ny>nEnd-.01?1:g(ny-(nEnd-.01),.022));
+    d+=(.005+.051*F.noseH*Math.pow(t,1.8))*g(nx,(.026+.018*t)*nw)*(ny>nEnd-.01?1:g(ny-(nEnd-.01),.022));
     d+=.007*F.noseH*g(nx,.038*nw)*g(ny-(nEnd+.005),.03);
     d+=.0065*g(ax-.056*nw,.018*nw)*g(ny-(nEnd-.022),.02);
-    d+=.02*F.noseTipP*g(nx,.05*nw)*g(ny-(nTip+.012),.04);
+    d+=.035*F.noseTipP*g(nx,.05*nw)*g(ny-(nTip+.012),.04);
     d-=.003*g(ax-.08*nw,.012)*g(ny-(nEnd-.01),.035);
     // forehead and brow ridge over the eyes
     d+=.012*F.browBone*g(ny-.1,.07)*g(nx,.45);
