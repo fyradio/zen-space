@@ -54,6 +54,39 @@ h1 .zhan::after{content:"";position:absolute;left:-18%;right:-18%;top:50%;height
 .sw::after{content:"";position:absolute;inset:-7px}
 .sw[aria-pressed="true"]{box-shadow:0 0 0 2px var(--jade)}
 .lab{font-size:11px;color:var(--dim);letter-spacing:.2em;text-align:center}
+/* 捏臉面板 */
+.top{transition:opacity .3s}
+.big{all:unset;box-sizing:border-box;cursor:pointer;text-align:center;font-size:15px;min-height:40px;display:grid;place-items:center;padding:0 6px;
+  border-radius:9px;border:1px solid var(--line);color:var(--ink);background:rgba(255,255,255,.02);letter-spacing:.12em}
+.big.go{border-color:var(--jade);background:linear-gradient(180deg,rgba(127,227,198,.26),rgba(127,227,198,.08));color:#fff}
+.big:focus-visible,.ftabs button:focus-visible,.opts button:focus-visible{outline:2px solid var(--jade);outline-offset:2px}
+.sheet{display:none;width:100%;max-width:520px;box-sizing:border-box;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:10px;gap:8px;
+  backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+body.editing .sheet{display:grid}
+body.editing .panel.main,body.editing .hint{display:none}
+body.editing .top{opacity:0;pointer-events:none}
+.ftabs{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none}
+.ftabs::-webkit-scrollbar{display:none}
+.ftabs button,.opts button{all:unset;box-sizing:border-box;flex:0 0 auto;cursor:pointer;padding:0 13px;min-height:36px;display:grid;place-items:center;border-radius:999px;
+  border:1px solid var(--line);font-size:14px;letter-spacing:.1em;color:var(--ink);background:rgba(255,255,255,.02)}
+.ftabs button[aria-pressed="true"],.opts button[aria-pressed="true"]{border-color:var(--jade);color:var(--jade);background:rgba(127,227,198,.12)}
+.fview{display:flex;gap:6px;align-items:center}
+.fview .big{min-height:30px;font-size:13px;padding:0 12px}
+.ftoast{margin-left:auto;font-size:12px;color:var(--jade);letter-spacing:.06em;text-align:right}
+.flist{display:grid;gap:0;max-height:min(30vh,260px);overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;touch-action:pan-y}
+.ctl{display:grid;grid-template-columns:7em 1fr 2.9em;align-items:center;gap:8px;min-height:42px}
+.cl{all:unset;font-size:13px;color:var(--ink);cursor:pointer;letter-spacing:.04em;line-height:1.25}
+.ctl input[type=range]{width:100%;height:34px;margin:0;accent-color:var(--jade);touch-action:pan-y}
+.cv{font-size:11px;color:var(--dim);text-align:right}
+.cv.on{color:var(--jade)}
+.opts{grid-column:2/4;display:flex;gap:6px;flex-wrap:wrap}
+.opts button{min-height:34px;padding:0 11px;font-size:13px}
+.frow{display:grid;grid-template-columns:2.2fr 1fr 1fr 1fr;gap:6px}
+.fio{display:grid;gap:6px}
+.fio[hidden]{display:none}
+.fio textarea{width:100%;box-sizing:border-box;height:58px;font:16px/1.3 var(--f-ui);background:rgba(0,0,0,.35);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:6px;
+  -webkit-user-select:text;user-select:text;resize:none}
+.fio small{font-size:11px;color:var(--dim)}
 @media (prefers-reduced-motion:reduce){h1 span,h1 .zhan::after{animation:none}h1 .zhan::after{opacity:0}}
 @media (max-height:620px){.fonts small{display:none}.sub{display:none}}
 </style>
@@ -65,7 +98,7 @@ h1 .zhan::after{content:"";position:absolute;left:-18%;right:-18%;top:50%;height
   <h1 id="title" aria-label="午夜來斬妖">
     <span style="--r:-5deg;--i:0">午</span><span style="--r:3deg;--i:1">夜</span><span style="--r:-2deg;--i:2">來</span><span class="zhan" style="--r:6deg;--i:3">斬</span><span style="--r:-4deg;--i:4">妖</span>
   </h1>
-  <div class="sub">煉氣一層・小道士　主角試做 v0.4</div>
+  <div class="sub">煉氣一層・小道士　主角試做 v0.5</div>
   <div class="fonts" role="group" aria-label="標題字體">
     <small>標題字體</small>
     <button class="chip" data-font="TPotta" aria-pressed="true">墨團</button>
@@ -77,7 +110,24 @@ h1 .zhan::after{content:"";position:absolute;left:-18%;right:-18%;top:50%;height
 
 <div class="dock">
   <div class="hint" id="hint">拖曳旋轉・雙指縮放</div>
-  <div class="panel">
+  <div class="sheet" id="sheet" role="group" aria-label="捏臉">
+    <div class="ftabs" id="ftabs"></div>
+    <div class="fview">
+      <button class="big" data-fyaw="0">正面</button><button class="big" data-fyaw=".6">斜側</button><button class="big" data-fyaw="1.57">側面</button>
+      <span class="ftoast" id="ftoast" aria-live="polite"></span>
+    </div>
+    <div class="flist" id="flist"></div>
+    <div class="fio" id="fio" hidden>
+      <textarea id="fiota" aria-label="捏臉設定文字" placeholder="把設定文字貼在這裡"></textarea>
+      <div class="frow" style="grid-template-columns:1fr 1fr"><button class="big go" id="fapply">套用貼上的設定</button><button class="big" id="fioclose">關閉</button></div>
+      <small id="fiohint"></small>
+    </div>
+    <div class="frow">
+      <button class="big go" id="fcopy">複製設定</button><button class="big" id="fpaste">貼上</button><button class="big" id="freset">重設</button><button class="big" id="fdone">完成</button>
+    </div>
+  </div>
+  <div class="panel main">
+    <button class="big" id="fedit">✦ 捏臉　調整五官</button>
     <div class="seg" role="group" aria-label="動作">
       <button data-mode="idle" aria-pressed="true">負手</button>
       <button data-mode="walk" aria-pressed="false">行走</button>
@@ -128,7 +178,7 @@ sky.renderOrder=-10;scene.add(sky);
 
 /* ---------- helpers ---------- */
 function ctex(w,h,draw){const c=document.createElement('canvas');c.width=w;c.height=h;const x=c.getContext('2d');draw(x,w,h);const t=new THREE.CanvasTexture(c);t.anisotropy=4;t.encoding=THREE.sRGBEncoding;t.userData={c,x,draw};return t}
-function redraw(t,draw){const {c,x}=t.userData;x.clearRect(0,0,c.width,c.height);draw(x,c.width,c.height);t.needsUpdate=true}
+function redraw(t,draw){const {c,x}=t.userData;x.save();x.setTransform(1,0,0,1,0,0);x.clearRect(0,0,c.width,c.height);draw(x,c.width,c.height);x.restore();t.needsUpdate=true}
 const glowTex=ctex(128,128,(x,w,h)=>{const g=x.createRadialGradient(64,64,0,64,64,64);g.addColorStop(0,'rgba(255,255,255,1)');g.addColorStop(.25,'rgba(255,255,255,.55)');g.addColorStop(.6,'rgba(255,255,255,.12)');g.addColorStop(1,'rgba(255,255,255,0)');x.fillStyle=g;x.fillRect(0,0,w,h)});
 const grad=new THREE.DataTexture(new Uint8Array([110,110,110,255,182,182,182,255,255,255,255,255]),3,1,THREE.RGBAFormat);
 grad.minFilter=grad.magFilter=THREE.NearestFilter;grad.generateMipmaps=false;grad.needsUpdate=true;
@@ -218,49 +268,109 @@ function drawCoat(x,w,h){x.fillStyle=pal.outer;x.fillRect(0,0,w,h);
 function drawBelt(x,w,h){x.fillStyle=pal.belt;x.fillRect(0,0,w,h);x.fillStyle='#c9a24e';x.fillRect(0,h*.18,w,2);x.fillRect(0,h*.78,w,2)}
 const torsoTex=ctex(512,256,drawTorso),skirtTex=ctex(256,256,drawSkirt),coatTex=ctex(512,512,drawCoat),beltTex=ctex(256,32,drawBelt);
 
+/* ---------- face parameters (捏臉): defaults are the current look; sliders edit F, 「複製設定」 exports it ---------- */
+const IRIS=[['#2a1812','#5b3624','#8e6235','#3a2418','#1d120e'],['#0c0a0b','#1d1618','#33262a','#1b1315','#0b0809'],['#0e2a2a','#1f5a58','#3f9a8e','#18403c','#0b1c1c'],['#3a1f0a','#8a4f1c','#d49a3c','#5a3312','#2a1608'],['#1c1230','#3d2a6b','#7a62b8','#2a1d4a','#150e26']];
+const LIPS=[['#cf8a80','#df9f95'],['#d9a49c','#e7b8af'],['#b5584f','#c77067'],['#d49b8c','#e0b0a2']];
+const SKINS=[['#f2cdb3','#eec5aa'],['#f7dfcf','#f3d6c3'],['#ebc09f','#e5b793'],['#d9a67f','#d29c74']];
+const MARKS=[null,'rgba(120,190,200,.45)','rgba(196,52,44,.8)'];
+// t: s=只改頭部縮放, g=頭型幾何, x=臉部貼圖（g/x 可併用）
+const FACE_SPEC=[
+ {tab:'臉型',items:[
+  {k:'headS',n:'頭大小',min:.92,max:1.08,step:.005,def:1,t:'s'},
+  {k:'faceW',n:'臉寬',min:.9,max:1.1,step:.005,def:1,t:'s'},
+  {k:'foreW',n:'額頭寬',min:-.06,max:.06,step:.005,def:0,t:'g'},
+  {k:'cheekW',n:'顴骨寬',min:-.1,max:.1,step:.005,def:0,t:'g'},
+  {k:'jawW',n:'下頜寬',min:-.14,max:.14,step:.005,def:0,t:'g'},
+  {k:'chinW',n:'下巴（尖↔圓）',min:-.14,max:.2,step:.01,def:0,t:'g'},
+  {k:'lowerLen',n:'下巴長',min:0,max:.22,step:.005,def:.1,t:'g'},
+  {k:'flat',n:'臉平度',min:0,max:.7,step:.02,def:.4,t:'g'},
+  {k:'cheekFull',n:'臉頰飽滿',min:-1,max:1,step:.05,def:0,t:'g'},
+  {k:'browBone',n:'眉骨',min:0,max:2,step:.05,def:1,t:'g'}]},
+ {tab:'眼睛',items:[
+  {k:'eyeSp',n:'眼距',min:46,max:66,step:1,def:55,t:'gx'},
+  {k:'eyeUp',n:'眼位高低',min:-10,max:10,step:1,def:0,t:'gx'},
+  {k:'eyeSize',n:'眼睛大小',min:.85,max:1.2,step:.01,def:1,t:'gx'},
+  {k:'eyeOpen',n:'眼睛開合',min:.8,max:1.25,step:.01,def:1,t:'x'},
+  {k:'eyeTilt',n:'眼尾上揚',min:-10,max:12,step:.5,def:0,t:'x'},
+  {k:'irisS',n:'瞳孔大小',min:.8,max:1.2,step:.01,def:1,t:'x'},
+  {k:'iris',n:'瞳色',opts:['墨褐','墨黑','青碧','琥珀','紫霧'],def:0,t:'x'},
+  {k:'lash',n:'上眼線粗細',min:1.5,max:5,step:.1,def:3,t:'x'},
+  {k:'shadow',n:'眼影',min:0,max:2.5,step:.1,def:1,t:'x'}]},
+ {tab:'眉毛',items:[
+  {k:'browUp',n:'眉位高低',min:-8,max:14,step:1,def:0,t:'x'},
+  {k:'browLen',n:'眉長',min:.7,max:1.25,step:.01,def:1,t:'x'},
+  {k:'browThick',n:'眉粗細',min:.8,max:3.2,step:.1,def:1.3,t:'x'},
+  {k:'browArch',n:'眉弧度',min:1,max:12,step:.5,def:6,t:'x'},
+  {k:'browTail',n:'眉尾上揚',min:-8,max:10,step:.5,def:0,t:'x'},
+  {k:'browDark',n:'眉色濃淡',min:.3,max:1.5,step:.05,def:1,t:'x'}]},
+ {tab:'鼻子',items:[
+  {k:'noseUp',n:'鼻頭位置',min:-8,max:8,step:1,def:0,t:'gx'},
+  {k:'noseH',n:'鼻樑高度',min:.3,max:1.8,step:.05,def:1,t:'g'},
+  {k:'noseW',n:'鼻翼寬',min:.7,max:1.5,step:.05,def:1,t:'gx'}]},
+ {tab:'嘴唇',items:[
+  {k:'lipUp',n:'唇位置',min:-10,max:8,step:1,def:0,t:'gx'},
+  {k:'lipW',n:'唇寬',min:.7,max:1.4,step:.02,def:1,t:'gx'},
+  {k:'lipThick',n:'唇厚',min:.6,max:1.7,step:.05,def:1,t:'gx'},
+  {k:'lipCorner',n:'嘴角上揚',min:-4,max:5,step:.5,def:0,t:'x'},
+  {k:'lipC',n:'唇色',opts:['朱砂','淡櫻','絳紅','裸粉'],def:0,t:'x'}]},
+ {tab:'膚妝',items:[
+  {k:'skin',n:'膚色',opts:['自然','瓷白','暖玉','小麥'],def:0,t:'x'},
+  {k:'blush',n:'腮紅',min:0,max:2.5,step:.1,def:1,t:'x'},
+  {k:'contour',n:'輪廓陰影',min:0,max:2,step:.1,def:1,t:'x'},
+  {k:'mark',n:'額間印記',opts:['無','青','朱'],def:1,t:'x'}]}];
+const FACE_DEF={};FACE_SPEC.forEach(s=>s.items.forEach(i=>{FACE_DEF[i.k]=i.def}));
+const FACE_HASH=JSON.stringify(FACE_DEF),FACE_KEY='zk-face-v1';
+const F=Object.assign({},FACE_DEF);
+try{const s=JSON.parse(localStorage.getItem(FACE_KEY)||'null');if(s&&s.h===FACE_HASH&&s.f)Object.keys(FACE_DEF).forEach(k=>{if(typeof s.f[k]==='number')F[k]=s.f[k]})}catch(e){}
+
 // face: painted at 2x resolution on the head's UV (front of the head is u=.25)
-const faceTex=ctex(2048,1024,(x,w,h)=>{x.scale(2,2);
-  x.fillStyle='#f2cdb3';x.fillRect(0,0,1024,512);
+const drawFace=(x,w,h)=>{x.scale(2,2);
+  const sk=SKINS[F.skin],ct=F.contour,nu=F.noseUp,nw=F.noseW;
+  x.fillStyle=sk[0];x.fillRect(0,0,1024,512);
   const cx=256,rg=(px,py,r,c0,c1)=>{const g=x.createRadialGradient(px,py,0,px,py,r);g.addColorStop(0,c0);g.addColorStop(1,c1);x.fillStyle=g;x.fillRect(px-r,py-r,r*2,r*2)};
-  rg(cx-118,300,70,'rgba(206,160,140,.35)','rgba(206,160,140,0)');rg(cx+118,300,70,'rgba(206,160,140,.35)','rgba(206,160,140,0)');
-  rg(cx,372,60,'rgba(210,166,146,.2)','rgba(210,166,146,0)');
-  [-1,1].forEach(d=>rg(cx+d*60,305,28,'rgba(236,140,130,.22)','rgba(236,140,130,0)'));
+  const R=(px,py,r,rgb,a)=>rg(px,py,r,`rgba(${rgb},${Math.min(1,a)})`,`rgba(${rgb},0)`);
+  R(cx-118,300,70,'206,160,140',.35*ct);R(cx+118,300,70,'206,160,140',.35*ct);
+  R(cx,372,60,'210,166,146',.2*ct);
+  [-1,1].forEach(d=>R(cx+d*60,305,28,'236,140,130',.22*F.blush));
   // painted contour: temples, under cheekbones, jaw, nose sides, under lip
-  [-1,1].forEach(d=>{rg(cx+d*92,318,46,'rgba(170,110,95,.22)','rgba(170,110,95,0)');rg(cx+d*80,372,50,'rgba(160,100,88,.2)','rgba(160,100,88,0)');rg(cx+d*14,282,14,'rgba(176,118,100,.22)','rgba(176,118,100,0)')});
-  rg(cx,352,16,'rgba(170,104,92,.22)','rgba(170,104,92,0)');rg(cx,232,40,'rgba(255,240,228,.18)','rgba(255,240,228,0)');rg(cx,362,22,'rgba(255,238,226,.12)','rgba(255,238,226,0)');
+  [-1,1].forEach(d=>{R(cx+d*92,318,46,'170,110,95',.22*ct);R(cx+d*80,372,50,'160,100,88',.2*ct);R(cx+d*14,282-nu,14,'176,118,100',.22*ct)});
+  R(cx,352-F.lipUp,16,'170,104,92',.22*ct);R(cx,232,40,'255,240,228',.18);R(cx,362,22,'255,238,226',.12);
   // nose bridge light + tip shade + nostrils
-  x.strokeStyle='rgba(255,246,236,.35)';x.lineWidth=5;x.lineCap='round';x.beginPath();x.moveTo(cx,256);x.lineTo(cx,300);x.stroke();
-  rg(cx-7,304,9,'rgba(190,130,112,.28)','rgba(190,130,112,0)');
-  x.strokeStyle='rgba(150,88,76,.55)';x.lineWidth=1.3;[-1,1].forEach(d=>{x.beginPath();x.moveTo(cx+d*3,311);x.quadraticCurveTo(cx+d*8,313,cx+d*10,309);x.stroke()});
+  x.strokeStyle='rgba(255,246,236,.35)';x.lineWidth=5;x.lineCap='round';x.beginPath();x.moveTo(cx,256);x.lineTo(cx,300-nu);x.stroke();
+  R(cx-7,304-nu,9,'190,130,112',.28);
+  x.strokeStyle='rgba(150,88,76,.55)';x.lineWidth=1.3;[-1,1].forEach(d=>{x.beginPath();x.moveTo(cx+d*3*nw,311-nu);x.quadraticCurveTo(cx+d*8*nw,313-nu,cx+d*10*nw,309-nu);x.stroke()});
   // lips
-  x.fillStyle='#cf8a80';x.beginPath();x.moveTo(cx-11,334);x.quadraticCurveTo(cx-5,331,cx,333);x.quadraticCurveTo(cx+5,331,cx+11,334);x.quadraticCurveTo(cx,335.5,cx-11,334);x.fill();
-  x.fillStyle='#df9f95';x.beginPath();x.moveTo(cx-9,335);x.quadraticCurveTo(cx,341,cx+9,335);x.quadraticCurveTo(cx,337,cx-10,335);x.fill();
-  x.strokeStyle='rgba(120,56,52,.7)';x.lineWidth=1.1;x.beginPath();x.moveTo(cx-12,334.2);x.quadraticCurveTo(cx,337,cx+12,334.2);x.stroke();
-  x.fillStyle='rgba(255,240,236,.5)';x.beginPath();x.ellipse(cx+2,338.5,3,1,0,0,7);x.fill();
+  const lc=LIPS[F.lipC],ly=334-F.lipUp,lw=F.lipW,lt=F.lipThick,yc=ly-F.lipCorner,Y=dy=>ly+dy*lt;
+  x.fillStyle=lc[0];x.beginPath();x.moveTo(cx-11*lw,yc);x.quadraticCurveTo(cx-5*lw,Y(-3),cx,Y(-1));x.quadraticCurveTo(cx+5*lw,Y(-3),cx+11*lw,yc);x.quadraticCurveTo(cx,Y(1.5),cx-11*lw,yc);x.fill();
+  x.fillStyle=lc[1];x.beginPath();x.moveTo(cx-9*lw,Y(1)-F.lipCorner*.8);x.quadraticCurveTo(cx,Y(7),cx+9*lw,Y(1)-F.lipCorner*.8);x.quadraticCurveTo(cx,Y(3),cx-10*lw,Y(1)-F.lipCorner*.8);x.fill();
+  x.strokeStyle='rgba(120,56,52,.7)';x.lineWidth=1.1;x.beginPath();x.moveTo(cx-12*lw,yc+.2);x.quadraticCurveTo(cx,Y(3),cx+12*lw,yc+.2);x.stroke();
+  x.fillStyle='rgba(255,240,236,.5)';x.beginPath();x.ellipse(cx+2,Y(4.5),3*lw,lt,0,0,7);x.fill();
   function eye(ex,ey,d){
-    rg(ex+d*2,ey-8,26,'rgba(184,116,104,.26)','rgba(184,116,104,0)');
-    x.save();x.translate(ex,ey);x.scale(1.4,1.4);
+    R(ex+d*2,ey-8,26,'184,116,104',.26*F.shadow);
+    x.save();x.translate(ex,ey);x.rotate(-d*F.eyeTilt*Math.PI/180);x.scale(1.4*F.eyeSize,1.4*F.eyeSize*F.eyeOpen);
+    const ir=F.irisS,ic=IRIS[F.iris];
     const lid=()=>{x.moveTo(-d*19,2);x.bezierCurveTo(-d*10,-9.5,d*10,-10.5,d*21,-4)};
     x.save();x.beginPath();lid();x.bezierCurveTo(d*12,6.5,-d*6,8.5,-d*19,2);x.closePath();x.fillStyle='#f4eee7';x.fill();x.clip();
-    const ig=x.createRadialGradient(d*1,1.5,.5,d*1,1.5,11.5);ig.addColorStop(0,'#2a1812');ig.addColorStop(.35,'#5b3624');ig.addColorStop(.75,'#8e6235');ig.addColorStop(.92,'#3a2418');ig.addColorStop(1,'#1d120e');
-    x.fillStyle=ig;x.beginPath();x.ellipse(d*1,1.5,10.5,11.5,0,0,7);x.fill();
-    x.strokeStyle='rgba(225,180,120,.35)';x.lineWidth=.5;for(let k=0;k<24;k++){const an=k/24*Math.PI*2;x.beginPath();x.moveTo(d*1+Math.cos(an)*4.5,1.5+Math.sin(an)*5);x.lineTo(d*1+Math.cos(an)*9.5,1.5+Math.sin(an)*10.5);x.stroke()}
-    x.fillStyle='#0a0607';x.beginPath();x.ellipse(d*1,2,3.8,4.6,0,0,7);x.fill();
+    const ig=x.createRadialGradient(d*1,1.5,.5,d*1,1.5,11.5*ir);ig.addColorStop(0,ic[0]);ig.addColorStop(.35,ic[1]);ig.addColorStop(.75,ic[2]);ig.addColorStop(.92,ic[3]);ig.addColorStop(1,ic[4]);
+    x.fillStyle=ig;x.beginPath();x.ellipse(d*1,1.5,10.5*ir,11.5*ir,0,0,7);x.fill();
+    x.strokeStyle='rgba(225,180,120,.35)';x.lineWidth=.5;for(let k=0;k<24;k++){const an=k/24*Math.PI*2;x.beginPath();x.moveTo(d*1+Math.cos(an)*4.5*ir,1.5+Math.sin(an)*5*ir);x.lineTo(d*1+Math.cos(an)*9.5*ir,1.5+Math.sin(an)*10.5*ir);x.stroke()}
+    x.fillStyle='#0a0607';x.beginPath();x.ellipse(d*1,2,3.8*ir,4.6*ir,0,0,7);x.fill();
     const sh=x.createLinearGradient(0,-12,0,0);sh.addColorStop(0,'rgba(40,20,20,.55)');sh.addColorStop(1,'rgba(40,20,20,0)');x.fillStyle=sh;x.fillRect(-30,-14,60,14);
     x.fillStyle='rgba(255,255,255,.95)';x.beginPath();x.ellipse(-d*3.5,-2,2.6,2,-.3,0,7);x.fill();
     x.fillStyle='rgba(255,255,255,.6)';x.beginPath();x.arc(d*4.5,5.5,1.1,0,7);x.fill();
     x.restore();
     x.fillStyle='rgba(214,140,136,.6)';x.beginPath();x.ellipse(-d*18.5,2.5,1.6,1.2,0,0,7);x.fill();
-    x.strokeStyle='#1a1013';x.lineCap='round';x.lineJoin='round';x.lineWidth=3;x.beginPath();lid();x.quadraticCurveTo(d*25,-6,d*28.5,-8.5);x.stroke();
+    x.strokeStyle='#1a1013';x.lineCap='round';x.lineJoin='round';x.lineWidth=F.lash;x.beginPath();lid();x.quadraticCurveTo(d*25,-6,d*28.5,-8.5);x.stroke();
     x.lineWidth=.9;for(let k=0;k<6;k++){const t=.45+k*.1,px=d*(-19+40*t),py=-9.5+Math.pow(2*t-1,2)*6;x.beginPath();x.moveTo(px,py);x.lineTo(px+d*(2+k*.7),py-3.2-k*.3);x.stroke()}
     x.strokeStyle='rgba(100,56,50,.5)';x.lineWidth=1;x.beginPath();x.moveTo(-d*13,-11.5);x.bezierCurveTo(-d*2,-16.5,d*12,-15.5,d*22,-10.5);x.stroke();
     x.strokeStyle='rgba(70,36,34,.4)';x.lineWidth=.9;x.beginPath();x.moveTo(-d*8,7.6);x.quadraticCurveTo(d*8,8.4,d*19,2.5);x.stroke();
     for(let k=0;k<3;k++){const px=d*(8+k*4);x.beginPath();x.moveTo(px,7.2-k*1.2);x.lineTo(px+d*1.2,9.4-k*1.2);x.stroke()}
     x.restore();
     x.lineCap='round';
-    for(let k=0;k<26;k++){const t=k/25,px=ex+d*(-18+52*t),py=ey-44-Math.sin(t*Math.PI*.92)*6+t*2;x.strokeStyle=`rgba(46,32,30,${.25+.5*(1-Math.abs(t-.35))})`;x.lineWidth=1.3;x.beginPath();x.moveTo(px,py+1.6);x.lineTo(px+d*4,py-1.4);x.stroke()}}
-  eye(cx-55,268,-1);eye(cx+55,268,1);
-  x.fillStyle='rgba(120,190,200,.45)';x.beginPath();x.moveTo(cx,200);x.quadraticCurveTo(cx+3,207,cx,214);x.quadraticCurveTo(cx-3,207,cx,200);x.fill()});
+    for(let k=0;k<26;k++){const t=k/25,px=ex+d*(-18+52*F.browLen*t),py=ey-44-F.browUp-Math.sin(t*Math.PI*.92)*F.browArch+t*2-F.browTail*t;x.strokeStyle=`rgba(46,32,30,${Math.min(1,(.25+.5*(1-Math.abs(t-.35)))*F.browDark)})`;x.lineWidth=F.browThick;x.beginPath();x.moveTo(px,py+1.6);x.lineTo(px+d*4,py-1.4);x.stroke()}}
+  eye(cx-F.eyeSp,268-F.eyeUp,-1);eye(cx+F.eyeSp,268-F.eyeUp,1);
+  if(MARKS[F.mark]){x.fillStyle=MARKS[F.mark];x.beginPath();x.moveTo(cx,200);x.quadraticCurveTo(cx+3,207,cx,214);x.quadraticCurveTo(cx-3,207,cx,200);x.fill()}};
+const faceTex=ctex(2048,1024,drawFace);
 
 /* ---------- materials ---------- */
 const M={
@@ -326,33 +436,39 @@ function makeArm(side){const sh=new THREE.Group();sh.position.set(side*.168,SH,0
   return {sh,el,fing,pins}}
 const armL=makeArm(1),armR=makeArm(-1);
 
-// head: sculpted sphere (brow, sockets, nose, cheekbones, lips, chin)
-const headG=new THREE.Group();headG.position.y=HY+.004;headG.scale.setScalar(1.0);body.add(headG);
+// head: sculpted sphere (brow, sockets, nose, cheekbones, lips, chin); shapeHead() rebuilds it from the 捏臉 parameters F
+const headG=new THREE.Group();headG.position.y=HY+.004;headG.scale.set(F.headS*F.faceW,F.headS,F.headS);body.add(headG);
 const headGeo=new THREE.SphereGeometry(.118,96,64);
-{const p=headGeo.attributes.position,g=(u,s)=>Math.exp(-(u*u)/(s*s)),sm=(a,b,v)=>{const t=Math.min(1,Math.max(0,(v-a)/(b-a)));return t*t*(3-2*t)};
+const headBase=headGeo.attributes.position.array.slice();
+const pyN=py=>Math.cos(py/512*Math.PI),pxN=(px,py)=>Math.sin(px/1024*Math.PI*2)*Math.sin(py/512*Math.PI);// face texture pixel -> head-sphere coordinates
+function shapeHead(){
+ const p=headGeo.attributes.position,g=(u,s)=>Math.exp(-(u*u)/(s*s)),sm=(a,b,v)=>{const t=Math.min(1,Math.max(0,(v-a)/(b-a)));return t*t*(3-2*t)};
  // face width by height: forehead, cheekbones, jaw angle, chin (V-line)
- const WT=[[1,.9],[.3,.92],[0,.9],[-.2,.87],[-.45,.8],[-.65,.68],[-.82,.53],[-.95,.42],[-1,.38]];
+ const WT=[[1,.9],[.3,.92+F.foreW],[0,.9+F.foreW],[-.2,.87+F.cheekW],[-.45,.8+F.cheekW],[-.65,.68+F.jawW],[-.82,.53+F.jawW],[-.95,.42+F.chinW],[-1,.38+F.chinW]];
  const wAt=y=>{for(let i=1;i<WT.length;i++){const [y0,w0]=WT[i-1],[y1,w1]=WT[i];if(y<=y0&&y>=y1)return w0+(w1-w0)*(y0-y)/(y0-y1)}return .2};
- for(let i=0;i<p.count;i++){let nx=p.getX(i)/.118,ny=p.getY(i)/.118,nz=p.getZ(i)/.118;let d=0;
+ const eyeY=268-F.eyeUp,eNy=-.07+pyN(eyeY)-pyN(268),eNx=.33+pxN(F.eyeSp,eyeY)-pxN(55,268);
+ const nTip=-.32+pyN(309-F.noseUp)-pyN(309),nL=-.02-nTip,lipD=pyN(334-F.lipUp)-pyN(334);
+ for(let i=0;i<p.count;i++){let nx=headBase[i*3]/.118,ny=headBase[i*3+1]/.118,nz=headBase[i*3+2]/.118;let d=0;
   // features as small bumps along the surface normal
-  if(nz>0){const t=Math.min(1,Math.max(0,(-.02-ny)/.3));
-    d+=(.008+.04*Math.pow(t,1.8))*g(nx,.034+.024*t)*(ny>-.34?1:g(ny+.34,.03));
-    d+=.006*g(Math.abs(nx)-.055,.022)*g(ny+.32,.028);
-    d+=.014*g(ny-.08,.06)*g(nx,.42);
-    d-=.022*g(Math.abs(nx)-.33,.11)*g(ny+.07,.07);
-    d+=.008*g(Math.abs(nx)-.5,.12)*g(ny+.2,.08);
+  if(nz>0){const t=Math.min(1,Math.max(0,(-.02-ny)/nL));
+    d+=(.008+.04*F.noseH*Math.pow(t,1.8))*g(nx,(.034+.024*t)*F.noseW)*(ny>nTip-.02?1:g(ny-(nTip-.02),.03));
+    d+=.006*g(Math.abs(nx)-.055*F.noseW,.022*F.noseW)*g(ny-nTip,.028);
+    d+=.014*F.browBone*g(ny-.08,.06)*g(nx,.42);
+    d-=.022*g(Math.abs(nx)-eNx,.11*F.eyeSize)*g(ny-eNy,.07*F.eyeSize);
+    d+=.008*g(Math.abs(nx)-.5,.12)*g(ny+.2,.08)+F.cheekFull*.012*g(Math.abs(nx)-.45,.16)*g(ny+.3,.14);
     d-=.005*g(Math.abs(nx)-.55,.16)*g(ny+.36,.12);
-    d+=.004*g(nx,.1)*g(ny+.44,.03)+.006*g(nx,.09)*g(ny+.49,.03);
+    d+=F.lipThick*(.004*g(nx,.1*F.lipW)*g(ny+.44-lipD,.03)+.006*g(nx,.09*F.lipW)*g(ny+.49-lipD,.03));
     d+=.01*g(nx,.13)*g(ny+.8,.08);
     d*=Math.min(1,nz*2.5)}
   let x=nx*(1+d),y=ny*(1+d),z=nz*(1+d);
   // flatter face plane, narrower and longer lower face, rounder skull at the back
   const f0=sm(-.65,.6,nz),lo=sm(-.15,-.55,ny),front=f0+(1-f0)*lo;
-  if(z>0){const amt=.4*(1-sm(-.45,-.85,ny));z=(z+amt*z*(1-z))*(1-.04*front)}
+  if(z>0){const amt=F.flat*(1-sm(-.45,-.85,ny));z=(z+amt*z*(1-z))*(1-.04*front)}
   x*=.97+(wAt(Math.max(-1,Math.min(1,ny)))-.97)*front;
-  if(ny<0){y*=1+.1*Math.min(1,-ny*1.6);if(z<0)z*=1-.18*(-ny)}
-  p.setXYZ(i,x*.118,y*.118,z*.118)}
- headGeo.scale(.93,1.0,.95);headGeo.computeVertexNormals()}
+  if(ny<0){y*=1+F.lowerLen*Math.min(1,-ny*1.6);if(z<0)z*=1-.18*(-ny)}
+  p.setXYZ(i,x*.118*.93,y*.118,z*.118*.95)}
+ p.needsUpdate=true;headGeo.computeVertexNormals();headGeo.computeBoundingSphere()}
+shapeHead();
 part(headGeo,M.face,headG);
 part(new THREE.SphereGeometry(1,12,10),M.skin,headG,{p:[.103,-.008,-.004],s:[.012,.024,.018]});
 part(new THREE.SphereGeometry(1,12,10),M.skin,headG,{p:[-.103,-.008,-.004],s:[.012,.024,.018]});
@@ -535,8 +651,8 @@ const lerp=(a,b,k)=>a+(b-a)*k;
 const angLerp=(a,b,k)=>{let d=((b-a+Math.PI)%(Math.PI*2)+Math.PI*2)%(Math.PI*2)-Math.PI;return a+d*k};
 
 /* ---------- camera control ---------- */
-const VIEWS={face:{d:1.15,p:.08,ty:1.4},full:{d:3.3,p:.15,ty:.88},game:{d:9.5,p:.95,ty:.6}};
-let view='full';const cam={yaw:.35,pitch:.15,d:3.3,ty:.88},want={yaw:.35,pitch:.15,d:3.3,ty:.88};
+const VIEWS={face:{d:1.15,p:.08,ty:1.4},full:{d:3.3,p:.15,ty:.88},game:{d:9.5,p:.95,ty:.6},edit:{d:1.05,p:.06,ty:1.43}};
+let view='full';const cam={yaw:.35,pitch:.15,d:3.3,ty:.88,sh:0},want={yaw:.35,pitch:.15,d:3.3,ty:.88,sh:0};// sh: shift the picture up by this fraction of the screen (room for the 捏臉 sheet)
 const camT=new THREE.Vector3(0,1,0);let lastDrag=-99;const ptrs=new Map();let pinch0=0,pinchD=0;
 canvas.addEventListener('pointerdown',e=>{canvas.setPointerCapture(e.pointerId);ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});
   if(ptrs.size===2){const [a,b]=[...ptrs.values()];pinch0=Math.hypot(a.x-b.x,a.y-b.y);pinchD=want.d}});
@@ -625,7 +741,8 @@ function frame(now){requestAnimationFrame(frame);let dt=Math.min(.05,(now-last)/
   shadow.position.set(HERO.pos.x,.012,HERO.pos.z);const sh=1-Math.min(.6,HERO.pos.y*.35);shadow.scale.set(.95*sh,.95*sh,1);shadow.material.opacity=.55*sh;
   // camera
   if((mode==='fly'||mode==='walk')&&clock-lastDrag>2.5){want.yaw=angLerp(want.yaw,root.rotation.y+Math.PI+(mode==='fly'?.75:1.15),1-Math.exp(-dt*.9))}
-  const kc=1-Math.exp(-dt*7);cam.yaw=angLerp(cam.yaw,want.yaw,kc);cam.pitch=lerp(cam.pitch,want.pitch,kc);cam.d=lerp(cam.d,want.d,kc);cam.ty=lerp(cam.ty,want.ty,kc);
+  const kc=1-Math.exp(-dt*7);cam.yaw=angLerp(cam.yaw,want.yaw,kc);cam.pitch=lerp(cam.pitch,want.pitch,kc);cam.d=lerp(cam.d,want.d,kc);cam.ty=lerp(cam.ty,want.ty,kc);cam.sh=lerp(cam.sh,want.sh,kc);
+  if(cam.sh>.003){const W=innerWidth,H=innerHeight;camera.setViewOffset(W,H,0,Math.round(H*cam.sh),W,H)}else if(camera.view&&camera.view.enabled)camera.clearViewOffset();
   camT.lerp(tmp.set(HERO.pos.x,HERO.pos.y+cam.ty,HERO.pos.z),1-Math.exp(-dt*6));
   const cd=cam.d+swordVis*(view==='game'?0:1.1);
   camera.position.set(camT.x+Math.sin(cam.yaw)*Math.cos(cam.pitch)*cd,camT.y+Math.sin(cam.pitch)*cd,camT.z+Math.cos(cam.yaw)*Math.cos(cam.pitch)*cd);
@@ -633,6 +750,57 @@ function frame(now){requestAnimationFrame(frame);let dt=Math.min(.05,(now-last)/
   camera.lookAt(camT);sky.position.copy(camera.position);
   renderer.render(scene,camera)}
 setView('full');requestAnimationFrame(t=>{last=t;frame(t)});
-window.__hero={setMode,setView,applyPal,setYaw:y=>{want.yaw=y}};
+/* ---------- 捏臉面板 ---------- */
+function applyFace(dirty){
+  headG.scale.set(F.headS*F.faceW,F.headS,F.headS);
+  if(dirty.g)shapeHead();
+  if(dirty.x){redraw(faceTex,drawFace);M.skin.color.copy(LC(SKINS[F.skin][1]))}}
+const saveFace=()=>{try{localStorage.setItem(FACE_KEY,JSON.stringify({h:FACE_HASH,f:F}))}catch(e){}};
+let fdirty={g:0,x:0},ftimer=0;
+function faceChanged(it){
+  if(it.t.includes('g'))fdirty.g=1;if(it.t.includes('x'))fdirty.x=1;
+  if(!ftimer)ftimer=setTimeout(()=>{ftimer=0;const d=fdirty;fdirty={g:0,x:0};applyFace(d);saveFace()},50)}
+M.skin.color.copy(LC(SKINS[F.skin][1]));
+let curTab=0,ftoastT=0;
+const ftoast=m=>{const e=$('#ftoast');e.textContent=m;clearTimeout(ftoastT);ftoastT=setTimeout(()=>{e.textContent=''},3200)};
+function renderTabs(){const box=$('#ftabs');box.innerHTML='';
+  FACE_SPEC.forEach((s,i)=>{const b=document.createElement('button');b.textContent=s.tab;b.setAttribute('aria-pressed',String(i===curTab));
+    b.onclick=()=>{curTab=i;renderTabs();renderList()};box.appendChild(b)})}
+function renderList(){const box=$('#flist');box.innerHTML='';box.scrollTop=0;
+  FACE_SPEC[curTab].items.forEach(it=>{
+    const row=document.createElement('div');row.className='ctl';
+    const lab=document.createElement('button');lab.className='cl';lab.textContent=it.n;lab.title='點一下還原預設';
+    lab.onclick=()=>{F[it.k]=it.def;faceChanged(it);renderList()};row.appendChild(lab);
+    if(it.opts){const seg=document.createElement('div');seg.className='opts';
+      it.opts.forEach((o,i)=>{const b=document.createElement('button');b.textContent=o;b.setAttribute('aria-pressed',String(F[it.k]===i));
+        b.onclick=()=>{F[it.k]=i;faceChanged(it);[...seg.children].forEach((c,j)=>c.setAttribute('aria-pressed',String(j===i)))};seg.appendChild(b)});
+      row.appendChild(seg)}
+    else{const inp=document.createElement('input');inp.type='range';inp.min=it.min;inp.max=it.max;inp.step=it.step;inp.value=F[it.k];inp.setAttribute('aria-label',it.n);
+      const val=document.createElement('span');val.className='cv';
+      const show=()=>{const n=Math.round((F[it.k]-it.def)/it.step);val.textContent=n?(n>0?'+':'')+n:'預設';val.classList.toggle('on',!!n)};show();
+      inp.oninput=()=>{F[it.k]=+inp.value;show();faceChanged(it)};row.append(inp,val)}
+    box.appendChild(row)})}
+const packFace=()=>{const o={};FACE_SPEC.forEach(s=>s.items.forEach(i=>{o[i.k]=+(+F[i.k]).toFixed(3)}));return '午夜來斬妖・捏臉設定 '+JSON.stringify(o)};
+function unpackFace(txt){const a=txt.indexOf('{'),b=txt.lastIndexOf('}');if(a<0||b<a)return 0;let o;try{o=JSON.parse(txt.slice(a,b+1))}catch(e){return 0}
+  let n=0;FACE_SPEC.forEach(s=>s.items.forEach(i=>{const v=o[i.k];if(typeof v==='number'&&isFinite(v)){
+    F[i.k]=i.opts?Math.max(0,Math.min(i.opts.length-1,Math.round(v))):Math.max(i.min,Math.min(i.max,v));n++}}));return n}
+const applyAllFace=()=>{applyFace({g:1,x:1});saveFace();renderList()};
+function showIO(hint,text){const io=$('#fio');io.hidden=false;$('#fiohint').textContent=hint;const ta=$('#fiota');ta.value=text||'';ta.focus();if(text){ta.select();try{ta.setSelectionRange(0,text.length)}catch(e){}}}
+$('#fcopy').onclick=async()=>{const t=packFace();
+  try{await navigator.clipboard.writeText(t);ftoast('已複製！貼給 Claude 就能設成預設');$('#fio').hidden=true;return}catch(e){}
+  showIO('這裡不能自動複製：請長按文字框「全選」再「拷貝」',t);
+  try{if(document.execCommand('copy')){ftoast('已複製！貼給 Claude 就能設成預設');$('#fio').hidden=true}}catch(e){}};
+$('#fpaste').onclick=async()=>{
+  try{const t=await navigator.clipboard.readText();if(unpackFace(t)){applyAllFace();ftoast('已套用貼上的設定');return}}catch(e){}
+  showIO('把之前複製的設定文字貼進來，再按「套用」','')};
+$('#fapply').onclick=()=>{if(unpackFace($('#fiota').value)){applyAllFace();ftoast('已套用');$('#fio').hidden=true}else $('#fiohint').textContent='看不懂這段文字，請確認是完整的「捏臉設定」'};
+$('#fioclose').onclick=()=>{$('#fio').hidden=true};
+$('#freset').onclick=()=>{Object.assign(F,FACE_DEF);applyAllFace();ftoast('已還原預設')};
+let editPrev=null;
+function openEdit(){editPrev={view,mode};document.body.classList.add('editing');setMode('idle');setView('edit');want.sh=.26;want.yaw=0;renderTabs();renderList()}
+function closeEdit(){document.body.classList.remove('editing');$('#fio').hidden=true;if(editPrev){setMode(editPrev.mode);setView(VIEWS[editPrev.view]?editPrev.view:'full')}want.sh=0;editPrev=null}
+$('#fedit').onclick=openEdit;$('#fdone').onclick=closeEdit;
+$$('[data-fyaw]').forEach(b=>b.addEventListener('click',()=>{want.yaw=+b.dataset.fyaw}));
+window.__hero={setMode,setView,applyPal,setYaw:y=>{want.yaw=y},openEdit,closeEdit,F,applyAllFace,setTab:i=>{curTab=i;renderTabs();renderList()}};
 })();
 </script>
