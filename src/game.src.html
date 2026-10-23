@@ -665,7 +665,8 @@ function beamCast(A){const lv=G.k.beamLv,L=SK.beam.range(),W=SK.beam.w,a0=Math.a
   beamDirs(a0).forEach((a,j)=>{const dx=Math.sin(a),dz=Math.cos(a);
     const m=new THREE.Mesh(beamGeo,new THREE.MeshBasicMaterial({map:beamTex,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide}));
     m.position.set(hx,.55,hz);m.rotation.y=a;m.scale.set(W,1,.01);scene.add(m);const tip=j%3===0?fx({p:tmp.set(hx,.6,hz),col:0xffd2c8,add:true,life:.32,s0:1.4,s1:1.4,op:1,vy:0}):null;let hit=false;
-    act(.45,t=>{const k=Math.min(1,t/.1),f=t>.15?Math.max(0,1-(t-.15)/.3):1;m.scale.set(W*Math.max(.05,f),1,L*k);m.material.opacity=f;if(tip)tip.s.position.set(hx+dx*L*k,.6,hz+dz*L*k);
+    const op=BEAM_N[lv]>=18?.4:BEAM_N[lv]>=10?.55:BEAM_N[lv]>=5?.8:1;
+    act(.45,t=>{const k=Math.min(1,t/.1),f=t>.15?Math.max(0,1-(t-.15)/.3):1;m.scale.set(W*Math.max(.05,f)*(lv>=3?.75:1),1,L*k);m.material.opacity=f*op;if(tip)tip.s.position.set(hx+dx*L*k,.6,hz+dz*L*k);
       if(!hit&&t>=.05){hit=true;const inside=(x,z,r)=>{const px=x-hx,pz=z-hz,al=px*dx+pz*dz,pe=Math.abs(px*dz-pz*dx);return al>-r&&al<L+r&&pe<W/2+r};
         for(const en of enemies){if(en.dead||!inside(en.x,en.z,en.r))continue;const c=hitN.get(en)||0;if(c>=2)continue;hitN.set(en,c+1);hurtEnemy(en,dmg,dx*.6,dz*.6,false,4.5)}
         if(boss.alive&&inside(boss.x,boss.z,boss.r)){const c=hitN.get(boss)||0;if(c<3){hitN.set(boss,c+1);hurtBoss(dmg)}}}},
@@ -673,13 +674,13 @@ function beamCast(A){const lv=G.k.beamLv,L=SK.beam.range(),W=SK.beam.w,a0=Math.a
 // 五雷咒（紫）: a talisman flies to the spot, purple thunder strikes all over the circle and stuns.
 // 進化：紫電連環（每道雷跳電 2 隻）→ 雷池（紫色雷陣電 4 秒）→ 紫霄神雷（先劈一道巨大天雷柱、範圍更大）
 const TH_LV=['紫電連環：每道雷再跳電附近 2 隻妖','雷池：留下紫色雷陣，持續電 4 秒','紫霄神雷：先劈下巨大天雷柱，範圍更大'];
-const PURPLE=0xc49aff;
+const PURPLE=0xa66bff;
 function zap(x1,z1,x2,z2,col=PURPLE){const pts=[],n=6;for(let i=0;i<=n;i++){const k=i/n;pts.push(new THREE.Vector3(x1+(x2-x1)*k+(i&&i<n?(Math.random()-.5)*.5:0),.7+(i&&i<n?(Math.random()-.5)*.4:0),z1+(z2-z1)*k+(i&&i<n?(Math.random()-.5)*.5:0)))}
   const m=new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts),12,.035,4),new THREE.MeshBasicMaterial({color:col,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false}));scene.add(m);bolts.push({m,t:0})}
 function thunderCast(A){const lv=G.k.thLv,[x,z]=A.pt,r=SK.thunder.r(),n=G.k.thN,dmg=swordDmg()*2.6*G.k.thD;const card=talCard(),from=HERO.pos.clone().setY(1.2);
   const ring=new THREE.Mesh(ringGeo,new THREE.MeshBasicMaterial({color:PURPLE,transparent:true,opacity:.9,blending:THREE.AdditiveBlending,depthWrite:false}));ring.position.set(x,.06,z);ring.scale.setScalar(r);scene.add(ring);
   let fired=0,big=false;const T=.3+n*.08+.3;
-  const strike=(px,pz)=>{boltAt(px,pz,dmg,1.25,0xd2b0ff,.07);
+  const strike=(px,pz)=>{boltAt(px,pz,dmg,1.25,0xb889ff,.07);
     if(lv>=1){const near=enemies.filter(e=>!e.dead&&(e.x-px)**2+(e.z-pz)**2<10).sort((a,b)=>((a.x-px)**2+(a.z-pz)**2)-((b.x-px)**2+(b.z-pz)**2)).slice(0,2);
       for(const e of near){zap(px,pz,e.x,e.z);hurtEnemy(e,dmg*.6,0,0,false,3)}}};
   act(T,t=>{if(t<.3){const k=t/.3;card.position.lerpVectors(from,tmp.set(x,.3,z),k);card.position.y+=Math.sin(k*Math.PI)*1.2;card.rotation.set(-.6,t*14,0);return}
@@ -691,7 +692,7 @@ function thunderCast(A){const lv=G.k.thLv,[x,z]=A.pt,r=SK.thunder.r(),n=G.k.thN,
       ring.material.opacity=.9*(1-Math.max(0,t-.3)/(T-.3))},
     ()=>{scene.remove(card);scene.remove(ring);ring.material.dispose();if(lv>=2)thunderField(x,z,r,dmg)})}
 // 雷池: a purple field that keeps zapping whatever stands in it
-function thunderField(x,z,r,dmg){const fld=new THREE.Mesh(new THREE.CircleGeometry(1,48).rotateX(-Math.PI/2),new THREE.MeshBasicMaterial({color:0x8a4dff,transparent:true,opacity:0,blending:THREE.AdditiveBlending,depthWrite:false}));
+function thunderField(x,z,r,dmg){const fld=new THREE.Mesh(new THREE.CircleGeometry(1,48).rotateX(-Math.PI/2),new THREE.MeshBasicMaterial({color:0x6a2cff,transparent:true,opacity:0,blending:THREE.AdditiveBlending,depthWrite:false}));
   const edge=new THREE.Mesh(ringGeo,new THREE.MeshBasicMaterial({color:PURPLE,transparent:true,opacity:.9,blending:THREE.AdditiveBlending,depthWrite:false}));
   fld.position.set(x,.05,z);fld.scale.setScalar(r);edge.position.set(x,.06,z);edge.scale.setScalar(r);scene.add(fld,edge);let tick=0;
   act(4,(t,dt)=>{fld.material.opacity=.22+.08*Math.sin(t*12);edge.rotation.y+=dt;tick-=dt;if(tick<=0){tick=.45;const inside=enemies.filter(e=>!e.dead&&(e.x-x)**2+(e.z-z)**2<r*r);
