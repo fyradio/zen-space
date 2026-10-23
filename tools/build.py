@@ -51,7 +51,11 @@ def build(src_name, out_name, test_name):
     src = include(open(path, encoding='utf8').read())
     print('--', out_name)
     title = '午夜來斬妖'
-    ui_chars = ''.join(sorted(set(c for c in src if ord(c) > 127))) + ''.join(chr(i) for i in range(32, 127))
+    # glyphs only for text that can be shown: JS/CSS/HTML comments are dropped first (keeps the embedded font small)
+    shown = re.sub(r'/\*[\s\S]*?\*/', '', src)
+    shown = re.sub(r'(?<![:\'"\w\\])//[^\n]*', '', shown)
+    shown = re.sub(r'<!--[\s\S]*?-->', '', shown)
+    ui_chars = ''.join(sorted(set(c for c in shown if ord(c) > 127))) + ''.join(chr(i) for i in range(32, 127))
     faces = [
         ('TPotta', 'pottaone/PottaOne-Regular.ttf', title),
         ('TReggae', 'reggaeone/ReggaeOne-Regular.ttf', title),

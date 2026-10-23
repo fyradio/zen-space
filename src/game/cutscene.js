@@ -38,6 +38,8 @@ const INK=(()=>{const W=800,H=360;
     x.fillStyle='#c8321f';x.beginPath();x.moveTo(20,-92);x.quadraticCurveTo(24,-104,30,-94);x.quadraticCurveTo(36,-104,38,-90);x.closePath();x.fill();x.beginPath();x.ellipse(31,-74,3,6,0,0,7);x.fill();
     x.fillStyle='#d9a12c';x.beginPath();x.moveTo(34,-86);x.lineTo(46,-82);x.lineTo(34,-79);x.fill();
     x.strokeStyle='rgba(18,16,14,.95)';x.lineWidth=3;x.beginPath();x.moveTo(-4,-18);x.lineTo(-6,0);x.moveTo(8,-18);x.lineTo(10,0);x.stroke();x.restore()}
+  const HELP={paper:x=>paper(x),wash:(...a)=>wash(...a),moon:(...a)=>moon(...a),roofs:(...a)=>roofs(...a),lantern:(...a)=>lantern(...a),figure:(...a)=>figure(...a),
+    lanternFace:(...a)=>lanternFace(...a),ghosts:(...a)=>ghosts(...a),seal:(...a)=>seal(...a),rooster:(...a)=>rooster(...a)};
   const INK_SCENES={
     night_village:x=>{paper(x);moon(x,620,80,36);wash(x,200,70,.35,1.3);wash(x,250,40,.55,2.1);roofs(x,300,6);[120,250,390,520,660].forEach((px,i)=>lantern(x,px,262,8,i===4));wash(x,330,10,.85,3);seal(x,'夜')},
     daoist:x=>{paper(x);moon(x,140,70,30);wash(x,230,60,.4,1.7);ghosts(x,5);figure(x,560,320,1.6,{gourd:1,lantern:1});wash(x,335,8,.85,2.4);seal(x,'救')},
@@ -47,15 +49,15 @@ const INK=(()=>{const W=800,H=360;
       x.fillStyle='rgba(255,236,170,.95)';x.beginPath();x.arc(W*.5,H*.86,70,Math.PI,0);x.fill();wash(x,300,40,.45,1.9);roofs(x,330,5);rooster(x,W*.5,262,1.5)}};
   // the overlay
   let q=[],i=0,done=null;const ov=$('#cutOv'),cv=$('#cutCv'),tx=$('#cutTx');const ctx=cv.getContext('2d');
-  function draw(){const p=q[i];const dpr=Math.min(2,devicePixelRatio||1);cv.width=W*dpr;cv.height=H*dpr;ctx.setTransform(dpr,0,0,dpr,0,0);(INK_SCENES[p.scene]||paper)(ctx);vignette(ctx);
+  function draw(){const p=q[i];const dpr=Math.min(2,devicePixelRatio||1);cv.width=W*dpr;cv.height=H*dpr;ctx.setTransform(dpr,0,0,dpr,0,0);(INK_SCENES[p.scene]||paper)(ctx,HELP);vignette(ctx);
     tx.textContent=p.t||'';cv.classList.remove('in');void cv.offsetWidth;cv.classList.add('in');$('#cutNext').textContent=i<q.length-1?'下一格':'開始'}
-  function play(panels,cb){q=panels;i=0;done=cb;ov.classList.add('on');draw()}
+  function play(panels,cb){q=panels;i=0;done=cb;ov.classList.remove('dawn');ov.classList.add('on');draw()}
   function next(){if(!q.length)return;if(i<q.length-1){i++;draw()}else end()}
   function end(){ov.classList.remove('on');q=[];const f=done;done=null;if(f)f()}
   ov.addEventListener('click',e=>{if(e.target.id==='cutSkip')return;next()});$('#cutSkip').onclick=e=>{e.stopPropagation();end()};
   // 雞啼: a short, self-advancing dawn panel
-  function dawn(cb){play([{scene:'dawn',t:'喔喔喔——！雞啼了，天亮了！'}],cb);$('#cutNext').textContent='繼續';ov.classList.add('dawn');setTimeout(()=>{ov.classList.remove('dawn');if(q.length)end()},2600)}
-  return {play,dawn,get on(){return ov.classList.contains('on')}}})();
+  function dawn(cb){play([{scene:'dawn',t:'喔喔喔——！雞啼了，天亮了！'}],cb);$('#cutNext').textContent='繼續';ov.classList.add('dawn');setTimeout(()=>{ov.classList.remove('dawn');if(q.length&&q[0].scene==='dawn')end()},2600)}
+  return {play,dawn,scenes:INK_SCENES,get on(){return ov.classList.contains('on')}}})();
 const CUTS={intro:[
   {scene:'night_village',t:'子時一到，白石村的燈籠一盞一盞熄滅了。連公雞都不啼——這一夜，好像不會結束。'},
   {scene:'daoist',t:'妖群湧進村子。一個醉醺醺的道士提著一盞燈籠，擋在打更人家的孩子面前……'},

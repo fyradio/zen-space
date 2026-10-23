@@ -79,10 +79,10 @@ html,body{height:100%;margin:0;background:var(--night);color:var(--ink);overflow
 .sk.ult em{color:#f2c75c}
 .sk.ult.ready{animation:ultPulse 1s ease-in-out infinite}
 @keyframes ultPulse{50%{box-shadow:0 0 34px rgba(242,199,92,1);transform:scale(1.06)}}
-.sk.aiming{border-color:#fff;box-shadow:0 0 22px rgba(170,240,255,.9)}
+.sk.aiming{border-color:#fff!important;box-shadow:0 0 22px rgba(170,240,255,.9)!important}
 .sk.no{animation:skNo .25s}
 @keyframes skNo{25%{translate:-4px 0}75%{translate:4px 0}}
-.cancel{position:fixed;right:calc(env(safe-area-inset-right,0px) + 26px);top:calc(env(safe-area-inset-top,0px) + 74px);width:64px;height:64px;border-radius:50%;display:none;place-items:center;
+.cancel{position:fixed;right:calc(env(safe-area-inset-right,0px) + 22px);top:calc(env(safe-area-inset-top,0px) + 6px);z-index:30;width:64px;height:64px;border-radius:50%;display:none;place-items:center;
   font-size:14px;letter-spacing:.1em;color:#ffd9d2;background:rgba(40,8,6,.7);border:2px solid rgba(229,72,58,.8);pointer-events:none}
 .cancel.on{display:grid}.cancel.hot{background:rgba(229,72,58,.65);color:#fff;transform:scale(1.12)}
 .ultFx{position:fixed;inset:0;pointer-events:none;opacity:0;background:radial-gradient(ellipse at 50% 55%,rgba(255,216,106,0) 35%,rgba(255,190,60,.5) 100%)}
@@ -105,6 +105,7 @@ html,body{height:100%;margin:0;background:var(--night);color:var(--ink);overflow
 /* overlays */
 .ov{position:fixed;inset:0;display:none;place-items:center;padding:20px;background:rgba(3,8,9,.62);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px)}
 .ov.on{display:grid}
+.ov{overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}.ov>.box{margin:auto}/* a box taller than the screen scrolls instead of being cut off */
 .box{width:min(100%,420px);display:grid;gap:12px;justify-items:center;text-align:center}
 h1{margin:0;font-family:var(--f-title);font-weight:400;font-size:clamp(46px,14vw,74px);line-height:1.05;color:#eef6ea;text-shadow:0 0 18px rgba(127,227,198,.5),0 3px 0 #071010}
 h1 .zhan{color:var(--cinnabar);text-shadow:0 0 18px rgba(229,72,58,.55),0 3px 0 #2a0906}
@@ -127,18 +128,18 @@ h2{margin:0;font-size:22px;font-weight:400;letter-spacing:.2em}
   border-radius:14px;border:1px solid var(--line);background:var(--panel);animation:flip .35s ease-out backwards}
 .card:nth-child(2){animation-delay:.08s}.card:nth-child(3){animation-delay:.16s}
 /* 洞府 */
-.ov.df{background:linear-gradient(90deg,rgba(3,8,9,0) 0%,rgba(3,8,9,.15) 34%,rgba(3,8,9,.78) 46%);backdrop-filter:none;-webkit-backdrop-filter:none;place-items:stretch;padding:0}
-.dfwrap{display:grid;grid-template-columns:40% 60%;height:100%;padding:calc(env(safe-area-inset-top,0px) + 10px) calc(env(safe-area-inset-right,0px) + 12px) 10px calc(env(safe-area-inset-left,0px) + 14px);box-sizing:border-box}
+.ov.df{overflow:hidden;background:linear-gradient(90deg,rgba(3,8,9,0) 0%,rgba(3,8,9,.15) 34%,rgba(3,8,9,.78) 46%);backdrop-filter:none;-webkit-backdrop-filter:none;place-items:stretch;padding:0}
+.dfwrap{position:absolute;inset:0;display:grid;grid-template-columns:40% 60%;grid-template-rows:minmax(0,1fr);height:100%;padding:calc(env(safe-area-inset-top,0px) + 10px) calc(env(safe-area-inset-right,0px) + 12px) 10px calc(env(safe-area-inset-left,0px) + 14px);box-sizing:border-box}
 .dfleft{display:grid;align-content:space-between;justify-items:start;gap:8px}
 .dft{font-size:clamp(30px,9vh,48px)!important}
 .dfrealm{display:grid;gap:2px;font-size:13px;color:var(--dim);text-shadow:0 1px 3px #000}.dfrealm b{font-size:18px;color:#fff4d6;font-weight:400}
 .dfleft .pair{width:min(100%,240px)}.dfleft .btn{min-height:36px;font-size:14px}
-.dfpanel{display:grid;grid-template-rows:auto 1fr;min-height:0;gap:6px}
+.dfpanel{display:grid;grid-template-rows:auto minmax(0,1fr);min-height:0;gap:6px}
 .dftabs{display:flex;gap:5px;flex-wrap:wrap}
 .dftabs button{all:unset;cursor:pointer;position:relative;padding:6px 12px;border-radius:999px;border:1px solid var(--line);background:rgba(9,18,19,.75);font-size:14px;letter-spacing:.1em}
 .dftabs button[aria-pressed="true"]{border-color:var(--jade);color:var(--jade);background:rgba(127,227,198,.12)}
 .dftabs .dot{position:absolute;right:2px;top:2px;width:8px;height:8px;border-radius:50%;background:#f2c75c;box-shadow:0 0 6px #f2c75c}
-.dfbody{overflow-y:auto;min-height:0;display:grid;gap:6px;align-content:start;padding-right:4px;overscroll-behavior:contain}
+.dfbody{overflow-y:auto;-webkit-overflow-scrolling:touch;touch-action:pan-y;min-height:0;padding-bottom:12px;display:grid;gap:6px;align-content:start;padding-right:4px;overscroll-behavior:contain}
 .chrow{display:grid;grid-template-columns:7.5em 1fr;gap:4px 8px;align-items:center;padding:6px 8px;border-radius:10px;border:1px solid var(--line);background:rgba(9,18,19,.7)}
 .chrow.lock{opacity:.5}.chrow em{grid-column:1/3;font-style:normal;font-size:11px;color:var(--dim)}
 .chn{display:grid;line-height:1.25}.chn b{font-size:14px;font-weight:400;color:#fff4d6}.chn span{font-size:13px}.chn small{font-size:10px;color:var(--dim)}
@@ -354,7 +355,8 @@ const pave=new THREE.Mesh(new THREE.CircleGeometry(9,48),new THREE.MeshLambertMa
 
 const wallM=toon(0xd6d0c2,{roughness:.9}),roofM=toon(0x262a31,{roughness:.7}),baseM=toon(0x5b5f58),doorM=toon(0x3a2a20),winM=toon(0x2a2416,{emissive:0x3a2a0c});
 const poleM=toon(0x2b211b),deadLanM=toon(0x5a1c18,{roughness:.6}),stoneM=toon(0x6a6e68),treeM=toon(0x1c2420);
-function house(x,z,rot,w,d){const g=new THREE.Group();g.position.set(x,0,z);g.rotation.y=rot;scene.add(g);
+const mapG=new THREE.Group();scene.add(mapG);// everything that belongs to the current chapter's map (rebuilt by buildMap)
+function house(x,z,rot,w,d){const g=new THREE.Group();g.position.set(x,0,z);g.rotation.y=rot;mapG.add(g);
   const h=1.5+rnd()*.5;
   part(new THREE.BoxGeometry(w+.1,.25,d+.1),baseM,g,{p:[0,.12,0]});
   part(new THREE.BoxGeometry(w,h,d),wallM,g,{p:[0,h/2+.2,0]});
@@ -363,22 +365,13 @@ function house(x,z,rot,w,d){const g=new THREE.Group();g.position.set(x,0,z);g.ro
   part(new THREE.BoxGeometry(w+.8,.12,.14),roofM,g,{p:[0,h+.2+Math.tan(ang)*rw+.02,0]});
   part(new THREE.BoxGeometry(.7,1.1,.06),doorM,g,{p:[0,.75,d/2+.01]});
   [-1,1].forEach(s=>{if(w>2.4)part(new THREE.BoxGeometry(.5,.45,.05),rnd()<.3?winM:doorM,g,{p:[s*(w/2-.6),1.15,d/2+.01]})})}
-function deadLantern(x,z){const g=new THREE.Group();g.position.set(x,0,z);scene.add(g);
+function deadLantern(x,z){const g=new THREE.Group();g.position.set(x,0,z);mapG.add(g);
   part(new THREE.CylinderGeometry(.04,.05,2.2,6),poleM,g,{p:[0,1.1,0]});part(new THREE.BoxGeometry(.6,.05,.05),poleM,g,{p:[.25,2.1,0]});
   part(new THREE.SphereGeometry(.17,12,10),deadLanM,g,{p:[.5,1.85,0],s:[1,1.2,1]});return g}
-function bareTree(x,z,s){const g=new THREE.Group();g.position.set(x,0,z);g.scale.setScalar(s);g.rotation.y=rnd()*6;scene.add(g);
+function bareTree(x,z,s){const g=new THREE.Group();g.position.set(x,0,z);g.scale.setScalar(s);g.rotation.y=rnd()*6;mapG.add(g);
   part(new THREE.CylinderGeometry(.08,.2,2.8,7),treeM,g,{p:[0,1.4,0]});
   for(let i=0;i<5;i++){const b=part(new THREE.CylinderGeometry(.02,.07,1.2+rnd()*.7,5),treeM,g,{p:[0,1.6+i*.3,0]});b.rotation.set(.6+rnd()*.5,i*1.3,0);b.translateY(.45)}}
-// houses on a ring around the square, doors facing in
-const HOUSES=[];for(let i=0;i<14;i++){const a=i/14*Math.PI*2+(rnd()-.5)*.15,r=14+rnd()*5,w=2.4+rnd()*1.6,d=2+rnd()*.8;
-  house(Math.sin(a)*r,Math.cos(a)*r,a+Math.PI,w,d);HOUSES.push({x:Math.sin(a)*r,z:Math.cos(a)*r,r:Math.max(w,d)*.55})}
-for(let i=0;i<8;i++){const a=i/8*Math.PI*2+.2;deadLantern(Math.sin(a)*9.6,Math.cos(a)*9.6)}
-for(let i=0;i<9;i++){const a=rnd()*Math.PI*2,r=21+rnd()*8;bareTree(Math.sin(a)*r,Math.cos(a)*r,.9+rnd()*.5)}
-// the village well
-{const g=new THREE.Group();g.position.set(3.2,0,-2.4);scene.add(g);
- part(new THREE.CylinderGeometry(.62,.68,.55,18,1,true),stoneM,g,{p:[0,.27,0]});part(new THREE.TorusGeometry(.64,.07,8,24),stoneM,g,{p:[0,.55,0],r:[Math.PI/2,0,0]});
- part(new THREE.CircleGeometry(.6,18),toon(0x050807),g,{p:[0,.4,0],r:[-Math.PI/2,0,0]});
- [-1,1].forEach(s=>part(new THREE.BoxGeometry(.08,1.3,.08),poleM,g,{p:[s*.62,.9,0]}));part(new THREE.BoxGeometry(1.4,.08,.08),poleM,g,{p:[0,1.52,0]});HOUSES.push({x:3.2,z:-2.4,r:.8})}
+const HOUSES=[];// round obstacles {x,z,r} of the current map (filled by MAPS[ch] in game/chapters.js)
 const moonTex=ctex(256,256,(x,w,h)=>{const g=x.createRadialGradient(128,128,40,128,128,128);g.addColorStop(0,'#f4f0dc');g.addColorStop(.62,'#e6e3cc');g.addColorStop(.66,'rgba(230,227,204,0)');x.fillStyle=g;x.fillRect(0,0,w,h)});
 const moon=new THREE.Sprite(new THREE.SpriteMaterial({map:moonTex,fog:false,depthWrite:false}));moon.scale.set(10,10,1);moon.position.set(-30,30,-50);scene.add(moon);
 const fogTex=ctex(256,256,(x,w,h)=>{for(let i=0;i<40;i++){const px=40+rnd()*176,py=40+rnd()*176,r=30+rnd()*50;const g=x.createRadialGradient(px,py,0,px,py,r);g.addColorStop(0,'rgba(190,215,205,.18)');g.addColorStop(1,'rgba(190,215,205,0)');x.fillStyle=g;x.fillRect(0,0,w,h)}});
@@ -518,30 +511,18 @@ const ET={
 // self-lit by their own vertex colours (glow = how much), so the painted colours still read at night
 function paintedMat(o,glow){const m=toon('#ffffff',Object.assign({vertexColors:true,roughness:.7},o));
   m.onBeforeCompile=sh=>{sh.fragmentShader=sh.fragmentShader.replace('#include <emissivemap_fragment>','#include <emissivemap_fragment>\n\ttotalEmissiveRadiance += vColor.rgb * '+glow.toFixed(2)+';')};return m}
-for(const k in ET){const t=ET[k];t.mesh=new THREE.InstancedMesh(t.geo,paintedMat(t.mat,t.glow),t.cap);
+function makeET(k){const t=ET[k];t.mesh=new THREE.InstancedMesh(t.geo,paintedMat(t.mat,t.glow),t.cap);
   t.mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);t.mesh.frustumCulled=false;
   for(let i=0;i<t.cap;i++)t.mesh.setColorAt(i,new THREE.Color(1,1,1));// r128 sizes instanceColor from .count, so colour first, then empty it
-  t.mesh.count=0;scene.add(t.mesh);t.list=[]}
+  t.mesh.count=0;t.mesh.visible=false;scene.add(t.mesh);t.list=[]}
+for(const k in ET)makeET(k);// more kinds are added per chapter in game/chapters.js
 const CAP=240;let enemies=[];
 const shadowMesh=new THREE.InstancedMesh(new THREE.PlaneGeometry(1,1).rotateX(-Math.PI/2),new THREE.MeshBasicMaterial({map:glowTex,color:0x000000,transparent:true,opacity:.7,depthWrite:false}),CAP);
 shadowMesh.count=0;shadowMesh.frustumCulled=false;scene.add(shadowMesh);// dark spot under each monster so they read against the ground
 const WHITE=new THREE.Color(1,1,1),FLASH=new THREE.Color(4,4,4),dummy=new THREE.Object3D();
 
-/* ================= 燈籠大王 ================= */
-const boss=(()=>{const g=new THREE.Group();g.visible=false;scene.add(g);
-  const faceT=ctex(512,256,(x,w,h)=>{x.fillStyle='#ffb257';x.fillRect(0,0,w,h);x.strokeStyle='rgba(140,50,10,.5)';x.lineWidth=4;for(let i=0;i<16;i++){x.beginPath();x.moveTo(i*w/16,0);x.lineTo(i*w/16,h);x.stroke()}
-    const cx=w*.25;x.fillStyle='#2a0904';
-    [-1,1].forEach(d=>{x.beginPath();x.moveTo(cx+d*18,92);x.lineTo(cx+d*58,74);x.lineTo(cx+d*50,112);x.closePath();x.fill()});
-    x.beginPath();x.moveTo(cx-60,150);x.quadraticCurveTo(cx,215,cx+60,150);x.quadraticCurveTo(cx,175,cx-60,150);x.fill();
-    x.fillStyle='#fff3d0';for(let i=-2;i<=2;i++){x.beginPath();x.moveTo(cx+i*20-7,156+Math.abs(i)*-3);x.lineTo(cx+i*20+7,156+Math.abs(i)*-3);x.lineTo(cx+i*20,176);x.fill()}
-    x.fillStyle='#c42a20';x.font='bold 90px serif';x.textAlign='center';x.textBaseline='middle';x.fillText('王',w*.75,h*.5)});
-  const body=part(new THREE.LatheGeometry(lanternPts,28),new THREE.MeshStandardMaterial({map:faceT,emissive:LC(0x9a3a0a),emissiveIntensity:.8,roughness:.6}),g,{s:[3.4,3.4,3.4],p:[0,2.1,0]});
-  body.rotation.y=-Math.PI/2;
-  part(new THREE.CylinderGeometry(.44,.5,.22,16),toon(0x24160f),g,{p:[0,3.25,0]});part(new THREE.CylinderGeometry(.5,.44,.22,16),toon(0x24160f),g,{p:[0,.95,0]});
-  [-1,1].forEach(d=>part(new THREE.ConeGeometry(.16,.7,8),toon(0x24160f),g,{p:[d*.45,3.6,0],r:[0,0,-d*.4]}));
-  const L=new THREE.PointLight(0xff8a3a,2.4,12,1.4);L.position.y=2.1;g.add(L);
-  const gl=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex,color:0xff9a4a,opacity:.6,blending:THREE.AdditiveBlending,depthWrite:false}));gl.scale.set(6,6,1);gl.position.y=2.1;g.add(gl);
-  return {g,body,L,alive:false,hp:0,max:0,x:0,z:0,t:0,cd:3,sum:6,flash:0,r:1.15,dmg:16}})();
+/* ================= 魔王（外殼；每章的魔王模型與招式在 game/chapters.js 的 BOSSES）================= */
+const boss={g:new THREE.Group(),models:{},def:null,m:null,alive:false,hp:0,max:0,x:0,z:0,t:0,cd:3,sum:6,flash:0,r:1.15,dmg:16};boss.g.visible=false;scene.add(boss.g);
 
 /* ================= 飛劍、技能、特效 ================= */
 const swordMat=new THREE.MeshBasicMaterial({color:0xbffff0,transparent:true,opacity:.95,blending:THREE.AdditiveBlending,depthWrite:false});
@@ -560,9 +541,9 @@ const fxPool=[];let fxNext=0;function fx(o){let f=fxPool.find(f=>!f.on);if(!f&&f
   Object.assign(f,{on:true,t:0,life:.6,vy:.6,s0:.6,s1:1.4,op:.8,add:false,col:0x000000},o);f.s.material.color.set(f.col);f.s.material.blending=f.add?THREE.AdditiveBlending:THREE.NormalBlending;
   f.s.position.copy(f.p);f.s.visible=true;return f}
 const ringGeo=new THREE.RingGeometry(.86,1,40);ringGeo.rotateX(-Math.PI/2);
-const warnPool=[];function warn(x,z,r,delay,dmg){let w=warnPool.find(w=>!w.on);if(!w){w={m:new THREE.Mesh(ringGeo,new THREE.MeshBasicMaterial({color:0xff3b2a,transparent:true,depthWrite:false})),
+const warnPool=[];function warn(x,z,r,delay,dmg,onHit=null,col=0xff3b2a){let w=warnPool.find(w=>!w.on);if(!w){w={m:new THREE.Mesh(ringGeo,new THREE.MeshBasicMaterial({color:0xff3b2a,transparent:true,depthWrite:false})),
     f:new THREE.Mesh(new THREE.CircleGeometry(1,32).rotateX(-Math.PI/2),new THREE.MeshBasicMaterial({color:0xff3b2a,transparent:true,opacity:.18,depthWrite:false}))};scene.add(w.m,w.f);warnPool.push(w)}
-  Object.assign(w,{on:true,x,z,r,t:0,delay,dmg});w.m.position.set(x,.04,z);w.f.position.set(x,.03,z);w.m.scale.setScalar(r);w.f.scale.setScalar(.01);w.m.visible=w.f.visible=true}
+  Object.assign(w,{on:true,x,z,r,t:0,delay,dmg,onHit,col});w.m.material.color.setHex(col);w.f.material.color.setHex(col);w.m.position.set(x,.04,z);w.f.position.set(x,.03,z);w.m.scale.setScalar(r);w.f.scale.setScalar(.01);w.m.visible=w.f.visible=true}
 const shots=[];
 const bolts=[];function bolt(x,z){boltAt(x,z,swordDmg()*3*(G.s.thunderP||1),1.14)}
 function boltAt(x,z,dmg,r,col=0xd8f0ff,th=.06,top=9){if(!G||G.over)return;const pts=[];let px=x,pz=z;for(let y=top;y>=0;y-=.9){pts.push(new THREE.Vector3(px,y,pz));px=x+(Math.random()-.5)*.5;pz=z+(Math.random()-.5)*.5}pts.push(new THREE.Vector3(x,0,z));
@@ -588,11 +569,16 @@ const talTex=ctex(64,128,(x,w,h)=>{x.fillStyle='#f2d04a';x.fillRect(0,0,w,h);x.s
 const talMat=new THREE.MeshBasicMaterial({map:talTex,side:THREE.DoubleSide});
 function talCard(){const m=new THREE.Mesh(new THREE.PlaneGeometry(.32,.62),talMat);scene.add(m);const gl=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex,color:0xffd65a,opacity:.7,blending:THREE.AdditiveBlending,depthWrite:false}));gl.scale.set(1.1,1.1,1);m.add(gl);return m}
 // monster fireballs: slow, glowing, red-orange so they read as dangerous
-const EBCAP=90,ebMesh=new THREE.InstancedMesh(new THREE.SphereGeometry(.13,12,8),new THREE.MeshBasicMaterial({color:0xff5a2a}),EBCAP);ebMesh.count=0;ebMesh.frustumCulled=false;scene.add(ebMesh);
-const ebGlow=new THREE.InstancedMesh(new THREE.PlaneGeometry(1,1),new THREE.MeshBasicMaterial({map:glowTex,color:0xff7a3a,transparent:true,opacity:.8,blending:THREE.AdditiveBlending,depthWrite:false}),EBCAP);ebGlow.count=0;ebGlow.frustumCulled=false;scene.add(ebGlow);
+const EBCAP=90,ebMesh=new THREE.InstancedMesh(new THREE.SphereGeometry(.13,12,8),new THREE.MeshBasicMaterial({color:0xffffff}),EBCAP);ebMesh.frustumCulled=false;scene.add(ebMesh);
+const ebGlow=new THREE.InstancedMesh(new THREE.PlaneGeometry(1,1),new THREE.MeshBasicMaterial({map:glowTex,color:0xffffff,transparent:true,opacity:.8,blending:THREE.AdditiveBlending,depthWrite:false}),EBCAP);ebGlow.frustumCulled=false;scene.add(ebGlow);
+for(let i=0;i<EBCAP;i++){ebMesh.setColorAt(i,WHITE);ebGlow.setColorAt(i,WHITE)}ebMesh.count=ebGlow.count=0;
+const EB_FIRE=[new THREE.Color(0xff5a2a),new THREE.Color(0xff7a3a)];
 let ebs=[];
-function enemyShot(x,y,z,vx,vz,spd,dmg){if(ebs.length>=EBCAP)return;ebs.push({x,y,z,vx:vx*spd,vz:vz*spd,t:0,dmg})}
-function stepEnemyShots(dt){for(let i=ebs.length-1;i>=0;i--){const b=ebs[i];b.t+=dt;b.x+=b.vx*dt;b.z+=b.vz*dt;
+// col: colour of the ball (default fire orange); home: how fast it turns toward the hero (狐火 homes in)
+function enemyShot(x,y,z,vx,vz,spd,dmg,col,home=0){if(ebs.length>=EBCAP)return;ebs.push({x,y,z,vx:vx*spd,vz:vz*spd,spd,t:0,dmg,home,c:col?[new THREE.Color(col),new THREE.Color(col)]:EB_FIRE})}
+function stepEnemyShots(dt){for(let i=ebs.length-1;i>=0;i--){const b=ebs[i];b.t+=dt;
+    if(b.home&&b.t<2.4){const want=Math.atan2(HERO.pos.x-b.x,HERO.pos.z-b.z),cur=Math.atan2(b.vx,b.vz),na=cur+Math.max(-b.home*dt,Math.min(b.home*dt,angDiff(want,cur)));b.vx=Math.sin(na)*b.spd;b.vz=Math.cos(na)*b.spd}
+    b.x+=b.vx*dt;b.z+=b.vz*dt;
     if((b.x-HERO.pos.x)**2+(b.z-HERO.pos.z)**2<.16){hurtHero(b.dmg,0,0,'火球');fx({p:tmp.set(b.x,b.y,b.z),col:0xff6a2a,add:true,life:.3,s0:.4,s1:1,op:.9,vy:0});ebs.splice(i,1);continue}
     if(b.t>4||Math.hypot(b.x,b.z)>ARENA+4)ebs.splice(i,1)}}
 const dashPool=[];function dashLine(e,on){let L=dashPool.find(l=>l.e===e);if(!on){if(L){L.e=null;L.m.visible=false}return}
@@ -629,6 +615,7 @@ for(const k of ['sweep','beam','thunder','ult']){const S=SK[k],b=document.create
   b.innerHTML=`<span class="ic">${S.ic}</span><i class="cd"></i><b></b><em>${S.n}</em>`;b.style.left=SK_POS[k][0]+'px';b.style.top=SK_POS[k][1]+'px';$('#skills').appendChild(b);skBtn[k]=b;
   b.addEventListener('pointerdown',e=>{e.preventDefault();if(!G||G.paused||G.over)return;SFX.resume();
     if(!ready(k)){b.classList.remove('no');void b.offsetWidth;b.classList.add('no');return}
+    if(SK[k].shape==='auto'||SK[k].shape==='self'){castSkill(k,null);hideTip();return}// tap skills: no aiming
     try{b.setPointerCapture(e.pointerId)}catch(_){}const r=b.getBoundingClientRect();aim={k,id:e.pointerId,cx:r.left+r.width/2,cy:r.top+r.height/2,dx:0,dy:0,moved:false,cancel:false};
     b.classList.add('aiming');$('#cancelZone').classList.add('on');hideTip()});
   b.addEventListener('pointermove',e=>{if(!aim||e.pointerId!==aim.id)return;aim.dx=e.clientX-aim.cx;aim.dy=e.clientY-aim.cy;if(Math.hypot(aim.dx,aim.dy)>14)aim.moved=true;
@@ -639,7 +626,7 @@ function cancelAim(){if(aim&&skBtn[aim.k])skBtn[aim.k].classList.remove('aiming'
 const ready=k=>!!G&&(k==='ult'?G.ult>=G.k.ultNeed:G.cd[k]<=0);
 const facing=()=>[Math.sin(root.rotation.y),Math.cos(root.rotation.y)];
 function screenToWorld(dx,dy){const c=Math.cos(camYaw),s=Math.sin(camYaw);return [dx*c+dy*s,-dx*s+dy*c]}
-function autoAim(k){const S=SK[k],hx=HERO.pos.x,hz=HERO.pos.z;
+function autoAim(k){const S=SK[k],hx=HERO.pos.x,hz=HERO.pos.z;if(S.shape==='auto'||S.shape==='self')return {dir:facing()};
   if(S.shape==='circle'){const R=S.range(),r=S.r();
     if(S.ult&&boss.alive&&Math.hypot(boss.x-hx,boss.z-hz)<R+2){const dx=boss.x-hx,dz=boss.z-hz,l=Math.hypot(dx,dz)||1,f=Math.min(l,R);return {pt:[hx+dx/l*f,hz+dz/l*f]}}
     // the most crowded spot in range
@@ -663,12 +650,12 @@ function showAim(){for(const m of Object.values(IND))m.visible=false;if(!aim||!G
   for(const m of Object.values(IND))m.material.color.setHex(col);
   IND.range.visible=true;IND.range.position.set(hx,.05,hz);IND.range.scale.setScalar(S.range());
   const fan=(a,R)=>{IND.fan.geometry=fanGeo(a);IND.fan.visible=true;IND.fan.position.set(hx,.06,hz);IND.fan.rotation.y=Math.atan2(A.dir[0],A.dir[1]);IND.fan.scale.setScalar(R)};
-  if(S.shape==='fan')fan(G.k.sweepLv>=3?Math.PI*2:S.ang,S.range());
-  else if(S.shape==='line'){if(G.k.beamLv>0)fan(Math.min(Math.PI*2,BEAM_SPREAD[G.k.beamLv]+.12),S.range());else{IND.line.visible=true;IND.line.position.set(hx,.06,hz);IND.line.rotation.y=Math.atan2(A.dir[0],A.dir[1]);IND.line.scale.set(S.w,1,S.range())}}
+  if(S.shape==='fan')fan(S.full&&S.full()?Math.PI*2:S.ang,S.range());
+  else if(S.shape==='line'){const sp=S.spread?S.spread():0;if(sp>0)fan(sp,S.range());else{IND.line.visible=true;IND.line.position.set(hx,.06,hz);IND.line.rotation.y=Math.atan2(A.dir[0],A.dir[1]);IND.line.scale.set(S.w,1,S.range())}}
   else{IND.circ.visible=IND.edge.visible=true;IND.circ.position.set(A.pt[0],.06,A.pt[1]);IND.circ.scale.setScalar(S.r());IND.edge.position.set(A.pt[0],.07,A.pt[1]);IND.edge.scale.setScalar(S.r())}}
 function castSkill(k,A){if(!G||G.paused||G.over||!ready(k))return false;A=A||autoAim(k);
-  const d=A.dir||[A.pt[0]-HERO.pos.x,A.pt[1]-HERO.pos.z];if(d[0]||d[1])root.rotation.y=Math.atan2(d[0],d[1]);G.castT=.45;
-  if(k==='ult'){G.ult=0;ultCast(A.pt)}else{G.cd[k]=SK[k].cd();({sweep:sweepCast,beam:beamCast,thunder:thunderCast})[k](A)}
+  const d=A.dir||(A.pt?[A.pt[0]-HERO.pos.x,A.pt[1]-HERO.pos.z]:[0,0]);if(d[0]||d[1])root.rotation.y=Math.atan2(d[0],d[1]);G.castT=.45;
+  if(k==='ult'){G.ult=0;SK.ult.cast(A)}else{if(SK[k].cast(A)===false){const b=skBtn[k];b.classList.remove('no');void b.offsetWidth;b.classList.add('no');return false}G.cd[k]=SK[k].cd()}
   G.casts=(G.casts||0)+1;return true}
 // timed skill effects that follow game time (so pause / slow motion apply)
 const acts=[];const act=(life,step,end)=>{acts.push({t:0,life,step,end})};
@@ -719,26 +706,10 @@ function beamCast(A){const lv=G.k.beamLv,L=SK.beam.range(),W=SK.beam.w,a0=Math.a
         for(const en of enemies){if(en.dead||!inside(en.x,en.z,en.r))continue;const c=hitN.get(en)||0;if(c>=2)continue;hitN.set(en,c+1);hurtEnemy(en,dmg,dx*.6,dz*.6,false,4.5)}
         if(boss.alive&&inside(boss.x,boss.z,boss.r)){const c=hitN.get(boss)||0;if(c<3){hitN.set(boss,c+1);hurtBoss(dmg)}}}},
       ()=>{scene.remove(m);m.material.dispose()})})}
-// 五雷咒（紫）: a talisman flies to the spot, purple thunder strikes all over the circle and stuns.
-// 進化：紫電連環（每道雷跳電 2 隻）→ 雷池（紫色雷陣電 4 秒）→ 紫霄神雷（先劈一道巨大天雷柱、範圍更大）
-const TH_LV=['紫電連環：每道雷再跳電附近 2 隻妖','雷池：留下紫色雷陣，持續電 4 秒','紫霄神雷：先劈下巨大天雷柱，範圍更大'];
+// 五雷咒（紫）: now a chain lightning that finds its own targets (game/skillsets.js)
 const PURPLE=0xa66bff;
 function zap(x1,z1,x2,z2,col=PURPLE){const pts=[],n=6;for(let i=0;i<=n;i++){const k=i/n;pts.push(new THREE.Vector3(x1+(x2-x1)*k+(i&&i<n?(Math.random()-.5)*.5:0),.7+(i&&i<n?(Math.random()-.5)*.4:0),z1+(z2-z1)*k+(i&&i<n?(Math.random()-.5)*.5:0)))}
   const m=new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts),12,.035,4),new THREE.MeshBasicMaterial({color:col,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false}));scene.add(m);bolts.push({m,t:0})}
-function thunderCast(A){const lv=G.k.thLv,[x,z]=A.pt,r=SK.thunder.r(),n=G.k.thN,dmg=swordDmg()*2.6*G.k.thD;const card=talCard(),from=HERO.pos.clone().setY(1.2);
-  const ring=new THREE.Mesh(ringGeo,new THREE.MeshBasicMaterial({color:PURPLE,transparent:true,opacity:.9,blending:THREE.AdditiveBlending,depthWrite:false}));ring.position.set(x,.06,z);ring.scale.setScalar(r);scene.add(ring);
-  let fired=0,big=false;const T=.3+n*.08+.3;
-  const strike=(px,pz)=>{boltAt(px,pz,dmg,1.25,0xb889ff,.07);
-    if(lv>=1){const near=enemies.filter(e=>!e.dead&&(e.x-px)**2+(e.z-pz)**2<10).sort((a,b)=>((a.x-px)**2+(a.z-pz)**2)-((b.x-px)**2+(b.z-pz)**2)).slice(0,2);
-      for(const e of near){zap(px,pz,e.x,e.z);hurtEnemy(e,dmg*.6,0,0,false,3)}}};
-  act(T,t=>{if(t<.3){const k=t/.3;card.position.lerpVectors(from,tmp.set(x,.3,z),k);card.position.y+=Math.sin(k*Math.PI)*1.2;card.rotation.set(-.6,t*14,0);return}
-      card.visible=false;
-      if(lv>=3&&!big){big=true;boltAt(x,z,dmg*5,r*.8,0xe6d2ff,.32,14);shake=Math.max(shake,.7);SFX.play('boom');fx({p:tmp.set(x,.5,z),col:0xb98aff,add:true,life:.6,s0:2,s1:r*3,op:1,vy:0})}
-      const want=Math.min(n,Math.floor((t-.3)/.08)+1);while(fired<want){const a=Math.random()*Math.PI*2,rr=fired===0?0:Math.sqrt(Math.random())*r*.85;
-        if(fired===0){SFX.play('thunder');shake=Math.max(shake,.3);for(const e of enemies)if(!e.dead&&(e.x-x)**2+(e.z-z)**2<r*r)e.stun=Math.max(e.stun||0,1.5)}
-        strike(x+Math.sin(a)*rr,z+Math.cos(a)*rr);fired++}
-      ring.material.opacity=.9*(1-Math.max(0,t-.3)/(T-.3))},
-    ()=>{scene.remove(card);scene.remove(ring);ring.material.dispose();if(lv>=2)thunderField(x,z,r,dmg)})}
 // 雷池: a purple field that keeps zapping whatever stands in it
 function thunderField(x,z,r,dmg){const fld=new THREE.Mesh(new THREE.CircleGeometry(1,48).rotateX(-Math.PI/2),new THREE.MeshBasicMaterial({color:0x6a2cff,transparent:true,opacity:0,blending:THREE.AdditiveBlending,depthWrite:false}));
   const edge=new THREE.Mesh(ringGeo,new THREE.MeshBasicMaterial({color:PURPLE,transparent:true,opacity:.9,blending:THREE.AdditiveBlending,depthWrite:false}));
@@ -797,12 +768,17 @@ function startTribulation(){if(!G||G.over||G.paused||G.breaking||!canBreak(true)
       act(.95,null,()=>{if(G&&!G.over){boltAt(x,z,swordDmg()*4,1.8);SFX.play('thunder')}});n++}},
     ()=>{if(!G||G.over)return;G.breaking=false;realmUp();G.s.dmg*=1.1*1.2;G.maxhp=Math.round(150*realmMult());G.hp=G.maxhp;
       banner('突破成功！',REALMS[save.realm],true);SFX.play('gold');buzz(90);shake=Math.max(shake,.5);
-      fx({p:tmp.set(HERO.pos.x,1,HERO.pos.z),col:0xffe08a,add:true,life:1,s0:1,s1:7,op:1,vy:1.5});say('突破了！血補滿，這一夜傷害再 +20%',4)})}
+      fx({p:tmp.set(HERO.pos.x,1,HERO.pos.z),col:0xffe08a,add:true,life:1,s0:1,s1:7,op:1,vy:1.5});
+      const t=skillTier();if(t!==G.tier){setSkills(G.tier=t);for(const k in G.cd)G.cd[k]=0;say(`${SKILL_SETS[t].name}新招：${SK.sweep.n}、${SK.beam.n}、${SK.thunder.n}！`,5)}else say('突破了！血補滿，這一夜傷害再 +20%',4)})}
 function checkBreak(){const b=$('#breakBtn');const can=!G.breaking&&canBreak(true);if(can&&b.hidden){b.hidden=false;if(!simming){SFX.play('ready');say('可以突破了！按左上「突破」引雷劫',4)}}else if(!can&&!b.hidden)b.hidden=true}
 function updSkillUI(){for(const k in SK){const b=skBtn[k];let p,txt='';
     if(k==='ult'){p=Math.min(1,G.ult/G.k.ultNeed);b.classList.toggle('ready',p>=1);b.style.setProperty('--p',(p*100).toFixed(1)+'%')}
     else{const c=G.cd[k];p=c>0?c/SK[k].cd():0;b.style.setProperty('--p',(p*100).toFixed(1)+'%');txt=c>0?String(Math.ceil(c)):''}
     if(b._t!==txt){b._t=txt;b.querySelector('b').textContent=txt}}}
+
+/*@include game/skillsets.js*/
+/*@include game/hazards.js*/
+/*@include game/chapters.js*/
 
 /* ================= 狀態 ================= */
 const SAVE_KEY='zk-game-v1';
@@ -813,26 +789,30 @@ const writeSave=()=>{try{localStorage.setItem(SAVE_KEY,JSON.stringify(save))}cat
    在戰場上按「突破」引來雷劫（躲過天雷＝成功，血補滿、這一夜傷害再 +20%），或在靜室打坐安全突破。
    每升一層：傷害、生命各 ×1.1，帶進每一夜。煉丹類條件要等洞府（v0.3）才做得到。 */
 const NUM=['一','二','三','四','五','六','七','八','九'];
-const REALMS=[...NUM.map(n=>`煉氣${n}層`),'築基初期'];
-const REQ_N={kills:'累計斬妖',wins:'撐到天亮',boss:'打倒燈籠大王',elite:'斬精英',best:'一夜斬妖',pill:'煉成聚氣丹',zhuji:'煉成築基丹'};
-const REQ_U={kills:'隻',wins:'次',boss:'次',elite:'隻',best:'隻',pill:'顆',zhuji:'顆'};
-const LOCK='洞府開放後';
+const REALMS=[...NUM.map(n=>`煉氣${n}層`),...['築基','結丹','元嬰'].flatMap(r=>['初期','中期','後期'].map(q=>r+q))];
+const REQ_N={kills:'累計斬妖',wins:'撐到天亮',boss:'打倒魔王',elite:'斬精英',best:'一夜斬妖',pill:'煉成聚氣丹',zhuji:'煉成築基丹',ningdan:'煉成凝丹靈液',huaying:'煉成化嬰丹',chap:'打贏第幾章',duel:'鬥法台勝場'};
+const REQ_U={kills:'隻',wins:'次',boss:'次',elite:'隻',best:'隻',pill:'顆',zhuji:'顆',ningdan:'瓶',huaying:'顆',chap:'章',duel:'場'};
+const LOCK='鬥法台開放後',LOCKED=k=>k==='duel';
 // REQS[i] = what it takes to go from REALMS[i] to REALMS[i+1]
 const REQS=[[['kills',300]],[['kills',800],['wins',1]],[['kills',1500],['boss',1]],[['kills',2500],['elite',3]],[['kills',4000],['boss',3]],
-  [['kills',6000],['best',1500]],[['kills',8500],['boss',5],['pill',1]],[['kills',12000],['pill',3]],[['zhuji',1],['boss',8]]];
+  [['kills',6000],['best',1500]],[['kills',8500],['boss',5],['pill',1]],[['kills',12000],['pill',3]],[['zhuji',1],['boss',8],['chap',3]],
+  // 築基 → 結丹 → 元嬰: chapters cleared, kills, and the pill each big step needs
+  [['kills',20000],['chap',4]],[['kills',26000],['boss',15]],[['ningdan',1],['chap',5]],[['kills',35000],['chap',6]],[['kills',45000],['chap',7]],[['huaying',1],['chap',8]],
+  [['chap',9],['kills',60000]],[['duel',3]]];
 if(save.realm===undefined){save.realm=Math.min(8,Math.floor((save.xiuwei||0)/300));save.st={kills:save.best||0,boss:0,elite:0,wins:save.wins||0,best:save.best||0,pill:0,zhuji:0}}
-save.st=Object.assign({kills:0,boss:0,elite:0,wins:0,best:0,pill:0,zhuji:0},save.st||{});
+save.st=Object.assign({kills:0,boss:0,elite:0,wins:0,best:0,pill:0,zhuji:0,ningdan:0,huaying:0,duel:0},save.st||{});
 const realmMult=()=>Math.pow(1.1,save.realm);
 // progress value of one condition; live = include what the current night has done so far
-function reqVal(k,live){const s=save.st[k]||0;if(!live||!G)return s;
+function reqVal(k,live){if(k==='chap'){const w=Object.keys(save.won||{}).map(x=>+x.split('-')[0]);return w.length?Math.max(...w):0}
+  const s=save.st[k]||0;if(!live||!G)return s;
   return k==='kills'?s+G.kills:k==='boss'?s+(G.bossKilled?1:0):k==='elite'?s+(G.eliteKilled?1:0):k==='best'?Math.max(s,G.kills):s}
 const reqs=()=>REQS[save.realm]||null;
-const canBreak=live=>{const R=reqs();return !!R&&R.every(([k,v])=>!(k==='pill'||k==='zhuji')&&reqVal(k,live)>=v)};
+const canBreak=live=>{const R=reqs();return !!R&&R.every(([k,v])=>!LOCKED(k)&&reqVal(k,live)>=v)};
 function reqHTML(live){const R=reqs();if(!R)return '<li>已到這一版的最高境界</li>';
-  return R.map(([k,v])=>{const locked=k==='pill'||k==='zhuji',x=Math.min(v,reqVal(k,live)),ok=!locked&&x>=v;
+  return R.map(([k,v])=>{const locked=LOCKED(k),x=Math.min(v,reqVal(k,live)),ok=!locked&&x>=v;
     return `<li class="${ok?'ok':''}${locked?' lock':''}"><span>${REQ_N[k]}</span><b>${locked?LOCK:`${fmt(x)} / ${fmt(v)} ${REQ_U[k]}`}</b></li>`}).join('')}
 function renderRealm(id,bar,list,live){const R=reqs();$(id).textContent=`${REALMS[save.realm]}${R?` → ${REALMS[save.realm+1]}`:''}`;
-  const f=R?R.reduce((a,[k,v])=>a+(k==='pill'||k==='zhuji'?0:Math.min(1,reqVal(k,live)/v)),0)/R.length:1;$(bar).style.width=(f*100)+'%';if(list)$(list).innerHTML=reqHTML(live)}
+  const f=R?R.reduce((a,[k,v])=>a+(LOCKED(k)?0:Math.min(1,reqVal(k,live)/v)),0)/R.length:1;$(bar).style.width=(f*100)+'%';if(list)$(list).innerHTML=reqHTML(live)}
 function realmUp(){save.realm=Math.min(REALMS.length-1,save.realm+1);writeSave()}
 let G=null;// the current night
 // one night = NIGHT seconds; the difficulty curve is the 8-'minute' curve squeezed into it (minute() runs 0→8)
@@ -865,10 +845,10 @@ const CARDS=[
   {k:'lamp',ic:'燈',n:'燈燈助陣',skill:1,d:r=>G.s.lamp?`燈燈火球更快更痛 +${[40,70,120][r]}%`:`新招：燈燈會吐火球`,f:r=>{G.s.lamp=G.s.lamp?G.s.lamp*(1+[.4,.7,1.2][r]):[1,1.4,2][r]}},
   {k:'bell',ic:'鐘',n:'金鐘罩',skill:1,d:r=>G.s.bell?`金鐘罩回復更快，震開範圍更大`:`新招：金鐘罩擋下一次傷害並震開周圍的妖，${[8,6,5][r]} 秒回復`,f:r=>{G.s.bell=G.s.bell?Math.max(3,G.s.bell*.75):[8,6,5][r];G.bellT=0}},
   // upgrades for the four right-hand skills
-  {k:'sweepUp',ic:'竹',n:'青竹劍・進化',up:1,d:r=>`${SWEEP_LV[G.k.sweepLv]}${r?'，冷卻 -15%':''}`,f:r=>{G.k.sweepLv=Math.min(3,G.k.sweepLv+1);G.k.sweepD*=1.3;if(G.k.sweepLv===1)G.k.sweepR=1.3;if(r)G.k.sweepCd*=.85},max:()=>G.k.sweepLv>=3},
-  {k:'beamUp',ic:'虹',n:'劍氣長虹・進化',up:1,d:r=>`${BEAM_LV[G.k.beamLv]}${r?'，傷害 +30%':''}`,f:r=>{G.k.beamLv=Math.min(4,G.k.beamLv+1);if(r)G.k.beamD*=1.3},max:()=>G.k.beamLv>=4},
-  {k:'thUp',ic:'雷',n:'五雷咒・進化',up:1,d:r=>`${TH_LV[G.k.thLv]}${r?'，多 2 道雷':''}`,f:r=>{G.k.thLv=Math.min(3,G.k.thLv+1);G.k.thN+=r?4:2;G.k.thD*=1.15},max:()=>G.k.thLv>=3},
-  {k:'ultUp',ic:'萬',n:'萬劍歸宗・精進',up:1,d:r=>`大絕充能快 ${[20,30,45][r]}%、落劍更多`,f:r=>{G.k.ultNeed=Math.max(40,Math.round(G.k.ultNeed*(1-[.2,.3,.45][r])));G.k.ultN=Math.min(1.6,G.k.ultN+.2)},max:()=>G.k.ultNeed<=40}];
+  {k:'sweepUp',get ic(){return SK.sweep.ic},get n(){return SK.sweep.n+'・進化'},up:1,d:r=>`${SK.sweep.lv[G.k.sweepLv]}${r?'，冷卻 -15%':''}`,f:r=>{G.k.sweepLv=Math.min(3,G.k.sweepLv+1);G.k.sweepD*=1.3;if(G.k.sweepLv===1)G.k.sweepR=1.3;if(r)G.k.sweepCd*=.85},max:()=>G.k.sweepLv>=3},
+  {k:'beamUp',get ic(){return SK.beam.ic},get n(){return SK.beam.n+'・進化'},up:1,d:r=>`${SK.beam.lv[G.k.beamLv]}${r?'，傷害 +30%':''}`,f:r=>{G.k.beamLv=Math.min(4,G.k.beamLv+1);if(r)G.k.beamD*=1.3},max:()=>G.k.beamLv>=4},
+  {k:'thUp',get ic(){return SK.thunder.ic},get n(){return SK.thunder.n+'・進化'},up:1,d:r=>`${SK.thunder.lv[G.k.thLv]}${r?'，威力再加強':''}`,f:r=>{G.k.thLv=Math.min(3,G.k.thLv+1);G.k.thN+=r?4:2;G.k.thD*=1.15},max:()=>G.k.thLv>=3},
+  {k:'ultUp',ic:'絕',n:'大絕・精進',up:1,d:r=>`大絕充能快 ${[20,30,45][r]}%、威力更大`,f:r=>{G.k.ultNeed=Math.max(40,Math.round(G.k.ultNeed*(1-[.2,.3,.45][r])));G.k.ultN=Math.min(1.6,G.k.ultN+.2)},max:()=>G.k.ultNeed<=40}];
 const RAR=['凡品','靈品','仙品'];
 let offer=[];
 // gold = 仙緣頓悟 after an elite or the boss: every card is 靈品 or better
@@ -892,25 +872,29 @@ function pickCard(i){if(!$('#cardOv').classList.contains('on'))return;if(i>=0){c
   $('#cardOv').classList.remove('on');G.paused=false;renderBuffs();
   if(G.pendingGold>0){G.pendingGold--;setTimeout(()=>openCards(true),400)}}
 $('#skipCard').onclick=()=>pickCard(-1);
-function renderBuffs(){const n={count:'劍',dmg:'鋒',rate:'疾',pierce:'穿',magnet:'攝',heal:'春',orbit:'陣',talis:'符',lamp:'燈',bell:'鐘',sweepUp:'竹',beamUp:'虹',thUp:'雷',ultUp:'萬'};
+function renderBuffs(){const n={count:'劍',dmg:'鋒',rate:'疾',pierce:'穿',magnet:'攝',heal:'春',orbit:'陣',talis:'符',lamp:'燈',bell:'鐘',sweepUp:SK.sweep.ic,beamUp:SK.beam.ic,thUp:SK.thunder.ic,ultUp:'絕'};
   $('#buffs').textContent=Object.entries(G.skills).map(([k,v])=>n[k]+(v>1?v:'')).join(' ')}
 
 /* ================= 生妖 ================= */
 function spawn(type,x,z,o={}){const t=ET[type];if(enemies.length>=CAP||t.list.length>=t.cap)return null;
   const sp=type!=='ghost'&&Math.random()<specialChance();
-  const e=Object.assign({type,t,x,z,y:0,vx:0,vz:0,hp:t.hp*1.1*hpScale()*(sp?2:1),r:t.r*t.sc*(sp?1.15:1),spd:t.spd*(.9+Math.random()*.2),dmg:t.dmg*(1+.15*minute()),flash:0,ph:Math.random()*6,kb:0,s:sp?1.18:1,special:sp},o);
+  const e=Object.assign({type,t,x,z,y:0,vx:0,vz:0,hp:t.hp*1.1*hpScale()*(sp?2:1)*chHp(G.ch),r:t.r*t.sc*(sp?1.15:1),spd:t.spd*(.9+Math.random()*.2),dmg:t.dmg*(1+.15*minute())*(1+.1*G.ch),flash:0,ph:Math.random()*6,kb:0,s:sp?1.18:1,special:sp},o);
   e.cd=2+Math.random()*4;e.max=e.hp;enemies.push(e);t.list.push(e);return e}
 const specialChance=()=>minute()<1.5?0:Math.min(.12,.03+.012*minute());
 function spawnRing(type,n,r){for(let i=0;i<n;i++){const a=i/n*Math.PI*2;spawn(type,HERO.pos.x+Math.sin(a)*r,HERO.pos.z+Math.cos(a)*r)}}
 function spawnTick(dt){const m=minute(),rate=1.25*(1+1.1*m+.18*m*m)*G.mod.spawn;G.spawnAcc+=dt*rate;
-  while(G.spawnAcc>=1){G.spawnAcc-=1;const w=[['ghost',3],['paper',m>.8?2.2:0],['jiang',m>2.8?1.4:0],['lgh',m>4.5?1.2:0]];let tot=w.reduce((a,b)=>a+b[1],0),x=Math.random()*tot,k='ghost';
+  const C=CHC[G.ch]||CHC[0];
+  while(G.spawnAcc>=1){G.spawnAcc-=1;const w=C.mobs.map(([n,v,m0])=>[n,m>=m0?v:0]);let tot=w.reduce((a,b)=>a+b[1],0),x=Math.random()*tot,k=w[0][0];
     for(const [n,v] of w){x-=v;if(x<=0){k=n;break}}
+    // 竹精 burst out of the ground close by (a moment to react: they are stunned while climbing out)
+    if(ET[k].popNear){const a=Math.random()*Math.PI*2,r=2.6+Math.random()*2;const e=spawn(k,HERO.pos.x+Math.sin(a)*r,HERO.pos.z+Math.cos(a)*r);if(e){e.stun=.7;e.y=-.5;e.rise=.7;if(!simming)fx({p:tmp.set(e.x,.2,e.z),col:0x3a2a1a,life:.6,s0:.4,s1:1.6,op:.8,vy:.6})}continue}
     const a=Math.random()*Math.PI*2,r=11+Math.random()*3;spawn(k,HERO.pos.x+Math.sin(a)*r,HERO.pos.z+Math.cos(a)*r)}
-  if(G.t>=G.waveAt*G.len/480&&!G.over){G.waveAt+=60;spawnRing(m>3?'paper':'ghost',16+Math.floor(m*3),10.5)}}
+  if(G.t>=G.waveAt*G.len/480&&!G.over){G.waveAt+=60;const rt=C.mobs[m>3&&C.mobs[1]?1:0][0];spawnRing(ET[rt].popNear?C.mobs[2][0]:rt,16+Math.floor(m*3),10.5)}}
 
 /* ================= 戰鬥 ================= */
 function hurtEnemy(e,dmg,kx=0,kz=0,crit=false,fly=0){if(e.hp<=0)return;e.hp-=dmg;e.flash=.1;if(!fly){e.x+=kx;e.z+=kz}else{e.x+=kx*.3;e.z+=kz*.3};showNum(e.x,1+e.y,e.z,dmg,crit?'c':e.elite?'b':'n');if(e.hp<=0)killEnemy(e,kx,kz,fly)}
-function killEnemy(e,kx=0,kz=0,fly=0){G.kills++;e.dead=true;SFX.play('kill');if(G.ult<G.k.ultNeed&&++G.ult>=G.k.ultNeed&&!simming){SFX.play('ready');say('大絕好了！按右下角的「萬」！',3)}if(G.kills%250===0&&G.kills<=1250&&!simming){banner('殺氣凝劍','飛劍 +1');SFX.play('gold')}dashLine(e,false);if(G.kills>=G.nextPill){G.nextPill+=100;dropPill(e.x,e.z)}
+function killEnemy(e,kx=0,kz=0,fly=0){if(e.t.revive&&!e.revived&&!fly){e.revived=true;e.hp=e.max*.5;e.stun=2.2;e.down=2.2;if(!simming)fx({p:tmp.set(e.x,.4,e.z),col:0xe8e2d0,life:.4,s0:.5,s1:1.4,op:.7,vy:.3});return}
+  G.kills++;e.dead=true;SFX.play('kill');if(G.ult<G.k.ultNeed&&++G.ult>=G.k.ultNeed&&!simming){SFX.play('ready');say(`大絕好了！按右下角的「${SK.ult.ic}」！`,3)}if(G.kills%250===0&&G.kills<=1250&&!simming){banner('殺氣凝劍','飛劍 +1');SFX.play('gold')}dashLine(e,false);if(G.kills>=G.nextPill){G.nextPill+=100;dropPill(e.x,e.z)}
   if(fly&&!simming)launch(e,kx,kz,fly);else fx({p:tmp.set(e.x,.6,e.z),col:0x0a0d0e,life:.7,s0:.5,s1:1.6,op:.75,vy:.9});fx({p:tmp.set(e.x,.6,e.z),col:0x6fffd0,add:true,life:.35,s0:.8,s1:.2,op:.9,vy:0});
   dropSoul(e.x,e.z,e.t.soul);if(e.elite){G.eliteKilled=true;for(let i=0;i<14;i++)dropSoul(e.x+(Math.random()-.5)*2,e.z+(Math.random()-.5)*2,1);banner('精英伏誅','殺氣大漲・仙緣頓悟');SFX.play('boss');setTimeout(()=>openCards(true),700)}
   $('#power').classList.add('pop')}
@@ -928,7 +912,7 @@ function nearest(x,z,maxR,skip){let best=null,bd=maxR*maxR;for(const e of enemie
 function hurtBoss(dmg,crit=false){if(!boss.alive)return;const d=Math.min(dmg,boss.allow);if(d<=0)return;boss.allow-=d;boss.hp-=d;boss.flash=.08;showNum(boss.x,3.2,boss.z,d,crit?'c':'b');if(boss.hp<=0){boss.alive=false;G.bossKilled=true;G.bossT=Math.round(G.t);G.kills+=1;
   G.slow=.9;SFX.play('bossDie');buzz(120);for(const e of enemies)if(!e.dead&&onScreen(e.x,.4,e.z))killEnemy(e);setTimeout(()=>openCards(true),1300);
   for(let i=0;i<10;i++)fx({p:tmp.set(boss.x+(Math.random()-.5)*2,1+Math.random()*2,boss.z+(Math.random()-.5)*2),col:0x0a0d0e,life:1.2,s0:1,s1:3,op:.8,vy:1});
-  for(let i=0;i<30;i++)dropSoul(boss.x+(Math.random()-.5)*3,boss.z+(Math.random()-.5)*3,2);boss.g.visible=false;$('#bossBox').classList.remove('on');banner('燈籠大王伏誅！','群妖潰散・殺氣 +5%');shake=.9}}
+  for(let i=0;i<30;i++)dropSoul(boss.x+(Math.random()-.5)*3,boss.z+(Math.random()-.5)*3,2);boss.g.visible=false;$('#bossBox').classList.remove('on');banner(`${boss.def.name}伏誅！`,'群妖潰散・殺氣 +5%');shake=.9}}
 function launchVolley(){const n=effCount(),used=new Set();const bossSeen=boss.alive&&bossOnScreen();const from=tmp2.copy(HERO.pos);from.y+=1.0;
   for(let i=0;i<n;i++){const tg=(bossSeen&&i%2===0)?boss:nearest(HERO.pos.x,HERO.pos.z,G.s.range,used)||nearest(HERO.pos.x,HERO.pos.z,G.s.range);if(!tg)return;used.add(tg);
     const sw=swords.find(s=>!s.on);if(!sw)return;if(i===0)SFX.play('swing');sw.on=true;sw.g.visible=true;sw.g.scale.setScalar(G.s.size);sw.tgt=tg;sw.life=1.4;sw.pierce=G.s.pierce;sw.hit.clear();sw.tr.pts.length=0;
@@ -979,27 +963,31 @@ function stepSkills(dt){
 
 /* ================= 頭目 ================= */
 const ELITE_HP=3000,BOSS_HP=14000;// fixed: a stronger build kills them faster (that is the point of getting stronger)
-function startElite(){G.eliteDone=true;const a=Math.random()*Math.PI*2;const e=spawn('lgh',HERO.pos.x+Math.sin(a)*9,HERO.pos.z+Math.cos(a)*9,{elite:true,s:2.4,r:.6,spd:1.6});
-  if(e){e.hp=e.max=ELITE_HP;e.dmg*=1.2}banner('大燈籠鬼','精英來了，斬了牠掉一大把魂火');shake=.3}
-function startBoss(){BGM.play('boss');G.bossDone=true;boss.alive=true;const a=Math.random()*Math.PI*2;boss.x=HERO.pos.x+Math.sin(a)*8;boss.z=HERO.pos.z+Math.cos(a)*8;
-  // tough enough for the build the player has by now: about 30 s of full damage, never less than the base
-  boss.max=boss.hp=BOSS_HP*G.mod.boss;boss.allow=boss.max/20;SFX.play('boss');buzz(80);boss.cd=3;boss.sum=5;boss.t=0;boss.rage=false;boss.ring=4;boss.g.visible=true;boss.g.position.set(boss.x,0,boss.z);
-  $('#bossBox').classList.add('on');banner('燈籠大王：「誰敢在子時點燈——！」','頭目');shake=.8;say('是燈籠大王！它的火球會先畫紅圈，快躲開！',5)}
-function stepBoss(dt){if(!boss.alive)return;boss.t+=dt;boss.allow=Math.min(boss.max/20*1.5,boss.allow+boss.max/20*dt);
-  const dx=HERO.pos.x-boss.x,dz=HERO.pos.z-boss.z,d=Math.hypot(dx,dz)||1;const sp=d>4?1.7:.6;boss.x+=dx/d*sp*dt;boss.z+=dz/d*sp*dt;
-  boss.g.position.set(boss.x,Math.sin(boss.t*1.4)*.25,boss.z);boss.g.rotation.y=Math.atan2(dx,dz);boss.body.rotation.y=-Math.PI/2+Math.sin(boss.t*2)*.1;
-  boss.body.material.emissiveIntensity=.8+(boss.flash>0?2:0)+Math.sin(boss.t*6)*.1;boss.flash-=dt;boss.L.intensity=2.2+Math.sin(boss.t*9)*.3;
-  boss.cd-=dt;if(boss.cd<=0){boss.cd=Math.max(boss.rage?1.2:1.8,(boss.rage?2.2:3.2)-minute()*.12);const n=3+Math.floor(Math.random()*3);
-    for(let i=0;i<n;i++){const a=Math.random()*Math.PI*2,r=i===0?0:1.2+Math.random()*2.8;warn(HERO.pos.x+Math.sin(a)*r+HERO.vel.x*.5,HERO.pos.z+Math.cos(a)*r+HERO.vel.z*.5,1.1,1.25,14)}}
-  if(!boss.rage&&boss.hp<boss.max*.5){boss.rage=true;banner('燈籠大王：「你惹火我了——！」','狂暴');shake=.6;boss.cd=.5}
-  if(boss.rage){boss.ring-=dt;if(boss.ring<=0){boss.ring=5;for(let j=0;j<10;j++){const a=j/10*Math.PI*2+boss.t;enemyShot(boss.x,1.2,boss.z,Math.sin(a),Math.cos(a),3,14)}}
-    boss.body.scale.setScalar(3.4*(1+Math.sin(boss.t*10)*.03))}
-  boss.sum-=dt;if(boss.sum<=0){boss.sum=6;for(let i=0;i<6;i++){const a=i/6*Math.PI*2;spawn('ghost',boss.x+Math.sin(a)*1.8,boss.z+Math.cos(a)*1.8)}}
+function startElite(){G.eliteDone=true;const a=Math.random()*Math.PI*2,k=(CHC[G.ch]||CHC[0]).elite;const e=spawn(k,HERO.pos.x+Math.sin(a)*9,HERO.pos.z+Math.cos(a)*9,{elite:true,s:2.4,r:.6,spd:k==='lgh'?1.6:ET[k].spd*.8});
+  if(e){e.hp=e.max=ELITE_HP*chHp(G.ch);e.dmg*=1.2}banner('大'+ET[k].n,'精英來了，斬了牠掉一大把魂火');shake=.3}
+function startBoss(){const key=(CHC[G.ch]||CHC[0]).boss,D=BOSSES[key];boss.def=D;
+  for(const k in boss.models)boss.models[k].g.visible=false;
+  if(!boss.models[key]){const g=new THREE.Group();boss.g.add(g);boss.models[key]=Object.assign({g},D.build(g))}
+  const M=boss.m=boss.models[key];M.g.visible=true;M.g.scale.setScalar(1);
+  BGM.play('boss');G.bossDone=true;boss.alive=true;const a=Math.random()*Math.PI*2;boss.x=HERO.pos.x+Math.sin(a)*8;boss.z=HERO.pos.z+Math.cos(a)*8;
+  // fixed HP (a stronger build kills it faster), scaled by chapter and by night (圍城 ×1.5)
+  boss.max=boss.hp=BOSS_HP*G.mod.boss*chBoss(G.ch);boss.allow=boss.max/20;boss.r=D.r;boss.dmg=D.dmg*(1+.1*G.ch);SFX.play('boss');buzz(80);
+  Object.assign(boss,{cd:3,sum:5,t:0,rage:false,ring:4,k:0,swing:0,stun:0});boss.g.visible=true;boss.g.position.set(boss.x,0,boss.z);
+  $('#bossName').textContent=D.name;$('#bossBox').classList.add('on');banner(D.line,'頭目');shake=.8;say(D.tip,5)}
+function stepBoss(dt){if(!boss.alive)return;const D=boss.def,M=boss.m;boss.t+=dt;boss.allow=Math.min(boss.max/20*1.5,boss.allow+boss.max/20*dt);
+  const dx=HERO.pos.x-boss.x,dz=HERO.pos.z-boss.z,d=Math.hypot(dx,dz)||1;let sp=d>4?D.spd:.6;if(D.keep&&d<D.keep)sp=-D.spd*.7;
+  if(!(boss.stun>0)){boss.x+=dx/d*sp*dt;boss.z+=dz/d*sp*dt}else boss.stun-=dt;
+  const rr=Math.hypot(boss.x,boss.z);if(rr>ARENA){boss.x*=ARENA/rr;boss.z*=ARENA/rr}
+  boss.g.position.set(boss.x,D.bob?Math.sin(boss.t*D.bob)*.25:0,boss.z);boss.g.rotation.y=Math.atan2(dx,dz);if(M.spin)M.spin(boss);
+  if(M.body&&M.body.material)M.body.material.emissiveIntensity=.8+(boss.flash>0?2:0)+Math.sin(boss.t*6)*.1;else M.g.scale.setScalar(boss.flash>0?1.06:1);
+  boss.flash-=dt;if(M.L)M.L.intensity=(M.Li||2.2)+Math.sin(boss.t*9)*.3;
+  if(!boss.rage&&boss.hp<boss.max*.5){boss.rage=true;banner(D.rage,'狂暴');shake=.6;boss.cd=.5}
+  if(!(boss.stun>0))D.act(boss,dt);
   if(d<boss.r+.4)hurtHero(boss.dmg,dx/d,dz/d,'魔王');
   $('#bossHp').style.width=(100*Math.max(0,boss.hp/boss.max))+'%'}
 function stepWarns(dt){for(const w of warnPool){if(!w.on)continue;w.t+=dt;const k=Math.min(1,w.t/w.delay);w.f.scale.setScalar(Math.max(.01,w.r*k));w.m.material.opacity=.5+.5*Math.sin(w.t*18);
-  if(k>=1){w.on=false;w.m.visible=w.f.visible=false;fx({p:tmp.set(w.x,.5,w.z),col:0xff6a2a,add:true,life:.4,s0:1,s1:w.r*2.6,op:1,vy:.5});
-    if((HERO.pos.x-w.x)**2+(HERO.pos.z-w.z)**2<w.r*w.r)hurtHero(w.dmg*(1+.1*minute()),0,0,'紅圈')}}}
+  if(k>=1){w.on=false;w.m.visible=w.f.visible=false;fx({p:tmp.set(w.x,.5,w.z),col:w.col===0xff3b2a?0xff6a2a:w.col,add:true,life:.4,s0:1,s1:w.r*2.6,op:1,vy:.5});
+    if((HERO.pos.x-w.x)**2+(HERO.pos.z-w.z)**2<w.r*w.r){if(w.dmg)hurtHero(w.dmg*(1+.1*minute()),0,0,'紅圈');if(w.onHit)w.onHit()}}}}
 
 /* ================= 主角受傷 ================= */
 let shake=0;
@@ -1028,8 +1016,13 @@ function inputDir(){let x=joy.x,y=joy.y;if(keys.has('a')||keys.has('arrowleft'))
     for(const e of enemies){const dx=HERO.pos.x-e.x,dz=HERO.pos.z-e.z,d2=dx*dx+dz*dz;if(d2<9){const w=1/Math.max(.3,d2);x+=dx*w;y+=dz*w}}
     if(boss.alive){const dx=HERO.pos.x-boss.x,dz=HERO.pos.z-boss.z,d2=dx*dx+dz*dz;if(d2<16){x+=dx*3/d2;y+=dz*3/d2}}
     for(const b of ebs){const dx=HERO.pos.x-b.x,dz=HERO.pos.z-b.z,d2=dx*dx+dz*dz;if(d2<4){const side=Math.sign(b.vx*dz-b.vz*dx)||1;x+=-b.vz*side*.6;y+=b.vx*side*.6}}
-    for(const w of warnPool){if(!w.on)continue;const dx=HERO.pos.x-w.x,dz=HERO.pos.z-w.z,d2=dx*dx+dz*dz;if(d2<(w.r+1)**2){x+=dx*4;y+=dz*4}}}
+    for(const w of warnPool){if(!w.on)continue;const dx=HERO.pos.x-w.x,dz=HERO.pos.z-w.z,d2=dx*dx+dz*dz;if(d2<(w.r+1)**2){x+=dx*4;y+=dz*4}}
+    for(const h of HZ){const dx=HERO.pos.x-h.x,dz=HERO.pos.z-h.z,d=Math.hypot(dx,dz)||1;
+      if(h.k==='fan'&&d<h.r+1.2){x+=dx/d*3;y+=dz/d*3}
+      else if(h.k==='line'){const ux=Math.sin(h.a0),uz=Math.cos(h.a0),al=dx*ux+dz*uz,pe=dx*uz-dz*ux;if(al>-1&&al<h.len+1&&Math.abs(pe)<h.w/2+1){const sg=Math.sign(pe)||1;x+=uz*sg*3;y+=-ux*sg*3}}
+      else if(h.k==='wave'){const R=h.spd*h.t;if(d>R-.5&&d-R<3){const gx=h.x+Math.sin(h.gapA)*d,gz=h.z+Math.cos(h.gapA)*d;x+=(gx-HERO.pos.x)*1.5;y+=(gz-HERO.pos.z)*1.5}}}}
   else{const c=Math.cos(camYaw),sn=Math.sin(camYaw),wx=x*c+y*sn,wz=-x*sn+y*c;x=wx;y=wz}// screen → world
+  if(G.charm>0){x=-x;y=-y}// 魅惑: the stick is reversed
   const l=Math.hypot(x,y);if(l>1){x/=l;y/=l}return {x,y,l:Math.min(1,l)}}
 
 /* ================= 介面 ================= */
@@ -1046,7 +1039,7 @@ const clockText=()=>{const s=Math.max(0,Math.ceil(G.len-G.t)),m=Math.floor(s/60)
 function pickChar(c){if(c!==who){useChar(c);applyFace({g:1,x:1});applyBody();buildHair();try{localStorage.setItem('zk-who',String(c))}catch(e){}}
   $$('[data-who]').forEach(b=>b.setAttribute('aria-pressed',String(+b.dataset.who===who)))}
 $$('[data-who]').forEach(b=>b.onclick=()=>pickChar(+b.dataset.who));pickChar(who);
-function startNight(len,opt={}){BGM.play('night');$('#breakBtn').hidden=true;SFX.resume();tryLandscape();resetWorld();cancelAim();G=newNight(len);G.ch=opt.ch||0;G.nt=opt.nt||0;G.mod=[{spawn:1,boss:1,elite2:0},{spawn:1.4,boss:1,elite2:1},{spawn:1.2,boss:1.5,elite2:0}][G.nt];G.paused=false;$('#pillBtn').hidden=!(save.inv.pill.hui>0);$('#pillN').textContent=save.inv.pill.hui;$('#skills').hidden=$('#joy').hidden=false;drawJoy();$('#startOv').classList.remove('on');$('#endOv').classList.remove('on');$('#hud').hidden=false;
+function startNight(len,opt={}){BGM.play('night');bannerT=0;$('#banner').classList.remove('on');$('#breakBtn').hidden=true;SFX.resume();tryLandscape();buildMap(opt.ch||0);setUlt(save.ult);resetWorld();cancelAim();G=newNight(len);setSkills(G.tier=skillTier());G.ch=opt.ch||0;G.nt=opt.nt||0;G.mod=[{spawn:1,boss:1,elite2:0},{spawn:1.4,boss:1,elite2:1},{spawn:1.2,boss:1.5,elite2:0}][G.nt];G.paused=false;$('#pillBtn').hidden=!(save.inv.pill.hui>0);$('#pillN').textContent=save.inv.pill.hui;$('#skills').hidden=$('#joy').hidden=false;drawJoy();$('#startOv').classList.remove('on');$('#endOv').classList.remove('on');$('#hud').hidden=false;
   $('#bossMark').style.left='67%';spawnRing('ghost',8,7.5);// an opening ring so the first monsters are seen walking in
   renderBuffs();tipShown=false;say('左手走路，右手放技能！按住技能拖曳可以瞄準',6);
   setTimeout(()=>{if(G&&!G.over&&G.kills<3)say('吸青色的魂火可以頓悟喔！',4)},9000)}
@@ -1054,12 +1047,12 @@ let med=null;
 function stepMed(dt){med.t+=dt;mode='cast';const k=med.t;pillar.visible=true;pillar.position.set(HERO.pos.x,4.5,HERO.pos.z);pillar.scale.set(.9+Math.sin(k*6)*.08,9,.9+Math.sin(k*6)*.08);
   pillar.material.opacity=.5*Math.min(1,k/.6)*(k>2.8?Math.max(0,1-(k-2.8)/.6):1);
   if(k>=3.4){pillar.visible=false;med=null;realmUp();banner('突破成功！',REALMS[save.realm],true);SFX.play('gold');setTimeout(()=>{$('#startOv').classList.add('on');DF.render()},1400)}}
-$('#again').onclick=()=>startNight(NIGHT);$('#toTitle').onclick=()=>{$('#breakBtn').hidden=true;$('#endOv').classList.remove('on');$('#skills').hidden=$('#joy').hidden=true;$('#startOv').classList.add('on');$('#hud').hidden=true;DF.render();resetWorld();G=null;$('#pillBtn').hidden=true};
+$('#again').onclick=()=>startNight(NIGHT,{ch:G?G.ch:0,nt:G?G.nt:0});$('#toTitle').onclick=()=>{$('#breakBtn').hidden=true;$('#endOv').classList.remove('on');$('#skills').hidden=$('#joy').hidden=true;$('#startOv').classList.add('on');$('#hud').hidden=true;DF.render();resetWorld();G=null;$('#pillBtn').hidden=true};
 function resetWorld(){corpses.length=0;acts.forEach(a=>{if(a.end)a.end()});acts.length=0;for(const m of Object.values(IND))m.visible=false;for(const e of enemies)e.dead=true;enemies=[];for(const k in ET)ET[k].list=[];souls=[];shots.length=0;
   swords.forEach(s=>{s.on=false;s.g.visible=false;s.tr.build(0)});warnPool.forEach(w=>{w.on=false;w.m.visible=w.f.visible=false});fxPool.forEach(f=>{f.on=false;f.s.visible=false});
   for(const k in ET)ET[k].mesh.count=0;soulMesh.count=0;shadowMesh.count=0;ebs=[];ebMesh.count=ebGlow.count=0;dashPool.forEach(l=>{l.e=null;l.m.visible=false});
   bolts.forEach(b=>scene.remove(b.m));bolts.length=0;falls.forEach(f=>{f.on=false;f.g.visible=false});bellMesh.visible=false;shots.forEach(s=>{if(s.card)scene.remove(s.card)});
-  pills.forEach(p=>scene.remove(p.g));pills.length=0;qiRings.forEach(q=>scene.remove(q.m));qiRings.length=0;
+  pills.forEach(p=>scene.remove(p.g));pills.length=0;qiRings.forEach(q=>scene.remove(q.m));qiRings.length=0;clearHZ();
   boss.alive=false;boss.g.visible=false;$('#bossBox').classList.remove('on');orbitBlades.forEach(g=>g.visible=false);root.position.set(0,0,0);
   scene.fog.color.copy(NIGHT_FOG);scene.background.copy(NIGHT_FOG);hemi.intensity=.55}
 function endNight(win,gaveUp=false){if(G.over)return;G.over=true;G.paused=true;cancelAim();showAim();
@@ -1069,10 +1062,12 @@ function endNight(win,gaveUp=false){if(G.over)return;G.over=true;G.paused=true;c
   const st=save.st;st.kills+=Math.round(G.kills*(win?1:.5));if(G.bossKilled)st.boss++;if(G.eliteKilled)st.elite++;if(win)st.wins++;st.best=Math.max(st.best,G.kills);
   save.nights++;if(win)save.wins++;save.best=Math.max(save.best,G.kills);writeSave();$('#breakBtn').hidden=true;
   $('#endTitle').textContent=win?'喔喔喔——雞啼了，天亮了！':gaveUp?'先回山上養傷吧':'倒下了……';
-  $('#endText').textContent=win?(G.bossKilled?'燈籠大王被你斬了！白石村今晚平安。':'撐到天亮了！燈籠大王趁著晨光逃走了。')+' 殺氣天一亮就散了，帶回的是修行的進度。'
+  const bn=BOSSES[(CHC[G.ch]||CHC[0]).boss].name,pl=CH[G.ch]?CH[G.ch].p:'村子';
+  $('#endText').textContent=win?(G.bossKilled?`${bn}被你斬了！${pl}今晚平安。`:`撐到天亮了！${bn}趁著晨光逃走了。`)+' 殺氣天一亮就散了，帶回的是修行的進度。'
     :'這一夜的斬妖數算一半；境界不會掉。';
   $('#endStat').innerHTML=`<dt>斬妖</dt><dd>${G.kills} 隻</dd><dt>最高戰力</dt><dd>${fmt(G.peak||0)}</dd><dt>頓悟</dt><dd>${G.lv} 次</dd><dt>靈石</dt><dd>+${G.reward}</dd>${G.bossKilled?'<dt>妖丹</dt><dd>+1</dd>':''}${newUlt?`<dt>新大絕</dt><dd>${newUlt.n}</dd>`:''}`;
-  renderRealm('#realmText2','#realmBar2','#reqList2',false);$('#breakNote').hidden=!canBreak(false);if(win&&!simming)setTimeout(()=>{SFX.play('rooster');INK.dawn(()=>$('#endOv').classList.add('on'))},1100);else setTimeout(()=>$('#endOv').classList.add('on'),win?1600:900);BGM.play('home');
+  renderRealm('#realmText2','#realmBar2','#reqList2',false);$('#breakNote').hidden=!canBreak(false);const showEnd=()=>$('#endOv').classList.add('on'),endCut=G.ch===3&&!save.seen3e;if(win&&endCut){save.seen3e=1;writeSave()}
+  if(win&&!simming)setTimeout(()=>{SFX.play('rooster');INK.dawn(()=>endCut?INK.play(CUTS.ch3end,showEnd):showEnd())},1100);else setTimeout(()=>$('#endOv').classList.add('on'),win?1600:900);BGM.play('home');
   SFX.play(win?'win':'lose');
   if(win){banner('喔喔喔——！','雞啼');$('#bossBox').classList.remove('on')}}
 
@@ -1116,8 +1111,10 @@ function updateCamera(dt,snap){const C=CAMS[camIdx],zoom=G?1:.45;let D=(camOverr
   camera.position.set(camT.x+Math.sin(camYaw)*Math.cos(camP)*camD+sx,camT.y+Math.sin(camP)*camD,camT.z+Math.cos(camYaw)*Math.cos(camP)*camD+sz);camera.lookAt(camT);camera.updateMatrixWorld();sky.position.copy(camera.position)}
 function stepGame(dt){const g=G;
   // move
-  const inp=inputDir();const moving=inp.l>.12;g.moving=moving;
-  if(moving){const sp=g.s.move*inp.l;g.walked+=sp*dt;if(g.walked>=2.4){g.walked=0;qiBurst()}root.position.x+=inp.x*sp*dt;root.position.z+=inp.y*sp*dt;root.rotation.y=angLerp(root.rotation.y,Math.atan2(inp.x,inp.y),1-Math.exp(-dt*12));
+  for(const k of ['rootT','slowT','charm'])if(g[k]>0)g[k]-=dt;
+  if((g.rootT>0||g.slowT>0||g.charm>0)&&!simming&&(g.stT=(g.stT||0)-dt)<=0){g.stT=.22;fx({p:tmp.set(HERO.pos.x+(Math.random()-.5)*.8,.3+Math.random()*.9,HERO.pos.z+(Math.random()-.5)*.8),col:g.rootT>0?0xffc860:g.charm>0?0xc07cff:0x5aff6a,add:true,life:.5,s0:.5,s1:.1,op:.9,vy:1})}
+  const inp=inputDir();const moving=inp.l>.12&&!(g.rootT>0);g.moving=moving;
+  if(moving){const sp=g.s.move*inp.l*(g.slowT>0?.5:1);g.walked+=sp*dt;if(g.walked>=2.4){g.walked=0;qiBurst()}root.position.x+=inp.x*sp*dt;root.position.z+=inp.y*sp*dt;root.rotation.y=angLerp(root.rotation.y,Math.atan2(inp.x,inp.y),1-Math.exp(-dt*12));
     walkPh+=dt*(4+3*inp.l);mode='walk';g.stand=0}else{mode='cast';g.stand+=dt;g.standQi=(g.standQi||0)+dt;if(g.standQi>=1.8){g.standQi=0;qiBurst()}}
   const rr=Math.hypot(root.position.x,root.position.z);if(rr>ARENA){root.position.x*=ARENA/rr;root.position.z*=ARENA/rr}
   for(const h of HOUSES){const dx=root.position.x-h.x,dz=root.position.z-h.z,d=Math.hypot(dx,dz),r=h.r+.3;if(d<r&&d>1e-4){root.position.x=h.x+dx/d*r;root.position.z=h.z+dz/d*r}}
@@ -1132,7 +1129,7 @@ function stepGame(dt){const g=G;
   for(const k in g.cd)g.cd[k]=Math.max(0,g.cd[k]-dt);if(g.castT>0){g.castT-=dt;mode='cast'}
   if(g.auto)for(const k in SK)if(ready(k))castSkill(k,null);
   g.volley-=dt*g.s.rate*(moving?1:1.3);if(g.volley<=0){g.volley=.62;launchVolley()}
-  stepSwords(dt);stepSkills(dt);stepBoss(dt);stepWarns(dt);stepEnemyShots(dt);stepPills(dt);stepQi(dt);
+  stepSwords(dt);stepSkills(dt);stepBoss(dt);stepWarns(dt);stepHZ(dt);stepEnemyShots(dt);stepPills(dt);stepQi(dt);
   // enemies
   stepEnemies(dt);stepCorpses(dt);
   // souls
@@ -1161,6 +1158,8 @@ function stepEnemies(dt){grid.clear();for(const e of enemies){if(e.dead)continue
   for(const e of enemies){if(e.dead)continue;const t=e.t;e.ph+=dt;
     const dx=HERO.pos.x-e.x,dz=HERO.pos.z-e.z,d=Math.hypot(dx,dz)||1;
     let mv=e.spd,mx=dx/d,mz=dz/d;e.cd-=dt;e.squash=Math.max(0,(e.squash||0)-dt*4);
+    if(e.burn>0){e.burn-=dt;e.burnT=(e.burnT||0)-dt;if(e.burnT<=0){e.burnT=.5;hurtEnemy(e,e.burnD,0,0,false,3);if(!simming)fx({p:tmp.set(e.x,.6,e.z),col:0xff7a2a,add:true,life:.35,s0:.6,s1:.2,op:.9,vy:1.5});if(e.dead)continue}}
+    if(e.rise>0){e.rise-=dt;e.y=-.5*Math.max(0,e.rise/.7)}else if(e.down>0)e.down-=dt;
     if(e.stun>0){e.stun-=dt;mv=0;e.cd=Math.max(e.cd,.4);e.wind=0;e.dashT=0}
     if(t.hop&&!e.leapT&&!(e.stun>0)){const h=Math.abs(Math.sin(e.ph*3.2));e.y=h*.32*e.s;mv*=h>.15?1.6:0;if(h<.08)e.squash=.6}
     if(t.float)e.y=.15+Math.sin(e.ph*2.4)*.1;
@@ -1177,6 +1176,8 @@ function stepEnemies(dt){grid.clear();for(const e of enemies){if(e.dead)continue
     if(t.leap&&e.special){if(e.leapT>0){e.leapT-=dt;const k=1-e.leapT/.7;e.x=e.lx0+(e.lx1-e.lx0)*k;e.z=e.lz0+(e.lz1-e.lz0)*k;e.y=Math.sin(k*Math.PI)*1.6;mv=0;
         if(e.leapT<=0){e.leapT=0;e.y=0;e.squash=1;e.cd=5+Math.random()*3;shake=Math.max(shake,.12);fx({p:tmp.set(e.x,.2,e.z),col:0x6a7a5a,life:.5,s0:.6,s1:2.2,op:.7,vy:.2})}}
       else if(e.cd<=0&&d<6&&d>1.5){e.leapT=.7;e.lx0=e.x;e.lz0=e.z;e.lx1=HERO.pos.x;e.lz1=HERO.pos.z;warn(e.lx1,e.lz1,1,.7,e.dmg*1.2)}}
+    if(t.ai&&!(e.stun>0)){const o=t.ai(e,dt,d,mx,mz);if(o){mv=o.v;mx=o.x;mz=o.z}}
+    if(e.slowT>0){e.slowT-=dt;mv*=.45}
     if(!e.leapT){e.x+=mx*mv*dt;e.z+=mz*mv*dt}
     // separation from neighbours
     const gx=Math.floor(e.x/GRID),gz=Math.floor(e.z/GRID);for(let i=-1;i<=1;i++)for(let j=-1;j<=1;j++){const c=grid.get((gx+i)+','+(gz+j));if(!c)continue;
@@ -1189,20 +1190,20 @@ function stepEnemies(dt){grid.clear();for(const e of enemies){if(e.dead)continue
 function writeInstances(){const lean=-.45*Math.max(0,Math.min(1,(camP-.45)/.45));for(const k in ET){const t=ET[k];let i=0;
     for(const e of t.list){dummy.position.set(e.x,e.y,e.z);const fy=Math.atan2(HERO.pos.x-e.x,HERO.pos.z-e.z);
       dummy.rotation.set(lean+(e.lunge>0?.35:0)+(t.float?.12:0),fy,t.sway?Math.sin(e.ph*5)*.14:t.float?Math.sin(e.ph*1.7)*.08:0,'YXZ');
-      const sq=e.squash||0;dummy.scale.set(e.s*t.sc*(1+sq*.25),e.s*t.sc*(1-sq*.3),e.s*t.sc*(1+sq*.25));dummy.updateMatrix();
-      t.mesh.setMatrixAt(i,dummy.matrix);t.mesh.setColorAt(i,e.flash>0?FLASH:e.elite?ELITE:e.special?SPECIAL:WHITE);i++}
+      const sq=e.squash||0,dn=e.down>0?.22+.78*Math.max(0,1-e.down/.4)*(e.down<.4?1:0):1;dummy.scale.set(e.s*t.sc*(1+sq*.25),e.s*t.sc*(1-sq*.3)*dn,e.s*t.sc*(1+sq*.25));dummy.updateMatrix();
+      t.mesh.setMatrixAt(i,dummy.matrix);t.mesh.setColorAt(i,e.flash>0?FLASH:e.slowT>0?ICE:e.elite?ELITE:e.special?SPECIAL:WHITE);i++}
     for(const c of corpses){if(c.t!==t||i>=t.cap)continue;const k=c.life/c.max;dummy.position.set(c.x,c.y,c.z);dummy.rotation.set(c.rx,c.ry,c.rz,'YXZ');
       dummy.scale.setScalar(c.s*t.sc*(k>.7?1-(k-.7)/.3*.75:1));dummy.updateMatrix();t.mesh.setMatrixAt(i,dummy.matrix);ASHC.copy(WHITE).lerp(ASH,Math.min(1,k*1.5));t.mesh.setColorAt(i,ASHC);i++}
-    t.mesh.count=i;t.mesh.instanceMatrix.needsUpdate=true;if(t.mesh.instanceColor)t.mesh.instanceColor.needsUpdate=true}
+    t.mesh.count=i;t.mesh.visible=i>0;t.mesh.instanceMatrix.needsUpdate=true;if(t.mesh.instanceColor)t.mesh.instanceColor.needsUpdate=true}
   {let j=0;for(const e of enemies){if(e.dead)continue;dummy.position.set(e.x,.02,e.z);dummy.rotation.set(0,0,0);dummy.scale.setScalar(e.r*3.2);dummy.updateMatrix();shadowMesh.setMatrixAt(j++,dummy.matrix)}
    shadowMesh.count=j;shadowMesh.instanceMatrix.needsUpdate=true}
   let i=0;for(const s of souls){dummy.position.set(s.x,s.y+Math.sin(s.t*5+i)*.08,s.z);dummy.rotation.set(0,s.t*3,0);dummy.scale.setScalar(s.v>1?1.4:1);dummy.updateMatrix();soulMesh.setMatrixAt(i++,dummy.matrix)}
   soulMesh.count=i;soulMesh.instanceMatrix.needsUpdate=true;
-  i=0;for(const b of ebs){const pul=1+Math.sin(b.t*20)*.15;dummy.position.set(b.x,b.y,b.z);dummy.rotation.set(0,0,0);dummy.scale.setScalar(pul);dummy.updateMatrix();ebMesh.setMatrixAt(i,dummy.matrix);
+  i=0;for(const b of ebs){const pul=1+Math.sin(b.t*20)*.15;dummy.position.set(b.x,b.y,b.z);dummy.rotation.set(0,0,0);dummy.scale.setScalar(pul);dummy.updateMatrix();ebMesh.setMatrixAt(i,dummy.matrix);ebMesh.setColorAt(i,b.c[0]);ebGlow.setColorAt(i,b.c[1]);
     dummy.quaternion.copy(camera.quaternion);dummy.scale.setScalar(.75*pul);dummy.updateMatrix();ebGlow.setMatrixAt(i++,dummy.matrix)}
-  ebMesh.count=ebGlow.count=i;ebMesh.instanceMatrix.needsUpdate=ebGlow.instanceMatrix.needsUpdate=true;
+  ebMesh.count=ebGlow.count=i;ebMesh.instanceMatrix.needsUpdate=ebGlow.instanceMatrix.needsUpdate=true;ebMesh.instanceColor.needsUpdate=ebGlow.instanceColor.needsUpdate=true;
   for(const L of dashPool)if(L.e){L.m.position.set(L.e.x,.03,L.e.z);L.m.material.opacity=.25+.25*Math.sin(G.t*30)}}
-const ELITE=new THREE.Color(1.6,.8,.6),SPECIAL=new THREE.Color(1.5,.75,.7);
+const ELITE=new THREE.Color(1.6,.8,.6),SPECIAL=new THREE.Color(1.5,.75,.7),ICE=new THREE.Color(.65,1.05,1.6);
 // off-screen danger: red arrows on the screen edge for fireballs / winding-up monsters nearby, orange for the boss
 const edgeEls=[];for(let i=0;i<8;i++){const d=document.createElement('div');d.className='edge';$('#edges').appendChild(d);edgeEls.push(d)}
 const ep=new THREE.Vector3();
@@ -1225,7 +1226,7 @@ function simRun(sec){const n=Math.round(sec*30);for(let i=0;i<n&&G&&!G.over;i++)
   G.t+=1/30;stepGame(1/30);HERO.pos.copy(root.position);updateCamera(1/30,true)}return G&&{t:Math.round(G.t),kills:G.kills,lv:G.lv,hp:Math.round(G.hp),en:enemies.length,boss:boss.alive?Math.round(boss.hp/boss.max*100)+'%':G.bossKilled?'killed':'-',over:G.over}}
 /*@include game/dongfu.js*/
 DF.render();
-window.__game={get save(){return save},cast:k=>castSkill(k,null),DF,startTribulation,canBreak,setCam:i=>{setCam(i)},ic:()=>{const m=ET.paper.mesh;return {cnt:m.count,ic:[...m.instanceColor.array.slice(0,9)],attr:Object.keys(m.geometry.attributes),vc:m.material.vertexColors,prog:renderer.info.programs.map(p=>p.name)}},cols:k=>{const a=ET[k].geo.attributes.color.array,u=new Set();for(let i=0;i<a.length;i+=3)u.add(a[i].toFixed(2)+','+a[i+1].toFixed(2)+','+a[i+2].toFixed(2));return [...u].concat([ET[k].mesh.material.vertexColors,!!ET[k].mesh.instanceColor])},gallery:()=>{G.paused=true;resetWorld();G.paused=true;['ghost','paper','jiang','lgh'].forEach((k,i)=>{const e=spawn(k,-1.35+i*.9,0);e.cd=99});root.position.set(0,0,-2.5);root.rotation.y=Math.PI;HERO.pos.set(0,0,3);root.rotation.y=0;writeInstances()},camD:d=>{camOverride=d},start:()=>startNight(NIGHT),get G(){return G},setT:s=>{if(G)G.t=s},auto:v=>{if(G)G.auto=v},pick:i=>pickCard(i),god:()=>{if(G){G.maxhp=G.hp=1e9}},
+window.__game={get save(){return save},cast:k=>castSkill(k,null),DF,startTribulation,canBreak,setCam:i=>{setCam(i)},ic:()=>{const m=ET.paper.mesh;return {cnt:m.count,ic:[...m.instanceColor.array.slice(0,9)],attr:Object.keys(m.geometry.attributes),vc:m.material.vertexColors,prog:renderer.info.programs.map(p=>p.name)}},cols:k=>{const a=ET[k].geo.attributes.color.array,u=new Set();for(let i=0;i<a.length;i+=3)u.add(a[i].toFixed(2)+','+a[i+1].toFixed(2)+','+a[i+2].toFixed(2));return [...u].concat([ET[k].mesh.material.vertexColors,!!ET[k].mesh.instanceColor])},gallery:(ks=['ghost','paper','jiang','lgh'])=>{G.paused=true;resetWorld();G.paused=true;ks.forEach((k,i)=>{const e=spawn(k,-(ks.length-1)*.45+i*.9,0);e.cd=99;e.cd2=99});root.position.set(0,0,-2.5);root.rotation.y=Math.PI;HERO.pos.set(0,0,3);root.rotation.y=0;writeInstances()},camD:d=>{camOverride=d},start:(ch=0,nt=0)=>startNight(NIGHT,{ch,nt}),startBoss:()=>{if(G&&!boss.alive)startBoss()},boss:()=>({alive:boss.alive,hp:boss.hp,max:boss.max,name:boss.def&&boss.def.name}),get G(){return G},setT:s=>{if(G)G.t=s},auto:v=>{if(G)G.auto=v},pick:i=>pickCard(i),god:()=>{if(G){G.maxhp=G.hp=1e9}},
   spawnRing,setWho:pickChar,sim,mat:k=>[...ET[k].mesh.instanceMatrix.array.slice(0,16)].map(v=>+v.toFixed(3)).concat(ET[k].list.slice(0,3).map(e=>[e.x,e.y,e.z,e.s,e.flash])),bdbg:()=>({n:(ndc.set(boss.x,1.5,boss.z).project(camera),[ndc.x,ndc.y,ndc.z].map(v=>+v.toFixed(2))),bx:[boss.x,boss.z],cam:camera.position.toArray().map(v=>+v.toFixed(1)),d:Math.hypot(boss.x-HERO.pos.x,boss.z-HERO.pos.z),on:bossOnScreen(),hp:boss.hp,max:boss.max,dps:G.dps,sw:swords.filter(s=>s.on&&s.tgt===boss).length}),dbg:()=>({cnt:Object.keys(ET).map(k=>k+':'+ET[k].mesh.count+(ET[k].mesh.instanceColor?'c':'')+(ET[k].mesh.visible?'v':'')),pr:renderer.getPixelRatio(),gl2:renderer.capabilities.isWebGL2,prog:renderer.info.programs.length,en:enemies.length,near:enemies.filter(e=>Math.hypot(e.x-HERO.pos.x,e.z-HERO.pos.z)<6.5).length,sw:swords.filter(s=>s.on).length,hero:[HERO.pos.x,HERO.pos.z],e0:enemies[0]&&[enemies[0].x,enemies[0].z,enemies[0].hp],vol:G&&G.volley})};
 })();
 </script>
