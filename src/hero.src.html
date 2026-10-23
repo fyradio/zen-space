@@ -99,7 +99,7 @@ body.editing .top{opacity:0;pointer-events:none}
   <h1 id="title" aria-label="午夜來斬妖">
     <span style="--r:-5deg;--i:0">午</span><span style="--r:3deg;--i:1">夜</span><span style="--r:-2deg;--i:2">來</span><span class="zhan" style="--r:6deg;--i:3">斬</span><span style="--r:-4deg;--i:4">妖</span>
   </h1>
-  <div class="sub">煉氣一層・小道士　主角試做 v0.9</div>
+  <div class="sub">煉氣一層・小道士　主角試做 v0.10</div>
   <div class="fonts" role="group" aria-label="標題字體">
     <small>標題字體</small>
     <button class="chip" data-font="TPotta" aria-pressed="true">墨團</button>
@@ -288,48 +288,48 @@ const MARKS=[null,'rgba(120,190,200,.45)','rgba(196,52,44,.8)'];
 // t: s=只改頭部縮放, g=頭型幾何, x=臉部貼圖（g/x 可併用）
 const FACE_SPEC=[
  {tab:'臉型',items:[
-  {k:'headH',n:'頭高（短↔長）',min:0.765,max:1.005,step:.005,span:0.24,def:0.885,t:'s'},
-  {k:'headS',n:'頭大小',min:0.925,max:1.225,step:.005,span:0.3,def:1.075,t:'s'},
-  {k:'faceW',n:'臉寬',min:0.52,max:0.82,step:.005,span:0.3,def:0.67,t:'s'},
-  {k:'foreW',n:'額頭寬',min:0.02,max:0.14,step:.005,span:0.12,def:0.08,t:'g'},
-  {k:'cheekW',n:'顴骨寬',min:-0.005,max:0.395,step:.005,span:0.4,def:0.195,t:'g'},
-  {k:'jawW',n:'下頜寬',min:0,max:0.44,step:.005,span:0.44,def:0.22,t:'g'},
-  {k:'chinW',n:'下巴（尖↔圓）',min:-1.08,max:-0.44,step:.01,span:0.64,def:-0.76,t:'g'},
-  {k:'chinR',n:'整個下巴圓潤',min:0.3,max:1.3,step:.05,span:1,def:0.8,t:'g'},
-  {k:'lowerLen',n:'下巴長',min:-0.035,max:0.185,step:.005,span:0.22,def:0.075,t:'g'},
-  {k:'flat',n:'臉平度',min:0,max:0.68,step:.02,span:0.7,def:0.04,t:'g'},
-  {k:'cheekFull',n:'臉頰飽滿',min:-2,max:0,step:.05,span:2,def:-1,t:'g'},
-  {k:'cheekLow',n:'兩頰寬',min:-.15,max:.15,step:.005,span:.3,def:0,t:'g'},
-  {k:'cheekHollow',n:'兩頰凹陷',min:0,max:3,step:.1,span:3,def:1,t:'g'},
-  {k:'cheekApple',n:'蘋果肌',min:-1,max:1,step:.05,span:2,def:0,t:'g'},
-  {k:'browBone',n:'眉骨',min:0.7,max:2.7,step:.05,span:2,def:1.7,t:'g'}]},
+  {k:'headH',n:'頭高（短↔長）',min:0.69,max:0.93,step:.005,span:0.24,def:0.81,t:'s'},
+  {k:'headS',n:'頭大小',min:0.945,max:1.245,step:.005,span:0.3,def:1.095,t:'s'},
+  {k:'faceW',n:'臉寬',min:0.5,max:0.8,step:.005,span:0.3,def:0.625,t:'s'},
+  {k:'foreW',n:'額頭寬',min:-0.02,max:0.1,step:.005,span:0.12,def:0.04,t:'g'},
+  {k:'cheekW',n:'顴骨寬',min:-0.185,max:0.215,step:.005,span:0.4,def:0.015,t:'g'},
+  {k:'jawW',n:'下頜寬',min:-0.13,max:0.31,step:.005,span:0.44,def:0.09,t:'g'},
+  {k:'chinW',n:'下巴（尖↔圓）',min:-0.91,max:-0.27,step:.01,span:0.64,def:-0.59,t:'g'},
+  {k:'chinR',n:'整個下巴圓潤',min:0.5,max:1.5,step:.05,span:1,def:1,t:'g'},
+  {k:'lowerLen',n:'下巴長',min:-0.1,max:0.12,step:.005,span:0.22,def:-0.015,t:'g'},
+  {k:'flat',n:'臉平度',min:0,max:0.68,step:.02,span:0.7,def:0.16,t:'g'},
+  {k:'cheekFull',n:'臉頰飽滿',min:-3,max:-1,step:.05,span:2,def:-2,t:'g'},
+  {k:'cheekLow',n:'兩頰寬',min:-0.14,max:0.16,step:.005,span:.3,def:0.01,t:'g'},
+  {k:'cheekHollow',n:'兩頰凹陷',min:-0.6,max:2.4,step:.1,span:3,def:0.9,t:'g'},
+  {k:'cheekApple',n:'蘋果肌',min:-0.95,max:1.05,step:.05,span:2,def:0.05,t:'g'},
+  {k:'browBone',n:'眉骨',min:0.95,max:2.95,step:.05,span:2,def:1.95,t:'g'}]},
  {tab:'眼睛',items:[
   {k:'eyeSp',n:'眼距',min:51,max:71,step:1,span:20,def:61,t:'gx'},
-  {k:'eyeUp',n:'眼位高低',min:-35,max:-3,step:1,span:32,def:-19,t:'gx'},
-  {k:'eyeSize',n:'眼睛大小',min:0.72,max:1.36,step:.01,span:0.65,def:1.04,t:'gx'},
-  {k:'eyeOpen',n:'眼睛開合',min:0.66,max:1.46,step:.01,span:0.8,def:1.06,t:'x'},
+  {k:'eyeUp',n:'眼位高低',min:-29,max:3,step:1,span:32,def:-13,t:'gx'},
+  {k:'eyeSize',n:'眼睛大小',min:0.79,max:1.43,step:.01,span:0.65,def:1.11,t:'gx'},
+  {k:'eyeOpen',n:'眼睛開合',min:0.61,max:1.41,step:.01,span:0.8,def:1.01,t:'x'},
   {k:'eyeTilt',n:'眼尾上揚',min:-18.5,max:15.5,step:.5,span:34,def:-1.5,t:'x'},
   {k:'irisS',n:'瞳孔大小',min:0.73,max:1.43,step:.01,span:0.7,def:1.08,t:'x'},
-  {k:'iris',n:'瞳色',opts:['墨褐','墨黑','青碧','琥珀','紫霧'],def:1,t:'x'},
-  {k:'lash',n:'上眼線粗細',min:0.5,max:3.9,step:.1,span:3.5,def:2.1,t:'x'},
+  {k:'iris',n:'瞳色',opts:['墨褐','墨黑','青碧','琥珀','紫霧'],def:4,t:'x'},
+  {k:'lash',n:'上眼線粗細',min:0.5,max:3.9,step:.1,span:3.5,def:1.5,t:'x'},
   {k:'shadow',n:'眼影',min:0,max:2.4,step:.1,span:2.5,def:0.8,t:'x'}]},
  {tab:'眉毛',items:[
-  {k:'browUp',n:'眉位高低',min:-19,max:3,step:1,span:22,def:-8,t:'x'},
-  {k:'browLen',n:'眉長',min:0.78,max:1.68,step:.01,span:0.9,def:1.23,t:'x'},
-  {k:'browThick',n:'眉粗細',min:2.9,max:7.1,step:.1,span:4.2,def:5,t:'x'},
-  {k:'browArch',n:'眉弧度',min:1,max:12,step:.5,span:11,def:6.5,t:'x'},
-  {k:'browTail',n:'眉尾上揚',min:-13.5,max:4.5,step:.5,span:18,def:-4.5,t:'x'},
-  {k:'browDark',n:'眉色濃淡',min:0.1,max:1.8,step:.05,span:1.7,def:0.95,t:'x'}]},
+  {k:'browUp',n:'眉位高低',min:-25,max:-3,step:1,span:22,def:-14,t:'x'},
+  {k:'browLen',n:'眉長',min:0.76,max:1.66,step:.01,span:0.9,def:1.21,t:'x'},
+  {k:'browThick',n:'眉粗細',min:3.4,max:7.6,step:.1,span:4.2,def:5.5,t:'x'},
+  {k:'browArch',n:'眉弧度',min:2.5,max:13.5,step:.5,span:11,def:8,t:'x'},
+  {k:'browTail',n:'眉尾上揚',min:-16.5,max:1.5,step:.5,span:18,def:-7.5,t:'x'},
+  {k:'browDark',n:'眉色濃淡',min:0.1,max:1.8,step:.05,span:1.7,def:0.9,t:'x'}]},
  {tab:'鼻子',items:[
-  {k:'noseUp',n:'鼻頭位置',min:-16,max:0,step:1,span:16,def:-8,t:'gx'},
-  {k:'noseH',n:'鼻樑高度',min:0,max:3.7,step:.05,span:3.7,def:1.65,t:'g'},
-  {k:'noseTipP',n:'鼻頭突出',min:0,max:4,step:.1,span:4,def:0.6,t:'g'},
+  {k:'noseUp',n:'鼻頭位置',min:-8,max:8,step:1,span:16,def:0,t:'gx'},
+  {k:'noseH',n:'鼻樑高度',min:0.2,max:3.9,step:.05,span:3.7,def:2.05,t:'g'},
+  {k:'noseTipP',n:'鼻頭突出',min:0,max:4,step:.1,span:4,def:1.2,t:'g'},
   {k:'noseW',n:'鼻翼寬',min:0.75,max:2.25,step:.05,span:1.5,def:1.5,t:'gx'}]},
  {tab:'嘴唇',items:[
-  {k:'lipUp',n:'唇位置',min:-29,max:-3,step:1,span:26,def:-16,t:'gx'},
+  {k:'lipUp',n:'唇位置',min:-21,max:5,step:1,span:26,def:-8,t:'gx'},
   {k:'lipW',n:'唇寬',min:1.8,max:3.48,step:.02,span:1.7,def:2.64,t:'gx'},
   {k:'lipThick',n:'唇厚',min:0.95,max:3.35,step:.05,span:2.4,def:2.15,t:'gx'},
-  {k:'lipCorner',n:'嘴角上揚',min:-9,max:7,step:.5,span:16,def:-1,t:'x'},
+  {k:'lipCorner',n:'嘴角上揚',min:-4.5,max:11.5,step:.5,span:16,def:3.5,t:'x'},
   {k:'lipStyle',n:'唇形',opts:['自然','櫻桃','花瓣','微笑','薄唇','咬唇'],def:0,t:'gx'},
   {k:'expr',n:'表情',opts:['平常','喜','怒','哀','樂','吶喊'],def:0,t:'x'},
   {k:'lipC',n:'唇色',opts:['朱砂','淡櫻','絳紅','裸粉'],def:0,t:'x'}]},
@@ -342,10 +342,11 @@ const FACE_SPEC=[
   {k:'height',n:'整體身高',min:0.52,max:0.82,step:.005,span:0.3,def:0.67,t:'b'},
   {k:'legLen',n:'下半身長',min:0.44,max:0.9,step:.005,span:0.46,def:0.67,t:'b'},
   {k:'torsoLen',n:'上身長',min:0.56,max:0.96,step:.005,span:0.4,def:0.76,t:'b'},
-  {k:'neckLen',n:'脖子長',min:0.2,max:1,step:.01,span:0.8,def:0.6,t:'b'},
+  {k:'neckLen',n:'脖子長',min:0.2,max:1,step:.01,span:0.8,def:0.46,t:'b'},
   {k:'shoulderW',n:'肩寬',min:0.405,max:0.905,step:.005,span:0.5,def:0.655,t:'b'},
   {k:'shoulderDrop',n:'溜肩',min:0,max:1,step:.05,span:1,def:0.4,t:'b'},
-  {k:'bodyW',n:'身材胖瘦',min:0.5,max:1.1,step:.005,span:0.6,def:0.8,t:'b'},
+  {k:'bodyW',n:'身材胖瘦',min:0.45,max:1.05,step:.005,span:0.6,def:0.75,t:'b'},
+  {k:'handS',n:'手大小',min:1,max:1.8,step:.01,span:.8,def:1.4,t:'b'},
   {k:'armLen',n:'手臂長',min:0.7,max:1,step:.005,span:0.3,def:0.85,t:'b'}]}];
 // t: b=身形（applyBody 重排身體各部件）
 const FACE_DEF={};FACE_SPEC.forEach(s=>s.items.forEach(i=>{FACE_DEF[i.k]=i.def}));
@@ -494,12 +495,14 @@ function makeArm(side){const sh=new THREE.Group();sh.position.set(side*.168,SH,0
   part(new THREE.CylinderGeometry(.066,.094,.24,18,1,true),M.outerDS,el,{p:[0,-.11,0]});
   part(new THREE.CylinderGeometry(.096,.096,.03,18,1,true),M.trim,el,{p:[0,-.222,0]});
   part(new THREE.CylinderGeometry(.06,.07,.05,16,1,true),M.inner,el,{p:[0,-.235,0]});
-  part(new THREE.SphereGeometry(1,14,12),M.skin,el,{p:[0,-.262,0],s:[.026,.034,.021]});
-  const fing=new THREE.Group();fing.position.y=-.282;el.add(fing);
-  part(new THREE.CylinderGeometry(.0055,.0055,.06,6),M.skin,fing,{p:[.006,-.03,0]});
-  part(new THREE.CylinderGeometry(.0055,.0055,.058,6),M.skin,fing,{p:[-.006,-.029,0]});
+  const hand=new THREE.Group();hand.position.y=-.25;el.add(hand);// wrist pivot, scaled by 手大小
+  part(new THREE.SphereGeometry(1,14,12),M.skin,hand,{p:[0,-.012,0],s:[.026,.034,.021]});
+  part(new THREE.SphereGeometry(1,10,8),M.skin,hand,{p:[side*.018,-.014,.012],s:[.008,.016,.008],r:[0,0,side*.5]});// thumb
+  const fing=new THREE.Group();fing.position.y=-.032;hand.add(fing);
+  part(new THREE.CylinderGeometry(.0068,.0078,.07,8),M.skin,fing,{p:[.0068,-.035,0]});
+  part(new THREE.CylinderGeometry(.0068,.0078,.067,8),M.skin,fing,{p:[-.0068,-.0335,0]});
   const pins=[];for(let i=0;i<4;i++)pins.push(anchor(`sl${side}_${i}`,el,0,-.03-i*.075,-.01));
-  return {sh,el,fing,pins}}
+  return {sh,el,hand,fing,pins}}
 const armL=makeArm(1),armR=makeArm(-1);
 
 // head: sculpted sphere (brow, sockets, nose, cheekbones, lips, chin); shapeHead() rebuilds it from the 捏臉 parameters F
@@ -853,6 +856,7 @@ function remapLathe(src,dst){for(let i=0;i<src.length;i+=3){const x=src[i],y=src
 function scaleRopes(){const hw=F.height*F.headS*F.faceW;
   for(const r of ropes){if(!r.kind)continue;const b=r.base,w=r.kind==='hair'?hw:F.height;r.seg=b.seg*.75*F.height;r.w0=b.w0*w;r.w1=b.w1*w}}
 function applyBody(){
+  armL.hand.scale.setScalar(F.handS);armR.hand.scale.setScalar(F.handS);
   body.scale.setScalar(F.height);scaleRopes();
   remapLathe(skirt0,skirtBase);remapLathe(coat0,coatBase);
   const ta=torsoGeo.attributes.position;remapLathe(torso0,ta.array);ta.needsUpdate=true;torsoGeo.computeVertexNormals();torsoGeo.computeBoundingSphere();
@@ -871,13 +875,17 @@ function applyBody(){
 function applyFace(dirty){
   headG.scale.set(F.headS*F.faceW,F.headS*F.headH,F.headS);scaleRopes();
   if(dirty.g)shapeHead();
-  if(dirty.x){redraw(faceTex,drawFace);M.skin.color.copy(LC(SKINS[F.skin][0])).multiplyScalar(.93)}}
+  if(dirty.x){redraw(faceTex,drawFace);skinFromFace()}}
 const saveFace=()=>{try{localStorage.setItem(FACE_KEY,JSON.stringify({h:FACE_HASH,f:F}))}catch(e){}};
 let fdirty={g:0,x:0,b:0},ftimer=0;
 function faceChanged(it){
   if(it.t.includes('g'))fdirty.g=1;if(it.t.includes('x'))fdirty.x=1;if(it.t.includes('b'))fdirty.b=1;
   if(!ftimer)ftimer=setTimeout(()=>{ftimer=0;const d=fdirty;fdirty={g:0,x:0,b:0};applyFace(d);if(d.b)applyBody();saveFace()},50)}
-M.skin.color.copy(LC(SKINS[F.skin][0])).multiplyScalar(.93);// same tone as the face texture so the neck matches
+// neck and hands take the colour the face texture actually has on the cheeks (base tone + blush + contour), darkened
+// because the neck faces the key light square-on and would otherwise tone-map paler than the face
+function skinFromFace(){const d=faceTex.userData.x.getImageData(2*(256-80),2*300,320,40).data;let r=0,g=0,b=0;
+  for(let i=0;i<d.length;i+=4){r+=d[i];g+=d[i+1];b+=d[i+2]}const n=d.length/4;M.skin.color.setRGB(r/n/255,g/n/255,b/n/255).convertSRGBToLinear().multiplyScalar(.56)}
+skinFromFace();
 let curTab=0,ftoastT=0;
 applyBody();
 const ftoast=m=>{const e=$('#ftoast');e.textContent=m;clearTimeout(ftoastT);ftoastT=setTimeout(()=>{e.textContent=''},3200)};
