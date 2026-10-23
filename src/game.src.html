@@ -128,7 +128,7 @@ h2{margin:0;font-size:22px;font-weight:400;letter-spacing:.2em}
     <div class="pair" role="group" aria-label="角色"><button class="btn" data-who="0">女主角</button><button class="btn" data-who="1">男主角</button></div>
     <button class="btn go" id="startNight">開始・一夜<small>3 分鐘：1 分多鐘出精英，2 分鐘燈籠大王登場</small></button>
     <div class="realm"><span id="realmText">煉氣一層・修為 0</span><div class="wu"><i id="realmBar"></i></div></div>
-    <div class="tag">走路＝劍罡護體、吸魂更遠；站樁＝出劍更快。右上「視」切換視角</div>
+    <div class="tag">走路＝劍罡護體、吸魂更遠；站樁＝出劍更快。每斬 250 隻妖多一把飛劍。右上「視」切換視角</div>
   </div>
 </div>
 
@@ -374,7 +374,7 @@ const boss=(()=>{const g=new THREE.Group();g.visible=false;scene.add(g);
 
 /* ================= 飛劍、技能、特效 ================= */
 const swordMat=new THREE.MeshBasicMaterial({color:0xbffff0,transparent:true,opacity:.95,blending:THREE.AdditiveBlending,depthWrite:false});
-const swords=[];for(let i=0;i<40;i++){const g=new THREE.Group();g.visible=false;scene.add(g);
+const swords=[];for(let i=0;i<60;i++){const g=new THREE.Group();g.visible=false;scene.add(g);
   part(new THREE.BoxGeometry(.05,.012,.6),swordMat,g,{ol:false});const tp=new THREE.ConeGeometry(.035,.12,4);tp.rotateX(Math.PI/2);part(tp,swordMat,g,{p:[0,0,.36],ol:false});
   const s=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex,color:0x7fffd4,opacity:.6,blending:THREE.AdditiveBlending,depthWrite:false}));s.scale.set(.7,.7,1);g.add(s);
   swords.push({g,on:false,tr:new Trail(10,.07,0x8fffe0),pos:new THREE.Vector3(),vel:new THREE.Vector3(),tgt:null,life:0,pierce:0,hit:new Set()})}
@@ -456,10 +456,12 @@ let G=null;// the current night
 const NIGHT=180;
 function newNight(len){return {nextPill:67,walked:0,moving:false,len,boost:480/len*.75,t:0,over:false,paused:true,kills:0,souls:0,wu:0,wuNeed:25,lv:0,slow:0,pendingGold:0,spawnAcc:0,waveAt:60,
   hp:150,maxhp:150,iframe:0,regenAcc:0,eliteDone:false,bossDone:false,bossKilled:false,eliteKilled:false,
-  s:{dmg:1,rate:1,count:2,pierce:1,range:7.5,move:3.2,magnet:1.8,regen:0,orbit:0,talis:0,talisN:0,lamp:0,size:1,crit:.12},
+  s:{dmg:1,rate:1,count:3,pierce:1,range:7.5,move:3.2,magnet:1.8,regen:0,orbit:0,talis:0,talisN:0,lamp:0,size:1,crit:.12},
   skills:{},volley:0,orbitHit:new Map(),talisCd:2,lampCd:1.5,stand:0,auto:false}}
 const minute=()=>G.t/G.len*8;// night progress in "minutes" of an 8-minute night
 const hpScale=()=>Math.pow(1+.2*minute(),1.3);
+// 殺氣凝劍: every 250 kills adds a flying sword (up to +5), so the slaughter itself makes you visibly stronger
+const killSw=()=>Math.min(5,Math.floor(G.kills/250)),effCount=()=>Math.min(14,G.s.count+killSw());
 const killMult=()=>1+.002*G.kills*G.boost+(G.bossKilled?.05:0)+(G.eliteKilled?.05:0);
 const swordDmg=()=>10*G.s.dmg*killMult();
 const fmt=n=>n>=1e8?(n/1e8).toFixed(2)+'億':n>=1e4?(n/1e4).toFixed(n>=1e5?1:2)+'萬':String(Math.round(n));
@@ -481,7 +483,7 @@ const CARDS=[
     f:r=>{if(G.s.thunder){G.s.thunder=Math.min(12,G.s.thunder+[1,2,3][r]);G.s.thunderP*=1.25}else{G.s.thunder=[3,4,5][r];G.s.thunderP=1}},max:()=>G.s.thunder>=12},
   {k:'bell',ic:'鐘',n:'金鐘罩',skill:1,d:r=>G.s.bell?`金鐘罩回復更快，震開範圍更大`:`新招：金鐘罩擋下一次傷害並震開周圍的妖，${[8,6,5][r]} 秒回復`,f:r=>{G.s.bell=G.s.bell?Math.max(3,G.s.bell*.75):[8,6,5][r];G.bellT=0}},
   // evolution: shows up (always 仙品) once you have 5 swords
-  {k:'wan',ic:'萬',n:'萬劍歸宗',skill:1,evo:1,d:r=>G.s.wan?`萬劍歸宗更快、落下更多劍`:`絕招：每 6 秒萬劍從天而降，斬盡畫面上的妖`,f:r=>{G.s.wan=Math.min(3,(G.s.wan||0)+1)},when:()=>G.s.count>=5,max:()=>G.s.wan>=3}];
+  {k:'wan',ic:'萬',n:'萬劍歸宗',skill:1,evo:1,d:r=>G.s.wan?`萬劍歸宗更快、落下更多劍`:`絕招：每 6 秒萬劍從天而降，斬盡畫面上的妖`,f:r=>{G.s.wan=Math.min(3,(G.s.wan||0)+1)},when:()=>effCount()>=5,max:()=>G.s.wan>=3}];
 const RAR=['凡品','靈品','仙品'];
 let offer=[];
 // gold = 仙緣頓悟 after an elite or the boss: every card is 靈品 or better
@@ -515,7 +517,7 @@ function spawn(type,x,z,o={}){const t=ET[type];if(enemies.length>=CAP||t.list.le
   e.cd=2+Math.random()*4;e.max=e.hp;enemies.push(e);t.list.push(e);return e}
 const specialChance=()=>minute()<1.5?0:Math.min(.12,.03+.012*minute());
 function spawnRing(type,n,r){for(let i=0;i<n;i++){const a=i/n*Math.PI*2;spawn(type,HERO.pos.x+Math.sin(a)*r,HERO.pos.z+Math.cos(a)*r)}}
-function spawnTick(dt){const m=minute(),rate=1.2*(1+1.2*m+.2*m*m);G.spawnAcc+=dt*rate;
+function spawnTick(dt){const m=minute(),rate=1.1*(1+1.1*m+.18*m*m);G.spawnAcc+=dt*rate;
   while(G.spawnAcc>=1){G.spawnAcc-=1;const w=[['ghost',3],['paper',m>.8?2.2:0],['jiang',m>2.8?1.4:0],['lgh',m>4.5?1.2:0]];let tot=w.reduce((a,b)=>a+b[1],0),x=Math.random()*tot,k='ghost';
     for(const [n,v] of w){x-=v;if(x<=0){k=n;break}}
     const a=Math.random()*Math.PI*2,r=11+Math.random()*3;spawn(k,HERO.pos.x+Math.sin(a)*r,HERO.pos.z+Math.cos(a)*r)}
@@ -523,7 +525,7 @@ function spawnTick(dt){const m=minute(),rate=1.2*(1+1.2*m+.2*m*m);G.spawnAcc+=dt
 
 /* ================= 戰鬥 ================= */
 function hurtEnemy(e,dmg,kx=0,kz=0,crit=false){if(e.hp<=0)return;e.hp-=dmg;e.flash=.1;e.x+=kx;e.z+=kz;showNum(e.x,1+e.y,e.z,dmg,crit?'c':e.elite?'b':'n');if(e.hp<=0)killEnemy(e)}
-function killEnemy(e){G.kills++;e.dead=true;SFX.play('kill');dashLine(e,false);if(G.kills>=G.nextPill){G.nextPill+=100;dropPill(e.x,e.z)}
+function killEnemy(e){G.kills++;e.dead=true;SFX.play('kill');if(G.kills%250===0&&G.kills<=1250&&!simming){banner('殺氣凝劍','飛劍 +1');SFX.play('gold')}dashLine(e,false);if(G.kills>=G.nextPill){G.nextPill+=100;dropPill(e.x,e.z)}
   fx({p:tmp.set(e.x,.6,e.z),col:0x0a0d0e,life:.7,s0:.5,s1:1.6,op:.75,vy:.9});fx({p:tmp.set(e.x,.6,e.z),col:0x6fffd0,add:true,life:.35,s0:.8,s1:.2,op:.9,vy:0});
   dropSoul(e.x,e.z,e.t.soul);if(e.elite){G.eliteKilled=true;for(let i=0;i<14;i++)dropSoul(e.x+(Math.random()-.5)*2,e.z+(Math.random()-.5)*2,1);banner('精英伏誅','殺氣大漲・仙緣頓悟');SFX.play('boss');setTimeout(()=>openCards(true),700)}
   $('#power').classList.add('pop')}
@@ -542,7 +544,7 @@ function hurtBoss(dmg,crit=false){if(!boss.alive)return;const d=Math.min(dmg,bos
   G.slow=.9;SFX.play('bossDie');buzz(120);for(const e of enemies)if(!e.dead&&onScreen(e.x,.4,e.z))killEnemy(e);setTimeout(()=>openCards(true),1300);
   for(let i=0;i<10;i++)fx({p:tmp.set(boss.x+(Math.random()-.5)*2,1+Math.random()*2,boss.z+(Math.random()-.5)*2),col:0x0a0d0e,life:1.2,s0:1,s1:3,op:.8,vy:1});
   for(let i=0;i<30;i++)dropSoul(boss.x+(Math.random()-.5)*3,boss.z+(Math.random()-.5)*3,2);boss.g.visible=false;$('#bossBox').classList.remove('on');banner('燈籠大王伏誅！','群妖潰散・殺氣 +5%');shake=.9}}
-function launchVolley(){const n=G.s.count,used=new Set();const bossSeen=boss.alive&&bossOnScreen();const from=tmp2.copy(HERO.pos);from.y+=1.0;
+function launchVolley(){const n=effCount(),used=new Set();const bossSeen=boss.alive&&bossOnScreen();const from=tmp2.copy(HERO.pos);from.y+=1.0;
   for(let i=0;i<n;i++){const tg=(bossSeen&&i%2===0)?boss:nearest(HERO.pos.x,HERO.pos.z,G.s.range,used)||nearest(HERO.pos.x,HERO.pos.z,G.s.range);if(!tg)return;used.add(tg);
     const sw=swords.find(s=>!s.on);if(!sw)return;if(i===0)SFX.play('swing');sw.on=true;sw.g.visible=true;sw.g.scale.setScalar(G.s.size);sw.tgt=tg;sw.life=1.4;sw.pierce=G.s.pierce;sw.hit.clear();sw.tr.pts.length=0;
     const a=(i-(n-1)/2)*.5;sw.pos.copy(from).add(tmp3.set(Math.sin(a)*.4,.2,Math.cos(a)*.4));sw.vel.set(Math.sin(a)*3,4,Math.cos(a)*3)}}
@@ -654,7 +656,7 @@ function pickChar(c){if(c!==who){useChar(c);applyFace({g:1,x:1});applyBody();bui
 $$('[data-who]').forEach(b=>b.onclick=()=>pickChar(+b.dataset.who));pickChar(who);
 function startNight(len){SFX.resume();resetWorld();G=newNight(len);G.paused=false;$('#startOv').classList.remove('on');$('#endOv').classList.remove('on');$('#hud').hidden=false;
   $('#bossMark').style.left='67%';spawnRing('ghost',8,7.5);// an opening ring so the first monsters are seen walking in
-  renderBuffs();tipShown=false;say('拖著畫面走路：每走幾步放一圈劍罡、被撞只受一半傷；放開站樁：出劍更快！',7);
+  renderBuffs();tipShown=false;say('拖著畫面走路：每走幾步放一圈劍罡、被撞只受一半傷；放開站樁：出劍更快！斬越多妖，飛劍越多！',7);
   setTimeout(()=>{if(G&&!G.over&&G.kills<3)say('吸青色的魂火可以頓悟喔！',4)},9000)}
 $('#startNight').onclick=()=>startNight(NIGHT);
 $('#again').onclick=()=>startNight(NIGHT);$('#toTitle').onclick=()=>{$('#endOv').classList.remove('on');$('#startOv').classList.add('on');$('#hud').hidden=true;renderRealm('#realmText','#realmBar');resetWorld();G=null};
@@ -713,7 +715,7 @@ function stepGame(dt){const g=G;
   // move
   const inp=inputDir();const moving=inp.l>.12;g.moving=moving;
   if(moving){const sp=g.s.move*inp.l;g.walked+=sp*dt;if(g.walked>=2.4){g.walked=0;qiBurst()}root.position.x+=inp.x*sp*dt;root.position.z+=inp.y*sp*dt;root.rotation.y=angLerp(root.rotation.y,Math.atan2(inp.x,inp.y),1-Math.exp(-dt*12));
-    walkPh+=dt*(4+3*inp.l);mode='walk';g.stand=0}else{mode='cast';g.stand+=dt}
+    walkPh+=dt*(4+3*inp.l);mode='walk';g.stand=0}else{mode='cast';g.stand+=dt;g.standQi=(g.standQi||0)+dt;if(g.standQi>=1.8){g.standQi=0;qiBurst()}}
   const rr=Math.hypot(root.position.x,root.position.z);if(rr>ARENA){root.position.x*=ARENA/rr;root.position.z*=ARENA/rr}
   for(const h of HOUSES){const dx=root.position.x-h.x,dz=root.position.z-h.z,d=Math.hypot(dx,dz),r=h.r+.3;if(d<r&&d>1e-4){root.position.x=h.x+dx/d*r;root.position.z=h.z+dz/d*r}}
   // timeline
@@ -811,7 +813,7 @@ requestAnimationFrame(t=>{last=t;frame(t)});
 // test hooks (Playwright)
 // fast-forward without rendering (tests / balance bots): advances the night by `sec` in 1/30 s steps
 function sim(sec){simming=true;try{return simRun(sec)}finally{simming=false}}
-function simRun(sec){const n=Math.round(sec*30);for(let i=0;i<n&&G&&!G.over;i++){if(G.paused){if($('#cardOv').classList.contains('on'))pickCard(0);else break}
+function simRun(sec){const n=Math.round(sec*30);for(let i=0;i<n&&G&&!G.over;i++){if(G.paused){if($('#cardOv').classList.contains('on'))pickCard(G.simPick==='rand'?Math.floor(Math.random()*offer.length):0);else break}
   G.t+=1/30;stepGame(1/30);HERO.pos.copy(root.position);updateCamera(1/30,true)}return G&&{t:Math.round(G.t),kills:G.kills,lv:G.lv,hp:Math.round(G.hp),en:enemies.length,boss:boss.alive?Math.round(boss.hp/boss.max*100)+'%':G.bossKilled?'killed':'-',over:G.over}}
 window.__game={setCam:i=>{setCam(i)},ic:()=>{const m=ET.paper.mesh;return {cnt:m.count,ic:[...m.instanceColor.array.slice(0,9)],attr:Object.keys(m.geometry.attributes),vc:m.material.vertexColors,prog:renderer.info.programs.map(p=>p.name)}},cols:k=>{const a=ET[k].geo.attributes.color.array,u=new Set();for(let i=0;i<a.length;i+=3)u.add(a[i].toFixed(2)+','+a[i+1].toFixed(2)+','+a[i+2].toFixed(2));return [...u].concat([ET[k].mesh.material.vertexColors,!!ET[k].mesh.instanceColor])},gallery:()=>{G.paused=true;resetWorld();G.paused=true;['ghost','paper','jiang','lgh'].forEach((k,i)=>{const e=spawn(k,-1.35+i*.9,0);e.cd=99});root.position.set(0,0,-2.5);root.rotation.y=Math.PI;HERO.pos.set(0,0,3);root.rotation.y=0;writeInstances()},camD:d=>{camOverride=d},start:()=>startNight(NIGHT),get G(){return G},setT:s=>{if(G)G.t=s},auto:v=>{if(G)G.auto=v},pick:i=>pickCard(i),god:()=>{if(G){G.maxhp=G.hp=1e9}},
   spawnRing,setWho:pickChar,sim,mat:k=>[...ET[k].mesh.instanceMatrix.array.slice(0,16)].map(v=>+v.toFixed(3)).concat(ET[k].list.slice(0,3).map(e=>[e.x,e.y,e.z,e.s,e.flash])),bdbg:()=>({n:(ndc.set(boss.x,1.5,boss.z).project(camera),[ndc.x,ndc.y,ndc.z].map(v=>+v.toFixed(2))),bx:[boss.x,boss.z],cam:camera.position.toArray().map(v=>+v.toFixed(1)),d:Math.hypot(boss.x-HERO.pos.x,boss.z-HERO.pos.z),on:bossOnScreen(),hp:boss.hp,max:boss.max,dps:G.dps,sw:swords.filter(s=>s.on&&s.tgt===boss).length}),dbg:()=>({cnt:Object.keys(ET).map(k=>k+':'+ET[k].mesh.count+(ET[k].mesh.instanceColor?'c':'')+(ET[k].mesh.visible?'v':'')),pr:renderer.getPixelRatio(),gl2:renderer.capabilities.isWebGL2,prog:renderer.info.programs.length,en:enemies.length,near:enemies.filter(e=>Math.hypot(e.x-HERO.pos.x,e.z-HERO.pos.z)<6.5).length,sw:swords.filter(s=>s.on).length,hero:[HERO.pos.x,HERO.pos.z],e0:enemies[0]&&[enemies[0].x,enemies[0].z,enemies[0].hp],vol:G&&G.volley})};
