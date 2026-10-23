@@ -453,9 +453,9 @@ function shapeHead(){
  for(let i=0;i<p.count;i++){let nx=headBase[i*3]/.118,ny=headBase[i*3+1]/.118,nz=headBase[i*3+2]/.118;let d=0;
   // features as small bumps along the surface normal
   if(nz>0){const t=Math.min(1,Math.max(0,(-.02-ny)/nL));
-    d+=(.008+.04*F.noseH*Math.pow(t,1.8))*g(nx,(.034+.024*t)*F.noseW)*(ny>nTip-.02?1:g(ny-(nTip-.02),.03));
+    d+=(.008+.06*F.noseH*Math.pow(t,1.8))*g(nx,(.034+.024*t)*F.noseW)*(ny>nTip-.02?1:g(ny-(nTip-.02),.03));
     d+=.006*g(Math.abs(nx)-.055*F.noseW,.022*F.noseW)*g(ny-nTip,.028);
-    d+=.02*F.noseTipP*g(nx,.05*F.noseW)*g(ny-(nTip+.012),.04);
+    d+=.035*F.noseTipP*g(nx,.05*F.noseW)*g(ny-(nTip+.012),.04);
     d+=.014*F.browBone*g(ny-.08,.06)*g(nx,.42);
     d-=.022*g(Math.abs(nx)-eNx,.11*F.eyeSize)*g(ny-eNy,.07*F.eyeSize);
     d+=.008*g(Math.abs(nx)-.5,.12)*g(ny+.2,.08)+F.cheekFull*.012*g(Math.abs(nx)-.45,.16)*g(ny+.3,.14);
