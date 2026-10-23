@@ -101,7 +101,7 @@ body.editing .top{opacity:0;pointer-events:none}
   <h1 id="title" aria-label="午夜來斬妖">
     <span style="--r:-5deg;--i:0">午</span><span style="--r:3deg;--i:1">夜</span><span style="--r:-2deg;--i:2">來</span><span class="zhan" style="--r:6deg;--i:3">斬</span><span style="--r:-4deg;--i:4">妖</span>
   </h1>
-  <div class="sub">煉氣一層・小道士　主角試做 v0.11</div>
+  <div class="sub">煉氣一層・小道士　主角試做 v0.12</div>
   <div class="fonts" role="group" aria-label="標題字體">
     <small>標題字體</small>
     <button class="chip" data-font="TPotta" aria-pressed="true">墨團</button>
@@ -342,7 +342,8 @@ const FACE_SPEC=[
   {k:'contour',n:'輪廓陰影',min:0,max:2.2,step:.1,span:3,def:1.1,t:'x'},
   {k:'mark',n:'額間印記',opts:['無','青','朱'],def:0,t:'x'}]},
  {tab:'髮型',items:[
-  {k:'hairStyle',n:'髮型',opts:['道冠垂髮','高馬尾','雙髻','披髮','束髮'],def:0,t:'h'},
+  {k:'hairStyle',n:'髮型',opts:['髮髻垂髮','高馬尾','雙髻','披髮','束髮','道髻長髮'],def:0,t:'h'},
+  {k:'orn',n:'髮飾',opts:['金冠','木簪','玉簪','髮帶','無'],def:0,t:'h'},
   {k:'bangs',n:'瀏海',opts:['中分','齊瀏海','側分','無'],def:0,t:'h'}]},
  {tab:'身形',cam:'body',items:[
   {k:'height',n:'整體身高',min:0.52,max:0.82,step:.005,span:0.3,def:0.67,t:'b'},
@@ -356,7 +357,7 @@ const FACE_SPEC=[
   {k:'armLen',n:'手臂長',min:0.7,max:1,step:.005,span:0.3,def:0.85,t:'b'}]}];
 // t: b=身形（applyBody 重排身體各部件）
 // 角色: FACE_SPEC holds the 女主角 ranges/defaults; MALE overrides them per key as [min,max,def] (tools/set_face.py writes both)
-const MALE={"headH":[0.78,1.02,0.9],"headS":[0.85,1.15,1.0],"faceW":[0.65,0.95,0.8],"foreW":[0.0,0.12,0.06],"cheekW":[-0.08,0.32,0.12],"jawW":[0.04,0.48,0.26],"chinW":[-0.42,0.22,-0.1],"chinR":[-0.2,0.8,0.3],"lowerLen":[-0.01,0.21,0.1],"flat":[0.0,0.4,0.2],"cheekFull":[-2.0,0.0,-1],"cheekLow":[-0.13,0.17,0.02],"cheekHollow":[0.0,3.0,1.5],"cheekApple":[-1.3,0.7,-0.3],"browBone":[1.2,3.2,2.2],"eyeSp":[51.0,71.0,61],"eyeUp":[-22.0,10.0,-6],"eyeSize":[0.68,1.32,1.0],"eyeOpen":[0.5,1.26,0.88],"eyeTilt":[-12.0,22.0,5],"irisS":[0.65,1.35,1.0],"iris":[0.0,0.0,1],"lashes":[0.0,0.6,0.3],"lash":[0.9,4.3,2.6],"shadow":[0.0,1.0,0.5],"browUp":[-17.0,5.0,-6],"browLen":[0.9,1.8,1.35],"browThick":[3.4,7.6,5.5],"browArch":[0.0,6.0,3],"browTail":[-4.0,14.0,5],"browDark":[0.45,2.15,1.3],"noseUp":[-8.0,8.0,0],"noseH":[0.05,3.75,1.9],"noseTipP":[0.0,1.6,0.8],"noseW":[0.55,2.05,1.3],"lipUp":[-21.0,5.0,-8],"lipW":[1.66,3.34,2.5],"lipThick":[0.3,2.1,1.2],"lipCorner":[-7.0,9.0,1],"lipStyle":[0.0,0.0,4],"expr":[0.0,0.0,0],"lipC":[0.0,0.0,3],"skin":[0.0,0.0,2],"blush":[0.0,1.2,0.6],"contour":[0.1,3.1,1.6],"mark":[0.0,0.0,0],"hairStyle":[0.0,0.0,4],"bangs":[0.0,0.0,3],"height":[0.61,0.91,0.76],"legLen":[0.53,0.99,0.76],"torsoLen":[0.46,0.86,0.66],"neckLen":[0.32,1.12,0.72],"shoulderW":[0.75,1.25,1.0],"shoulderDrop":[0.0,0.4,0.2],"bodyW":[0.54,1.14,0.84],"handS":[1.05,1.85,1.45],"armLen":[0.75,1.05,0.9]};
+const MALE={"headH":[0.78,1.02,0.9],"headS":[0.85,1.15,1.0],"faceW":[0.65,0.95,0.8],"foreW":[0.0,0.12,0.06],"cheekW":[-0.08,0.32,0.12],"jawW":[0.04,0.48,0.26],"chinW":[-0.42,0.22,-0.1],"chinR":[-0.2,0.8,0.3],"lowerLen":[-0.01,0.21,0.1],"flat":[0.0,0.4,0.2],"cheekFull":[-2.0,0.0,-1],"cheekLow":[-0.13,0.17,0.02],"cheekHollow":[0.0,3.0,1.5],"cheekApple":[-1.3,0.7,-0.3],"browBone":[1.2,3.2,2.2],"eyeSp":[51.0,71.0,61],"eyeUp":[-22.0,10.0,-6],"eyeSize":[0.68,1.32,1.0],"eyeOpen":[0.5,1.26,0.88],"eyeTilt":[-12.0,22.0,5],"irisS":[0.65,1.35,1.0],"iris":[0.0,0.0,1],"lashes":[0.0,0.6,0.3],"lash":[0.9,4.3,2.6],"shadow":[0.0,1.0,0.5],"browUp":[-17.0,5.0,-6],"browLen":[0.9,1.8,1.35],"browThick":[3.4,7.6,5.5],"browArch":[0.0,6.0,3],"browTail":[-4.0,14.0,5],"browDark":[0.45,2.15,1.3],"noseUp":[-8.0,8.0,0],"noseH":[0.05,3.75,1.9],"noseTipP":[0.0,1.6,0.8],"noseW":[0.55,2.05,1.3],"lipUp":[-21.0,5.0,-8],"lipW":[1.66,3.34,2.5],"lipThick":[0.3,2.1,1.2],"lipCorner":[-7.0,9.0,1],"lipStyle":[0.0,0.0,4],"expr":[0.0,0.0,0],"lipC":[0.0,0.0,3],"skin":[0.0,0.0,2],"blush":[0.0,1.2,0.6],"contour":[0.1,3.1,1.6],"mark":[0.0,0.0,0],"hairStyle":[0.0,0.0,5],"bangs":[0.0,0.0,3],"height":[0.61,0.91,0.76],"legLen":[0.53,0.99,0.76],"torsoLen":[0.46,0.86,0.66],"neckLen":[0.32,1.12,0.72],"shoulderW":[0.75,1.25,1.0],"shoulderDrop":[0.0,0.4,0.2],"bodyW":[0.54,1.14,0.84],"handS":[1.05,1.85,1.45],"armLen":[0.75,1.05,0.9],"orn":[0.0,0.0,1]};
 const CHARS=[{n:'女主角',key:'zk-face-v1'},{n:'男主角',key:'zk-face-m1',ov:MALE}];
 const SPEC0={};FACE_SPEC.forEach(s=>s.items.forEach(i=>{SPEC0[i.k]=[i.min,i.max,i.def]}));
 const FACE_DEF={},F={};let FACE_HASH='',FACE_KEY='',who=0;
@@ -460,9 +461,10 @@ const M={
   outer:toon(pal.outer,{roughness:.58}),outerDS:toon(pal.outer,{side:THREE.DoubleSide,roughness:.58,normalMap:foldTex,normalScale:new THREE.Vector2(.5,.5)}),
   trim:toon(pal.trim,{roughness:.5}),belt:toon('#ffffff',{map:beltTex,side:THREE.DoubleSide,roughness:.5}),ribbon:toon(pal.ribbon,{side:THREE.DoubleSide,roughness:.45}),
   hair:toon('#1b1a21',{roughness:.45}),hairDS:toon('#1b1a21',{side:THREE.DoubleSide,roughness:.45}),hairCard:toon('#ffffff',{map:hairTex,side:THREE.DoubleSide,roughness:.4}),
+  hairLong:toon('#8e8c99',{map:hairTex,side:THREE.DoubleSide,roughness:.6}),// hanging hair: dimmer so the back rim light doesn't turn it grey-blue
   skin:toon('#eec5aa',{roughness:.62,emissive:'#26120c'}),face:toon('#ffffff',{map:faceTex,roughness:.6,emissive:'#26120c'}),
   gold:toon('#c79a4a',{roughness:.32,metalness:.75}),bronze:toon('#80683c',{roughness:.45,metalness:.5}),jade:toon('#74dcb9',{roughness:.22,emissive:'#0b3328'}),
-  boot:toon('#17181d',{roughness:.6}),scab:toon('#1f1c27',{roughness:.4}),wrap:toon('#2c2232'),red:toon('#c9372d',{side:THREE.DoubleSide,roughness:.5})};
+  boot:toon('#17181d',{roughness:.6}),scab:toon('#1f1c27',{roughness:.4}),wrap:toon('#2c2232'),wood:toon('#6e4a2c',{roughness:.55}),red:toon('#c9372d',{side:THREE.DoubleSide,roughness:.5})};
 function applyPal(i){pal=PALS[i];M.inner.color.copy(LC(pal.inner));M.outer.color.copy(LC(pal.outer));M.outerDS.color.copy(LC(pal.outer));M.trim.color.copy(LC(pal.trim));M.ribbon.color.copy(LC(pal.ribbon));
   redraw(torsoTex,drawTorso);redraw(skirtTex,drawSkirt);redraw(coatTex,drawCoat);redraw(beltTex,drawBelt)}
 
@@ -598,8 +600,9 @@ const knot=V(0,.122,-.04);
 for(let k=0;k<20;k++){const a=-1.45+2.9*k/19;strand([onHead(.29,a,1.02),onHead(.2,a*.8,1.045),onHead(.11,a*.5,1.06),knot],.05,.026)}
 for(let k=0;k<14;k++){const a=Math.PI+(-1.25+2.5*k/13);strand([onHead(.62,a,1.03),onHead(.45,a,1.05),onHead(.27,a*.95+Math.PI*.05,1.06),knot],.055,.028)}
 // 髮型: what sits on top, whether long hair hangs down (long = width factor), ponytail, side locks (count, length)
-const HAIRS=[{crown:'gold',long:1,locks:8,lockLen:1,hb:1},{crown:'tie',pony:1,locks:4,lockLen:.8,hb:1},{crown:'buns',locks:4,lockLen:.7,buns:1},
-  {crown:'pin',long:1.35,locks:10,lockLen:1.6},{crown:'gold',locks:2,lockLen:.6,hb:1}];
+// knot: shape of the gathered hair on top (髮飾 F.orn sits on it); tie = ponytail tie, dao = tall 道髻
+const HAIRS=[{long:1,locks:8,lockLen:1},{knot:'tie',pony:1,locks:4,lockLen:.8},{knot:'buns',locks:4,lockLen:.7,buns:1},
+  {long:1.35,locks:10,lockLen:1.6},{locks:2,lockLen:.6},{knot:'dao',long:1.15,locks:4,lockLen:1.3}];
 const hairVar=new THREE.Group();headG.add(hairVar);
 function buildHair(){
   hairVar.traverse(o=>{if(o.geometry)o.geometry.dispose()});hairVar.clear();strandTo=hairVar;
@@ -612,19 +615,29 @@ function buildHair(){
   [-1,1].forEach(d=>{for(let j=0;j<H.locks;j++){const a=d*(.96+.6*j/Math.max(1,H.locks-1)),w=Math.sin(j*2.3+d),len=(.12+.035*(j%3)+.01*w)*H.lockLen,s0=onHead(.4+.012*(j%2),a,1.05),s1=onHead(.56,a+d*.05,1.065);
     strand([s0,s1,V(s1.x-d*(.008+.003*w),s1.y-len*.45,s1.z+.006),V(s1.x-d*.006,s1.y-len*.8,s1.z-.002-j*.002),V(s1.x+d*(.006+.004*(j%2)),s1.y-len,s1.z-.008-j*.003)],.032-.0015*(j%3),.004)}});
   strandTo=null;
-  // top: knot, then crown / ribbon tie / hairpin / twin buns
+  // top: the knot, then the 髮飾 on it
+  const kn=H.knot,K=kn==='tie'?[0,.15,-.06]:kn==='dao'?[0,.145,-.035]:[0,.128,-.035],yC=kn==='dao'?K[1]+.03:K[1]+.024,orn=H.buns?-1:F.orn;
   part(new THREE.SphereGeometry(H.buns?.018:.05,20,16),M.hair,hairVar,{p:[0,.122,-.035]});
-  if(H.crown==='gold'){part(new THREE.CylinderGeometry(.036,.047,.046,18),M.gold,hairVar,{p:[0,.152,-.035],r:[-.2,0,0]});
-    part(new THREE.BoxGeometry(.03,.034,.01),M.jade,hairVar,{p:[0,.158,.0],r:[-.2,0,0]})}
-  if(H.crown==='gold'||H.crown==='pin'){part(new THREE.CylinderGeometry(.006,.006,.2,8),M.gold,hairVar,{p:[0,.155,-.035],r:[0,0,Math.PI/2]});
-    part(new THREE.SphereGeometry(.011,10,8),M.jade,hairVar,{p:[.1,.155,-.035]})}
-  if(H.crown==='tie'){part(new THREE.SphereGeometry(.046,18,14),M.hair,hairVar,{p:[0,.15,-.06],s:[1,.9,1.1]});
-    part(new THREE.TorusGeometry(.03,.009,8,20),M.ribbon,hairVar,{p:[0,.15,-.1],r:[.3,0,0]})}
+  if(kn==='tie')part(new THREE.SphereGeometry(.046,18,14),M.hair,hairVar,{p:K,s:[1,.9,1.1]});
+  if(kn==='dao')part(new THREE.SphereGeometry(.042,18,16),M.hair,hairVar,{p:K,s:[.95,1.45,.95]});
+  if(orn===0){part(new THREE.CylinderGeometry(.036,.047,.046,18),M.gold,hairVar,{p:[K[0],yC,K[2]],r:[-.2,0,0]});
+    part(new THREE.BoxGeometry(.03,.034,.01),M.jade,hairVar,{p:[K[0],yC+.006,K[2]+.035],r:[-.2,0,0]});
+    part(new THREE.CylinderGeometry(.006,.006,.2,8),M.gold,hairVar,{p:[K[0],yC+.003,K[2]],r:[0,0,Math.PI/2]});
+    part(new THREE.SphereGeometry(.011,10,8),M.jade,hairVar,{p:[K[0]+.1,yC+.003,K[2]]})}
+  if(orn===1){// 木簪: plain wooden pin slanted through the knot, round head
+    part(new THREE.CylinderGeometry(.0042,.0032,.18,8),M.wood,hairVar,{p:[K[0],yC,K[2]],r:[0,0,Math.PI/2-.35]});
+    part(new THREE.SphereGeometry(.0085,10,8),M.wood,hairVar,{p:[K[0]+.085*Math.cos(.35),yC+.085*Math.sin(.35),K[2]]})}
+  if(orn===2){// 玉簪: slim jade pin with a gold-capped bead
+    part(new THREE.CylinderGeometry(.0035,.0025,.16,8),M.jade,hairVar,{p:[K[0],yC,K[2]],r:[0,0,Math.PI/2-.3]});
+    const ex=K[0]+.078*Math.cos(.3),ey=yC+.078*Math.sin(.3);
+    part(new THREE.SphereGeometry(.011,12,10),M.jade,hairVar,{p:[ex,ey,K[2]]});part(new THREE.CylinderGeometry(.006,.008,.006,10),M.gold,hairVar,{p:[ex-.009,ey-.003,K[2]],r:[0,0,Math.PI/2-.3]})}
+  if(orn===3)part(new THREE.TorusGeometry(kn==='dao'?.034:.03,.009,8,20),M.ribbon,hairVar,{p:[K[0],K[1]-.01,K[2]-(kn==='tie'?.04:0)],r:[kn==='tie'?.3:Math.PI/2,0,0]});
   if(H.buns)[-1,1].forEach(d=>{part(new THREE.SphereGeometry(.042,18,14),M.hair,hairVar,{p:[d*.072,.112,-.03]});
     part(new THREE.TorusGeometry(.03,.007,8,20),M.ribbon,hairVar,{p:[d*.072,.1,-.03],r:[Math.PI/2+.4,d*.5,0]})});
+  const hb=orn===0||orn===3;
   // which hanging ropes are live
   if(typeof ropes!=='undefined')for(const r of ropes){const k=r.hairRole;if(!k)continue;
-    r.off=!(k==='long'&&H.long||k==='pony'&&H.pony||k==='hb'&&H.hb||k==='bun'&&H.buns);r.mesh.visible=!r.off;r.ok=false;r.styleW=k==='long'?H.long||1:1}
+    r.off=!(k==='long'&&H.long||k==='pony'&&H.pony||k==='hb'&&hb||k==='bun'&&H.buns);r.mesh.visible=!r.off;r.ok=false;r.styleW=k==='long'?H.long||1:1}
   scaleRopes()}
 anchor('hb1',headG,.04,.15,-.06);anchor('hb2',headG,-.04,.15,-.06);
 anchor('pony',headG,0,.14,-.11);anchor('bunL',headG,.072,.08,-.05);anchor('bunR',headG,-.072,.08,-.05);
@@ -732,15 +745,15 @@ class Drape{
   build(){const pa=this.pa;this.p.forEach((v,i)=>{pa[i*3]=v.x;pa[i*3+1]=v.y;pa[i*3+2]=v.z});this.geo.attributes.position.needsUpdate=true;this.geo.computeVertexNormals();this.geo.computeBoundingSphere()}}
 
 const ropes=[
-  new Rope({anchor:A.pony,n:12,seg:.058,w0:.11,w1:.04,grav:-15,flut:.08,damp:.9,mat:M.hairCard,kind:'hair',hairRole:'pony'}),
-  new Rope({anchor:A.pony,n:11,seg:.056,w0:.07,w1:.025,grav:-15,flut:.1,damp:.9,mat:M.hairCard,kind:'hair',hairRole:'pony'}),
+  new Rope({anchor:A.pony,n:12,seg:.058,w0:.11,w1:.008,grav:-15,flut:.08,damp:.9,mat:M.hairLong,kind:'hair',hairRole:'pony'}),
+  new Rope({anchor:A.pony,n:11,seg:.056,w0:.07,w1:.008,grav:-15,flut:.1,damp:.9,mat:M.hairLong,kind:'hair',hairRole:'pony'}),
   new Rope({anchor:A.bunL,n:8,seg:.05,w0:.022,w1:.018,grav:-5,flut:.45,damp:.92,twist:.7,kind:'ribbon',hairRole:'bun'}),
   new Rope({anchor:A.bunR,n:8,seg:.05,w0:.022,w1:.018,grav:-5,flut:.45,damp:.92,twist:.7,kind:'ribbon',hairRole:'bun'}),
-  new Rope({anchor:A.hairE,n:12,seg:.058,w0:.17,w1:.07,grav:-15,flut:.06,damp:.9,mat:M.hairCard,kind:'hair',hairRole:'long'}),
-  new Rope({anchor:A.hairA,n:12,seg:.06,w0:.1,w1:.035,grav:-15,flut:.07,damp:.9,mat:M.hairCard,kind:'hair',hairRole:'long'}),
-  new Rope({anchor:A.hairB,n:12,seg:.06,w0:.1,w1:.035,grav:-15,flut:.07,damp:.9,mat:M.hairCard,kind:'hair',hairRole:'long'}),
-  new Rope({anchor:A.hairC,n:11,seg:.058,w0:.08,w1:.025,grav:-15,flut:.09,damp:.9,mat:M.hairCard,kind:'hair',hairRole:'long'}),
-  new Rope({anchor:A.hairD,n:11,seg:.058,w0:.08,w1:.025,grav:-15,flut:.09,damp:.9,mat:M.hairCard,kind:'hair',hairRole:'long'}),
+  new Rope({anchor:A.hairE,n:12,seg:.058,w0:.17,w1:.008,grav:-15,flut:.06,damp:.9,mat:M.hairLong,kind:'hair',hairRole:'long'}),
+  new Rope({anchor:A.hairA,n:12,seg:.06,w0:.1,w1:.008,grav:-15,flut:.07,damp:.9,mat:M.hairLong,kind:'hair',hairRole:'long'}),
+  new Rope({anchor:A.hairB,n:12,seg:.06,w0:.1,w1:.008,grav:-15,flut:.07,damp:.9,mat:M.hairLong,kind:'hair',hairRole:'long'}),
+  new Rope({anchor:A.hairC,n:11,seg:.058,w0:.08,w1:.008,grav:-15,flut:.09,damp:.9,mat:M.hairLong,kind:'hair',hairRole:'long'}),
+  new Rope({anchor:A.hairD,n:11,seg:.058,w0:.08,w1:.008,grav:-15,flut:.09,damp:.9,mat:M.hairLong,kind:'hair',hairRole:'long'}),
   new Rope({anchor:A.hb1,n:12,seg:.06,w0:.026,w1:.022,grav:-5,flut:.45,damp:.92,twist:.7,kind:'ribbon',hairRole:'hb'}),
   new Rope({anchor:A.hb2,n:12,seg:.06,w0:.026,w1:.022,grav:-5,flut:.45,damp:.92,twist:.7,kind:'ribbon',hairRole:'hb'}),
   new Rope({anchor:A.sashL,n:15,seg:.066,w0:.05,w1:.03,grav:-5.5,flut:.5,damp:.92,twist:.9,kind:'ribbon'}),
