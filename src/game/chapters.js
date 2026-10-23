@@ -2,6 +2,7 @@
    CHC[ch] = { map, fog, ground, mobs:[[種類,權重,從第幾分鐘起]], elite, boss, cut }
    難度：妖血 ×1.1^推薦境界×(1+0.08×章)；魔王血 ×1.1^推薦境界×(1+0.15×章)。 */
 const chRec=ch=>CH[ch]?CH[ch].rec:0;
+const chDmg=ch=>Math.pow(1.06,chRec(ch));// monsters hit harder as the recommended realm (and your own HP) grows
 const chHp=ch=>Math.pow(1.1,chRec(ch))*(1+.08*ch),chBoss=ch=>Math.pow(1.1,chRec(ch))*(1+.15*ch);
 /* ---------- 地圖 ---------- */
 function clearMap(){while(mapG.children.length){const o=mapG.children.pop();o.traverse(n=>{if(n.geometry)n.geometry.dispose()})}HOUSES.length=0}

@@ -780,6 +780,7 @@ function updSkillUI(){for(const k in SK){const b=skBtn[k];let p,txt='';
 /*@include game/skillsets.js*/
 /*@include game/hazards.js*/
 /*@include game/chapters.js*/
+/*@include game/chapters2.js*/
 
 /* ================= 狀態 ================= */
 const SAVE_KEY='zk-game-v1';
@@ -879,7 +880,7 @@ function renderBuffs(){const n={count:'劍',dmg:'鋒',rate:'疾',pierce:'穿',ma
 /* ================= 生妖 ================= */
 function spawn(type,x,z,o={}){const t=ET[type];if(enemies.length>=CAP||t.list.length>=t.cap)return null;
   const sp=type!=='ghost'&&Math.random()<specialChance();
-  const e=Object.assign({type,t,x,z,y:0,vx:0,vz:0,hp:t.hp*1.1*hpScale()*(sp?2:1)*chHp(G.ch),r:t.r*t.sc*(sp?1.15:1),spd:t.spd*(.9+Math.random()*.2),dmg:t.dmg*(1+.15*minute())*(1+.1*G.ch),flash:0,ph:Math.random()*6,kb:0,s:sp?1.18:1,special:sp},o);
+  const e=Object.assign({type,t,x,z,y:0,vx:0,vz:0,hp:t.hp*1.1*hpScale()*(sp?2:1)*chHp(G.ch),r:t.r*t.sc*(sp?1.15:1),spd:t.spd*(.9+Math.random()*.2),dmg:t.dmg*(1+.15*minute())*(1+.1*G.ch)*chDmg(G.ch),flash:0,ph:Math.random()*6,kb:0,s:sp?1.18:1,special:sp},o);
   e.cd=2+Math.random()*4;e.max=e.hp;enemies.push(e);t.list.push(e);return e}
 const specialChance=()=>minute()<1.5?0:Math.min(.12,.03+.012*minute());
 function spawnRing(type,n,r){for(let i=0;i<n;i++){const a=i/n*Math.PI*2;spawn(type,HERO.pos.x+Math.sin(a)*r,HERO.pos.z+Math.cos(a)*r)}}
@@ -972,7 +973,7 @@ function startBoss(){const key=(CHC[G.ch]||CHC[0]).boss,D=BOSSES[key];boss.def=D
   const M=boss.m=boss.models[key];M.g.visible=true;M.g.scale.setScalar(1);
   BGM.play('boss');G.bossDone=true;boss.alive=true;const a=Math.random()*Math.PI*2;boss.x=HERO.pos.x+Math.sin(a)*8;boss.z=HERO.pos.z+Math.cos(a)*8;
   // fixed HP (a stronger build kills it faster), scaled by chapter and by night (圍城 ×1.5)
-  boss.max=boss.hp=BOSS_HP*G.mod.boss*chBoss(G.ch);boss.allow=boss.max/20;boss.r=D.r;boss.dmg=D.dmg*(1+.1*G.ch);SFX.play('boss');buzz(80);
+  boss.max=boss.hp=BOSS_HP*G.mod.boss*chBoss(G.ch);boss.allow=boss.max/20;boss.r=D.r;boss.dmg=D.dmg*(1+.1*G.ch)*chDmg(G.ch);SFX.play('boss');buzz(80);
   Object.assign(boss,{cd:3,sum:5,t:0,rage:false,ring:4,k:0,swing:0,stun:0});boss.g.visible=true;boss.g.position.set(boss.x,0,boss.z);
   $('#bossName').textContent=D.name;$('#bossBox').classList.add('on');banner(D.line,'頭目');shake=.8;say(D.tip,5)}
 function stepBoss(dt){if(!boss.alive)return;const D=boss.def,M=boss.m;boss.t+=dt;boss.allow=Math.min(boss.max/20*1.5,boss.allow+boss.max/20*dt);
@@ -1068,8 +1069,8 @@ function endNight(win,gaveUp=false){if(G.over)return;G.over=true;G.paused=true;c
   $('#endText').textContent=win?(G.bossKilled?`${bn}被你斬了！${pl}今晚平安。`:`撐到天亮了！${bn}趁著晨光逃走了。`)+' 殺氣天一亮就散了，帶回的是修行的進度。'
     :'這一夜的斬妖數算一半；境界不會掉。';
   $('#endStat').innerHTML=`<dt>斬妖</dt><dd>${G.kills} 隻</dd><dt>最高戰力</dt><dd>${fmt(G.peak||0)}</dd><dt>頓悟</dt><dd>${G.lv} 次</dd><dt>靈石</dt><dd>+${G.reward}</dd>${G.bossKilled?'<dt>妖丹</dt><dd>+1</dd>':''}${newUlt?`<dt>新大絕</dt><dd>${newUlt.n}</dd>`:''}`;
-  renderRealm('#realmText2','#realmBar2','#reqList2',false);$('#breakNote').hidden=!canBreak(false);const showEnd=()=>$('#endOv').classList.add('on'),endCut=G.ch===3&&!save.seen3e;if(win&&endCut){save.seen3e=1;writeSave()}
-  if(win&&!simming)setTimeout(()=>{SFX.play('rooster');INK.dawn(()=>endCut?INK.play(CUTS.ch3end,showEnd):showEnd())},1100);else setTimeout(()=>$('#endOv').classList.add('on'),win?1600:900);BGM.play('home');
+  renderRealm('#realmText2','#realmBar2','#reqList2',false);$('#breakNote').hidden=!canBreak(false);const showEnd=()=>$('#endOv').classList.add('on'),endKey=win?({3:'ch3end',5:'ch5end'})[G.ch]:null,endCut=endKey&&!save['seen_'+endKey];if(endCut){save['seen_'+endKey]=1;writeSave()}
+  if(win&&!simming)setTimeout(()=>{SFX.play('rooster');INK.dawn(()=>endCut?INK.play(CUTS[endKey],showEnd):showEnd())},1100);else setTimeout(()=>$('#endOv').classList.add('on'),win?1600:900);BGM.play('home');
   SFX.play(win?'win':'lose');
   if(win){banner('喔喔喔——！','雞啼');$('#bossBox').classList.remove('on')}}
 
@@ -1192,8 +1193,8 @@ function stepEnemies(dt){grid.clear();for(const e of enemies){if(e.dead)continue
 // monsters turn to face the hero; from a high camera they lean back a little so their faces still show
 function writeInstances(){const lean=-.45*Math.max(0,Math.min(1,(camP-.45)/.45));for(const k in ET){const t=ET[k];let i=0;
     for(const e of t.list){dummy.position.set(e.x,e.y,e.z);const fy=Math.atan2(HERO.pos.x-e.x,HERO.pos.z-e.z);
-      dummy.rotation.set(lean+(e.lunge>0?.35:0)+(t.float?.12:0),fy,t.sway?Math.sin(e.ph*5)*.14:t.float?Math.sin(e.ph*1.7)*.08:0,'YXZ');
-      const sq=e.squash||0,dn=e.down>0?.22+.78*Math.max(0,1-e.down/.4)*(e.down<.4?1:0):1;dummy.scale.set(e.s*t.sc*(1+sq*.25),e.s*t.sc*(1-sq*.3)*dn,e.s*t.sc*(1+sq*.25));dummy.updateMatrix();
+      dummy.rotation.set(lean+(e.lunge>0?.35:0)+(t.float?.12:0),fy+(e.spin||0),t.sway?Math.sin(e.ph*5)*.14:t.float?Math.sin(e.ph*1.7)*.08:0,'YXZ');
+      const sq=e.squash||0,dn=e.down>0?.22+.78*Math.max(0,1-e.down/.4)*(e.down<.4?1:0):1;const hs=e.hide?.001:1;dummy.scale.set(hs*e.s*t.sc*(1+sq*.25),hs*e.s*t.sc*(1-sq*.3)*dn,hs*e.s*t.sc*(1+sq*.25));dummy.updateMatrix();
       t.mesh.setMatrixAt(i,dummy.matrix);t.mesh.setColorAt(i,e.flash>0?FLASH:e.slowT>0?ICE:e.elite?ELITE:e.special?SPECIAL:WHITE);i++}
     for(const c of corpses){if(c.t!==t||i>=t.cap)continue;const k=c.life/c.max;dummy.position.set(c.x,c.y,c.z);dummy.rotation.set(c.rx,c.ry,c.rz,'YXZ');
       dummy.scale.setScalar(c.s*t.sc*(k>.7?1-(k-.7)/.3*.75:1));dummy.updateMatrix();t.mesh.setMatrixAt(i,dummy.matrix);ASHC.copy(WHITE).lerp(ASH,Math.min(1,k*1.5));t.mesh.setColorAt(i,ASHC);i++}
