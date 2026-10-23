@@ -17,8 +17,8 @@ let CH_READY=4;// how many chapters are playable so far (the rest show 製作中
 save.inv=Object.assign({stone:0,seed:{ning:3,chi:1,shen:0},herb:{ning:0,chi:0,shen:0},pill:{hui:1,juqi:0,zhuji:0,ningdan:0,huaying:0},yaodan:0,paper:0},save.inv||{});
 save.garden=save.garden||[null,null,null,null];save.won=save.won||{};save.ults=save.ults||['wan'];save.ult=save.ult||'wan';save.lastSeen=save.lastSeen||Date.now();
 const chUnlocked=i=>i===0||[0,1,2].some(n=>save.won[`${i-1}-${n}`]);
-const DF=(()=>{let tab='go',tick=0;
-  const TABS=[['go','出戰'],['med','靜室'],['garden','藥園'],['alch','丹房'],['lib','藏經閣'],['shop','坊市']];
+const DF=(()=>{let tab='go',tick=0,lookTab=0,lt=0,ld={g:0,x:0,b:0,h:0};
+  const TABS=[['go','出戰'],['med','靜室'],['garden','藥園'],['alch','丹房'],['look','造型'],['lib','藏經閣'],['shop','坊市']];
   const el=$('#dfBody');
   function head(){$('#dfRealm').textContent=REALMS[save.realm];$('#dfStone').textContent=`靈石 ${fmt(save.inv.stone)}・妖丹 ${save.inv.yaodan}`}
   function tabs(){$('#dfTabs').innerHTML=TABS.map(([k,n])=>`<button data-tab="${k}" aria-pressed="${k===tab}">${n}${k==='med'&&canBreak(false)?'<i class="dot"></i>':''}${k==='garden'&&save.garden.some(p=>p&&ripe(p))?'<i class="dot"></i>':''}</button>`).join('');
@@ -49,6 +49,21 @@ const DF=(()=>{let tab='go',tick=0;
       el.innerHTML=RECIPES.map(r=>{const ok=Object.entries(r.need).every(([k,v])=>have(k)>=v);
         return `<div class="recipe"><div><b>${r.n}</b>（有 ${inv.pill[r.k]}）<span class="tag">${r.d}</span><small>${Object.entries(r.need).map(([k,v])=>`${nm(k)} ${have(k)}/${v}`).join('、')}</small></div><button class="btn${ok?' go':''}" data-brew="${r.k}" ${ok?'':'disabled'}>煉製</button></div>`}).join('');
       $$('#dfBody [data-brew]').forEach(b=>b.onclick=()=>brew(RECIPES.find(r=>r.k===b.dataset.brew)))}
+    else if(tab==='look'){const SP=FACE_SPEC;
+      el.innerHTML=`<div class="dftabs" id="lkTabs">${SP.map((t,i)=>`<button data-lk="${i}" aria-pressed="${i===lookTab}">${t.tab}</button>`).join('')}</div>
+        <div class="dfsec" id="lkList"></div>
+        <div class="dfsec"><h3>道袍顏色</h3><div class="pair" style="grid-template-columns:repeat(3,1fr)">${PALS.map((p,i)=>`<button class="btn${(save.pal||0)===i?' go':''}" data-pal="${i}" style="background:linear-gradient(135deg,${p.inner} 50%,${p.outer} 50%);min-height:34px" aria-label="服裝${i+1}"></button>`).join('')}</div>
+        <div class="pair"><button class="btn" id="lkReset">還原這位預設</button><button class="btn" id="lkCopy">複製設定</button></div></div>`;
+      $$('#lkTabs [data-lk]').forEach(b=>b.onclick=()=>{lookTab=+b.dataset.lk;body()});
+      $$('#dfBody [data-pal]').forEach(b=>b.onclick=()=>{save.pal=+b.dataset.pal;applyPal(save.pal);writeSave();SFX.play('soul');body()});
+      $('#lkReset').onclick=()=>{Object.assign(F,FACE_DEF);applyFace({g:1,x:1});applyBody();buildHair();saveFace();body()};
+      $('#lkCopy').onclick=async()=>{const o={};FACE_SPEC.forEach(s=>s.items.forEach(i=>{o[i.k]=+(+F[i.k]).toFixed(3)}));o.who=who;const t='午夜來斬妖・捏臉設定 '+JSON.stringify(o);try{await navigator.clipboard.writeText(t);say('已複製設定',2)}catch(e){say('這裡無法複製',2)}};
+      const box=$('#lkList');SP[lookTab].items.forEach(it=>{const row=document.createElement('div');row.className='ctl';row.style.cssText='display:grid;grid-template-columns:7.5em 1fr;gap:6px;align-items:center;margin:4px 0';
+        const lab=document.createElement('button');lab.className='cl';lab.style.cssText='all:unset;font-size:12px;cursor:pointer';lab.textContent=it.n;lab.onclick=()=>{F[it.k]=it.def;look(it);body()};row.appendChild(lab);
+        if(it.opts){const seg=document.createElement('div');seg.style.cssText='display:flex;flex-wrap:wrap;gap:4px';it.opts.forEach((o,i)=>{const b=document.createElement('button');b.className='nb';b.style.padding='5px 8px';b.textContent=o;if(F[it.k]===i)b.classList.add('won');
+            b.onclick=()=>{F[it.k]=i;look(it);[...seg.children].forEach((c,j)=>c.classList.toggle('won',j===i))};seg.appendChild(b)});row.appendChild(seg)}
+        else{const inp=document.createElement('input');inp.type='range';inp.min=it.min;inp.max=it.max;inp.step=it.step;inp.value=F[it.k];inp.style.width='100%';inp.oninput=()=>{F[it.k]=+inp.value;look(it)};row.appendChild(inp)}
+        box.appendChild(row)})}
     else if(tab==='lib'){el.innerHTML=ULTS.map(u=>{const has=save.ults.includes(u.k);
         return `<button class="ultpick${save.ult===u.k?' on':''}" data-ult="${u.k}" ${has?'':'disabled'}><b>${u.n}</b><span>${has?u.d:`打贏${CH[u.ch].n}解鎖`}</span></button>`}).join('');
       $$('#dfBody [data-ult]').forEach(b=>b.onclick=()=>{save.ult=b.dataset.ult;writeSave();SFX.play('ready');render()})}
@@ -57,6 +72,9 @@ const DF=(()=>{let tab='go',tick=0;
       el.innerHTML=items.map(it=>`<div class="recipe"><div><b>${it.n}</b><span class="tag">${it.d}</span></div><button class="btn${inv.stone>=it.p?' go':''}" data-buy="${it.id}" ${inv.stone>=it.p?'':'disabled'}>${it.p} 靈石</button></div>`).join('')+
         `<p class="tag">替身紙人 ${inv.paper}、回春丹 ${inv.pill.hui}。靈石靠斬妖和閉關。</p>`;
       $$('#dfBody [data-buy]').forEach(b=>b.onclick=()=>{const it=items.find(x=>x.id===b.dataset.buy);if(inv.stone<it.p)return;inv.stone-=it.p;it.buy();writeSave();SFX.play('gold');render()})}}
+  // 造型 edits apply to the figure on the left right away (debounced), and are saved per character
+  function look(it){if(it.t.includes('g'))ld.g=1;if(it.t.includes('x'))ld.x=1;if(it.t.includes('b'))ld.b=1;if(it.t.includes('h'))ld.h=1;
+    if(!lt)lt=setTimeout(()=>{lt=0;const d=ld;ld={g:0,x:0,b:0,h:0};applyFace(d);if(d.b)applyBody();if(d.h)buildHair();saveFace()},50)}
   function render(){head();tabs();body()}
   function go(ch,n){SFX.resume();const start=()=>startNight(NIGHT,{ch,nt:n});
     if(ch===0&&!save.seenIntro){save.seenIntro=1;writeSave();BGM.play('night');INK.play(CUTS.intro,start)}else if(CUTS['ch'+ch]&&!save['seen'+ch]){save['seen'+ch]=1;writeSave();INK.play(CUTS['ch'+ch],start)}else start()}

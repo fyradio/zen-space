@@ -1036,9 +1036,10 @@ $('#powerBtn').onclick=()=>{POWER.cycle();$('#powerBtn').textContent='省電模�
 addEventListener('pointerdown',()=>{SFX.resume();if(!G&&!BGM.mood)BGM.play('home')},{once:true});$('#sfxBtn').textContent=SFX.on?'音':'靜';$('#pauseBtn').onclick=togglePause;$('#resume').onclick=togglePause;$('#giveUp').onclick=()=>{$('#pauseOv').classList.remove('on');endNight(false,true)};
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&G&&!G.paused&&!G.over)togglePause()});
 const clockText=()=>{const s=Math.max(0,Math.ceil(G.len-G.t)),m=Math.floor(s/60);return `${m}:${String(s%60).padStart(2,'0')}`};
-function pickChar(c){if(c!==who){useChar(c);applyFace({g:1,x:1});applyBody();buildHair();try{localStorage.setItem('zk-who',String(c))}catch(e){}}
+function pickChar(c){if(c!==who){saveFace();useChar(c);applyFace({g:1,x:1});applyBody();buildHair();try{localStorage.setItem('zk-who',String(c))}catch(e){}}if(window.DF&&!G)DF.render();
   $$('[data-who]').forEach(b=>b.setAttribute('aria-pressed',String(+b.dataset.who===who)))}
 $$('[data-who]').forEach(b=>b.onclick=()=>pickChar(+b.dataset.who));pickChar(who);
+if(save.pal)applyPal(save.pal);
 function startNight(len,opt={}){BGM.play('night');bannerT=0;$('#banner').classList.remove('on');$('#breakBtn').hidden=true;SFX.resume();tryLandscape();buildMap(opt.ch||0);setUlt(save.ult);resetWorld();cancelAim();G=newNight(len);setSkills(G.tier=skillTier());G.ch=opt.ch||0;G.nt=opt.nt||0;G.mod=[{spawn:1,boss:1,elite2:0},{spawn:1.4,boss:1,elite2:1},{spawn:1.2,boss:1.5,elite2:0}][G.nt];G.paused=false;$('#pillBtn').hidden=!(save.inv.pill.hui>0);$('#pillN').textContent=save.inv.pill.hui;$('#skills').hidden=$('#joy').hidden=false;drawJoy();$('#startOv').classList.remove('on');$('#endOv').classList.remove('on');$('#hud').hidden=false;
   $('#bossMark').style.left='67%';spawnRing('ghost',8,7.5);// an opening ring so the first monsters are seen walking in
   renderBuffs();tipShown=false;say('左手走路，右手放技能！按住技能拖曳可以瞄準',6);
