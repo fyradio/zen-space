@@ -433,7 +433,7 @@ function dropPill(x,z){const r=Math.hypot(x,z),R=ARENA-.8;if(r>R){x*=R/r;z*=R/r}
   const gl=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex,color:0xffd27a,opacity:.8,blending:THREE.AdditiveBlending,depthWrite:false}));gl.scale.set(1.1,1.1,1);gl.position.y=.25;g.add(gl);
   g.position.set(x,0,z);g.scale.setScalar(1.6);scene.add(g);pills.push({g,x,z,t:0})}
 function stepPills(dt){for(let i=pills.length-1;i>=0;i--){const p=pills[i];p.t+=dt;p.g.rotation.y+=dt*2;p.g.position.y=.1+Math.sin(p.t*3)*.08;
-    const dx=HERO.pos.x-p.x,dz=HERO.pos.z-p.z,d=Math.hypot(dx,dz);if(d<G.s.magnet*.8){p.x+=dx/d*Math.min(d,6*dt);p.z+=dz/d*Math.min(d,6*dt);p.g.position.x=p.x;p.g.position.z=p.z}
+    const dx=HERO.pos.x-p.x,dz=HERO.pos.z-p.z,d=Math.hypot(dx,dz);if(d<G.s.magnet*.8||p.t>1.2){p.x+=dx/d*Math.min(d,(6+p.t*4)*dt);p.z+=dz/d*Math.min(d,6*dt);p.g.position.x=p.x;p.g.position.z=p.z}
     if(d<.6){G.hp=Math.min(G.maxhp,G.hp+G.maxhp*.2);banner('回春丹','生命 +20%');fx({p:HERO.pos,col:0x8fff9a,add:true,life:.6,s0:.8,s1:2.4,op:.8,vy:1});scene.remove(p.g);pills.splice(i,1)}}}
 // 劍罡: walking releases a ring of sword qi every few steps (damages and pushes back what is close)
 const qiRings=[];
@@ -593,9 +593,9 @@ function stepSkills(dt){
       if(boss.alive&&(boss.x-s.to.x)**2+(boss.z-s.to.z)**2<(s.aoe+boss.r)**2)hurtBoss(s.dmg);shots.splice(i,1)}}}
 
 /* ================= 頭目 ================= */
-const ELITE_HP=3000,BOSS_HP=9000;// fixed: a stronger build kills them faster (that is the point of getting stronger)
+const ELITE_HP=2200,BOSS_HP=9000;// fixed: a stronger build kills them faster (that is the point of getting stronger)
 function startElite(){G.eliteDone=true;const a=Math.random()*Math.PI*2;const e=spawn('lgh',HERO.pos.x+Math.sin(a)*9,HERO.pos.z+Math.cos(a)*9,{elite:true,s:2.4,r:.6,spd:1.6});
-  if(e){e.hp=e.max=ELITE_HP;e.dmg*=1.6}banner('大燈籠鬼','精英來了，斬了牠掉一大把魂火');shake=.3}
+  if(e){e.hp=e.max=ELITE_HP;e.dmg*=1.2}banner('大燈籠鬼','精英來了，斬了牠掉一大把魂火');shake=.3}
 function startBoss(){G.bossDone=true;boss.alive=true;const a=Math.random()*Math.PI*2;boss.x=HERO.pos.x+Math.sin(a)*8;boss.z=HERO.pos.z+Math.cos(a)*8;
   // tough enough for the build the player has by now: about 30 s of full damage, never less than the base
   boss.max=boss.hp=BOSS_HP;boss.allow=BOSS_HP/14;SFX.play('boss');buzz(80);boss.cd=3;boss.sum=5;boss.t=0;boss.rage=false;boss.ring=4;boss.g.visible=true;boss.g.position.set(boss.x,0,boss.z);
@@ -761,9 +761,9 @@ function stepEnemies(dt){grid.clear();for(const e of enemies){if(e.dead)continue
     if(t.float)e.y=.15+Math.sin(e.ph*2.4)*.1;
     if(e.elite)e.cd=Math.min(e.cd,9);
     // 燈籠鬼: keep at range and spit a slow fireball (it glows and swells first)
-    if(t.ranged&&(e.special||e.elite)){if(d<4.5)mv*=-.6;else if(d<7)mv*=.15;
+    if(t.ranged&&(e.special||e.elite)){if(e.elite)mv*=d<2.5?0:.7;else if(d<4.5)mv*=-.6;else if(d<7)mv*=.15;
       if(e.cd<.6&&d<9){e.flash=Math.max(e.flash,.03);e.squash=-(.6-e.cd)*.6}
-      if(e.cd<=0&&d<9){e.cd=3.2+Math.random()*1.5;const n=e.elite?5:1;for(let j=0;j<n;j++){const a=Math.atan2(dx,dz)+(j-(n-1)/2)*.28;enemyShot(e.x,.75*e.s,e.z,Math.sin(a),Math.cos(a),e.elite?4.4:3.6,e.dmg)}}}
+      if(e.cd<=0&&d<9){e.cd=3.2+Math.random()*1.5;const n=e.elite?3:1;for(let j=0;j<n;j++){const a=Math.atan2(dx,dz)+(j-(n-1)/2)*.32;enemyShot(e.x,.75*e.s,e.z,Math.sin(a),Math.cos(a),e.elite?4:3.4,e.dmg*.7)}}}
     // 紙人: stops, flutters (red line on the ground), then dashes straight through
     if(t.dash&&e.special){if(e.dashT>0){e.dashT-=dt;mv=9;mx=e.dx;mz=e.dz;if(e.dashT<=0)e.cd=4+Math.random()*3}
       else if(e.wind>0){e.wind-=dt;mv=0;e.lunge=1;if(e.wind<=0){e.dashT=.38;e.lunge=0;dashLine(e,false)}}
@@ -771,7 +771,7 @@ function stepEnemies(dt){grid.clear();for(const e of enemies){if(e.dead)continue
     // 跳跳殭屍: crouches, then leaps onto the spot where the hero is (red circle), landing hurts
     if(t.leap&&e.special){if(e.leapT>0){e.leapT-=dt;const k=1-e.leapT/.7;e.x=e.lx0+(e.lx1-e.lx0)*k;e.z=e.lz0+(e.lz1-e.lz0)*k;e.y=Math.sin(k*Math.PI)*1.6;mv=0;
         if(e.leapT<=0){e.leapT=0;e.y=0;e.squash=1;e.cd=5+Math.random()*3;shake=Math.max(shake,.12);fx({p:tmp.set(e.x,.2,e.z),col:0x6a7a5a,life:.5,s0:.6,s1:2.2,op:.7,vy:.2})}}
-      else if(e.cd<=0&&d<6&&d>1.5){e.leapT=.7;e.lx0=e.x;e.lz0=e.z;e.lx1=HERO.pos.x;e.lz1=HERO.pos.z;warn(e.lx1,e.lz1,1,.7,e.dmg*1.5)}}
+      else if(e.cd<=0&&d<6&&d>1.5){e.leapT=.7;e.lx0=e.x;e.lz0=e.z;e.lx1=HERO.pos.x;e.lz1=HERO.pos.z;warn(e.lx1,e.lz1,1,.7,e.dmg*1.2)}}
     if(!e.leapT){e.x+=mx*mv*dt;e.z+=mz*mv*dt}
     // separation from neighbours
     const gx=Math.floor(e.x/GRID),gz=Math.floor(e.z/GRID);for(let i=-1;i<=1;i++)for(let j=-1;j<=1;j++){const c=grid.get((gx+i)+','+(gz+j));if(!c)continue;
