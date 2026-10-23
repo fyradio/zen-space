@@ -130,6 +130,9 @@ h2{margin:0;font-size:22px;font-weight:400;letter-spacing:.2em}
   .btn{min-height:42px;font-size:16px}
   #skipCard{width:auto;padding:0 44px}
   .power b{font-size:20px}
+  .banner{top:17%}
+  .banner b{font-size:17px;padding:7px 18px}
+  .banner.ult b{font-size:40px}
   .hud{gap:4px}
 }
 @keyframes flip{from{transform:rotateY(80deg) scale(.9);opacity:0}}
@@ -560,11 +563,11 @@ function aimInfo(k,a){if(!a||!a.moved)return autoAim(k);const S=SK[k];const [wx,
   if(S.shape==='circle'){const f=Math.min(1,Math.hypot(a.dx,a.dy)/90)*S.range();return {pt:[HERO.pos.x+wx/l*f,HERO.pos.z+wz/l*f]}}
   return {dir:[wx/l,wz/l]}}
 // ground indicators (light blue = yours; gold for the 大絕; red while over 取消)
-const indMat=()=>new THREE.MeshBasicMaterial({color:0x8fe6ff,transparent:true,opacity:.26,depthWrite:false});
+const indMat=()=>new THREE.MeshBasicMaterial({color:0x8fe6ff,transparent:true,opacity:.34,depthWrite:false,blending:THREE.AdditiveBlending});
 const IND={range:new THREE.Mesh(ringGeo,indMat()),fan:new THREE.Mesh(new THREE.CircleGeometry(1,40,-Math.PI/2-SK.sweep.ang/2,SK.sweep.ang).rotateX(-Math.PI/2),indMat()),
   line:new THREE.Mesh(new THREE.PlaneGeometry(1,1).rotateX(-Math.PI/2).translate(0,0,.5),indMat()),circ:new THREE.Mesh(new THREE.CircleGeometry(1,48).rotateX(-Math.PI/2),indMat()),
   edge:new THREE.Mesh(ringGeo,indMat())};
-for(const m of Object.values(IND)){m.visible=false;m.renderOrder=5;scene.add(m)}IND.range.material.opacity=.45;IND.edge.material.opacity=.8;
+for(const m of Object.values(IND)){m.visible=false;m.renderOrder=5;scene.add(m)}IND.range.material.opacity=.5;IND.edge.material.opacity=.95;
 function showAim(){for(const m of Object.values(IND))m.visible=false;if(!aim||!G||G.paused||G.over)return;
   const S=SK[aim.k],A=aimInfo(aim.k,aim),hx=HERO.pos.x,hz=HERO.pos.z,col=aim.cancel?0xff6a5a:S.ult?0xffd86a:0x8fe6ff;
   for(const m of Object.values(IND))m.material.color.setHex(col);
@@ -583,11 +586,11 @@ const angDiff=(a,b)=>{const d=a-b;return Math.atan2(Math.sin(d),Math.cos(d))};
 // 青竹劍・橫掃: a giant green bamboo sword swings across the fan
 const bamboo=(()=>{const g=new THREE.Group();g.visible=false;scene.add(g);
   const gM=toon('#5cc46e',{emissive:'#1f7a3a',roughness:.4}),nM=toon('#2f7a3c',{emissive:'#0f3a1a'}),hM=toon('#5a3a20');
-  for(let i=0;i<5;i++){const c=new THREE.Mesh(new THREE.CylinderGeometry(.075-.006*i,.08-.006*i,.78,10),gM);c.rotation.x=Math.PI/2;c.position.z=.7+i*.8;g.add(c);
-    const n=new THREE.Mesh(new THREE.CylinderGeometry(.097-.006*i,.097-.006*i,.07,10),nM);n.rotation.x=Math.PI/2;n.position.z=.3+i*.8;g.add(n)}
-  const tip=new THREE.Mesh(new THREE.ConeGeometry(.055,.55,10),gM);tip.rotation.x=Math.PI/2;tip.position.z=4.55;g.add(tip);
+  for(let i=0;i<5;i++){const c=new THREE.Mesh(new THREE.CylinderGeometry(.15-.012*i,.16-.012*i,.78,10),gM);c.rotation.x=Math.PI/2;c.position.z=.7+i*.8;g.add(c);
+    const n=new THREE.Mesh(new THREE.CylinderGeometry(.19-.012*i,.19-.012*i,.08,10),nM);n.rotation.x=Math.PI/2;n.position.z=.3+i*.8;g.add(n)}
+  const tip=new THREE.Mesh(new THREE.ConeGeometry(.1,.6,10),gM);tip.rotation.x=Math.PI/2;tip.position.z=4.6;g.add(tip);
   const hd=new THREE.Mesh(new THREE.CylinderGeometry(.05,.05,.4,8),hM);hd.rotation.x=Math.PI/2;hd.position.z=.05;g.add(hd);
-  for(let i=0;i<6;i++){const s=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex,color:0x7dffa0,opacity:.55,blending:THREE.AdditiveBlending,depthWrite:false}));s.scale.set(1.2,1.2,1);s.position.z=.6+i*.8;g.add(s)}
+  for(let i=0;i<6;i++){const s=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex,color:0x7dffa0,opacity:.55,blending:THREE.AdditiveBlending,depthWrite:false}));s.scale.set(1.7,1.7,1);s.position.z=.6+i*.8;g.add(s)}
   return g})();
 function sweepCast(A){const S=SK.sweep,ang=S.ang,R=S.range(),a0=Math.atan2(A.dir[0],A.dir[1]),hx=HERO.pos.x,hz=HERO.pos.z,dmg=swordDmg()*7*G.k.sweepD;
   SFX.play('sweep');shake=Math.max(shake,.22);buzz(20);
