@@ -11,12 +11,12 @@ const RECIPES=[
 const ULTS=[{k:'wan',n:'萬劍歸宗',ch:0,d:'金色劍陣，萬劍從天而降'},{k:'fire',n:'三昧真火',ch:1,d:'扇形火海，燒一陣子'},{k:'thunder9',n:'九天神雷',ch:3,d:'超大範圍，紫金天雷連劈'},
   {k:'bagua',n:'八卦封妖陣',ch:5,d:'把妖吸進八卦陣定住再引爆'},{k:'sun',n:'劍氣貫日',ch:7,d:'全畫面的巨大劍氣長虹'},{k:'yuanying',n:'元嬰出竅',ch:9,d:'元嬰化身替你斬妖 10 秒'}];
 const CH=[{n:'序章',p:'白石村',rec:0},{n:'第一章',p:'荒村夜',rec:0},{n:'第二章',p:'竹林小徑',rec:3},{n:'第三章',p:'古寺',rec:6},{n:'第四章',p:'鬼市',rec:10},{n:'第五章',p:'黃泉渡口',rec:11},
-  {n:'第六章',p:'雲海',rec:12},{n:'第七章',p:'雷澤',rec:13},{n:'第八章',p:'天河',rec:14},{n:'第九章',p:'九霄魔域',rec:15},{n:'第十章',p:'渡劫長征',rec:17}];
+  {n:'第六章',p:'雲海',rec:12},{n:'第七章',p:'雷澤',rec:13},{n:'第八章',p:'天河',rec:14},{n:'第九章',p:'九霄魔域',rec:15},{n:'第十章',p:'渡劫長征',rec:17},{n:'無盡之夜',p:'無盡',rec:17}];
 const NIGHTS=['夜一・一般','夜二・快攻','夜三・圍城'];
-let CH_READY=9;// how many chapters are playable so far (the rest show 製作中)
+let CH_READY=12;// how many chapters are playable so far (the rest show 製作中)
 save.inv=Object.assign({stone:0,seed:{ning:3,chi:1,shen:0},herb:{ning:0,chi:0,shen:0},pill:{hui:1,juqi:0,zhuji:0,ningdan:0,huaying:0},yaodan:0,paper:0},save.inv||{});
 save.garden=save.garden||[null,null,null,null];save.won=save.won||{};save.ults=save.ults||['wan'];save.ult=save.ult||'wan';save.lastSeen=save.lastSeen||Date.now();
-const chUnlocked=i=>i===0||[0,1,2].some(n=>save.won[`${i-1}-${n}`]);
+const chUnlocked=i=>i===0||(i===11?!!save.ending:false)||i!==11&&[0,1,2].some(n=>save.won[`${i-1}-${n}`]);
 const DF=(()=>{let tab='go',tick=0,lookTab=0,lt=0,ld={g:0,x:0,b:0,h:0};
   const TABS=[['go','出戰'],['med','靜室'],['garden','藥園'],['alch','丹房'],['look','造型'],['lib','藏經閣'],['shop','坊市']];
   const el=$('#dfBody');
