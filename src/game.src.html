@@ -1,5 +1,6 @@
 <title>午夜來斬妖 序章</title>
 <meta name="claude:viewport-fit-sides" content="cover">
+<link rel="manifest" href="game.webmanifest"><meta name="theme-color" content="#0d0a1c"><link rel="apple-touch-icon" href="icon-192.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes">
 <style>
 /*FONTS*/
 /* Layout: full-screen 3D village seen from above; HUD hugs the top edge, overlays (start / 頓悟 cards / result / pause) sit centred over a dimmed scene */
@@ -1097,6 +1098,7 @@ function checkRot(){const need=isTouch&&innerHeight>innerWidth;$('#rotOv').class
 function tryLandscape(){try{if(isTouch&&window.top===window&&/Android/i.test(navigator.userAgent)&&document.fullscreenEnabled&&!document.fullscreenElement)
   document.documentElement.requestFullscreen().then(()=>screen.orientation&&screen.orientation.lock&&screen.orientation.lock('landscape')).catch(()=>{})}catch(e){}}
 addEventListener('resize',resize);resize();
+try{if('serviceWorker' in navigator&&/^https?:/.test(location.protocol)&&window.top===window)navigator.serviceWorker.register('sw.js').catch(()=>{})}catch(e){}
 let last=performance.now();const camT=new THREE.Vector3(),bubP=new THREE.Vector3();
 mode='idle';
 function frame(now){requestAnimationFrame(frame);let dt=Math.min(.05,(now-last)/1000);last=now;clock+=dt;
