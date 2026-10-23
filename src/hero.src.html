@@ -98,7 +98,7 @@ body.editing .top{opacity:0;pointer-events:none}
   <h1 id="title" aria-label="午夜來斬妖">
     <span style="--r:-5deg;--i:0">午</span><span style="--r:3deg;--i:1">夜</span><span style="--r:-2deg;--i:2">來</span><span class="zhan" style="--r:6deg;--i:3">斬</span><span style="--r:-4deg;--i:4">妖</span>
   </h1>
-  <div class="sub">煉氣一層・小道士　主角試做 v0.5</div>
+  <div class="sub">煉氣一層・小道士　主角試做 v0.6</div>
   <div class="fonts" role="group" aria-label="標題字體">
     <small>標題字體</small>
     <button class="chip" data-font="TPotta" aria-pressed="true">墨團</button>
@@ -330,23 +330,35 @@ const drawFace=(x,w,h)=>{x.scale(2,2);
   const cx=256,rg=(px,py,r,c0,c1)=>{const g=x.createRadialGradient(px,py,0,px,py,r);g.addColorStop(0,c0);g.addColorStop(1,c1);x.fillStyle=g;x.fillRect(px-r,py-r,r*2,r*2)};
   const R=(px,py,r,rgb,a)=>rg(px,py,r,`rgba(${rgb},${Math.min(1,a)})`,`rgba(${rgb},0)`);
   R(cx-118,300,70,'206,160,140',.35*ct);R(cx+118,300,70,'206,160,140',.35*ct);
-  R(cx,372,60,'210,166,146',.2*ct);
-  [-1,1].forEach(d=>R(cx+d*60,305,28,'236,140,130',.22*F.blush));
-  // painted contour: temples, under cheekbones, jaw, nose sides, under lip
-  [-1,1].forEach(d=>{R(cx+d*92,318,46,'170,110,95',.22*ct);R(cx+d*80,372,50,'160,100,88',.2*ct);R(cx+d*14,282-nu,14,'176,118,100',.22*ct)});
-  R(cx,352-F.lipUp,16,'170,104,92',.22*ct);R(cx,232,40,'255,240,228',.18);R(cx,362,22,'255,238,226',.12);
-  // nose bridge light + tip shade + nostrils
-  x.strokeStyle='rgba(255,246,236,.35)';x.lineWidth=5;x.lineCap='round';x.beginPath();x.moveTo(cx,256);x.lineTo(cx,300-nu);x.stroke();
-  R(cx-7,304-nu,9,'190,130,112',.28);
-  x.strokeStyle='rgba(150,88,76,.55)';x.lineWidth=1.3;[-1,1].forEach(d=>{x.beginPath();x.moveTo(cx+d*3*nw,311-nu);x.quadraticCurveTo(cx+d*8*nw,313-nu,cx+d*10*nw,309-nu);x.stroke()});
-  // lips
-  const lc=LIPS[F.lipC],ly=334-F.lipUp,lw=F.lipW,lt=F.lipThick,yc=ly-F.lipCorner,Y=dy=>ly+dy*lt;
-  x.fillStyle=lc[0];x.beginPath();x.moveTo(cx-11*lw,yc);x.quadraticCurveTo(cx-5*lw,Y(-3),cx,Y(-1));x.quadraticCurveTo(cx+5*lw,Y(-3),cx+11*lw,yc);x.quadraticCurveTo(cx,Y(1.5),cx-11*lw,yc);x.fill();
-  x.fillStyle=lc[1];x.beginPath();x.moveTo(cx-9*lw,Y(1)-F.lipCorner*.8);x.quadraticCurveTo(cx,Y(7),cx+9*lw,Y(1)-F.lipCorner*.8);x.quadraticCurveTo(cx,Y(3),cx-10*lw,Y(1)-F.lipCorner*.8);x.fill();
-  x.strokeStyle='rgba(120,56,52,.7)';x.lineWidth=1.1;x.beginPath();x.moveTo(cx-12*lw,yc+.2);x.quadraticCurveTo(cx,Y(3),cx+12*lw,yc+.2);x.stroke();
-  x.fillStyle='rgba(255,240,236,.5)';x.beginPath();x.ellipse(cx+2,Y(4.5),3*lw,lt,0,0,7);x.fill();
+  [-1,1].forEach(d=>R(cx+d*62,306,30,'236,140,130',.28*F.blush));
+  // painted contour: temples, under cheekbones, along the jaw (kept off the mouth so it doesn't read as a muzzle), nose sides
+  [-1,1].forEach(d=>{R(cx+d*94,316,46,'170,110,95',.2*ct);R(cx+d*112,392,46,'160,100,88',.16*ct);R(cx+d*15,272-nu,13,'168,108,92',.26*ct)});
+  R(cx,232,40,'255,240,228',.18);R(cx-14,302-nu,18,'255,240,228',.14);
+  // nose: bridge light, tip highlight, shade under the tip and in the alar grooves, nostrils
+  x.strokeStyle='rgba(255,246,236,.32)';x.lineWidth=4;x.lineCap='round';x.beginPath();x.moveTo(cx-1,254);x.lineTo(cx-1.5,296-nu);x.stroke();
+  R(cx-2,300-nu,6,'255,250,244',.5);R(cx,311-nu,11*nw,'170,104,92',.3*ct);
+  [-1,1].forEach(d=>{x.strokeStyle='rgba(160,98,84,.3)';x.lineWidth=1.6;x.beginPath();x.moveTo(cx+d*9*nw,301-nu);x.quadraticCurveTo(cx+d*12.5*nw,306-nu,cx+d*9.5*nw,310-nu);x.stroke()});
+  x.fillStyle='rgba(120,62,54,.6)';[-1,1].forEach(d=>{x.beginPath();x.ellipse(cx+d*4.6*nw,310.6-nu,2.4*nw,1.1,d*.35,0,7);x.fill()});
+  // philtrum: two faint ridges with a shade between, running from the nose to the lip
+  const ly=336-F.lipUp,pt=311-nu;
+  R(cx,(pt+ly)/2-2,5,'190,128,112',.22*ct);
+  x.strokeStyle='rgba(255,240,230,.25)';x.lineWidth=1;[-1,1].forEach(d=>{x.beginPath();x.moveTo(cx+d*2.4,pt+3);x.lineTo(cx+d*3.6,ly-6);x.stroke()});
+  // lips (drawn at default size, then scaled about the mouth line): cupid's bow, fuller lower lip, dark parting line, corners
+  const lc=LIPS[F.lipC],kc=F.lipCorner/1.3;
+  x.save();x.translate(cx,ly);x.scale(1.3*F.lipW,.9*F.lipThick);x.translate(-cx,-336);
+  x.fillStyle=lc[0];x.beginPath();x.moveTo(cx-15,336-kc);x.bezierCurveTo(cx-10,333,cx-6,329.5,cx-2.5,330);x.quadraticCurveTo(cx,331.3,cx+2.5,330);x.bezierCurveTo(cx+6,329.5,cx+10,333,cx+15,336-kc);x.quadraticCurveTo(cx,334.6,cx-15,336-kc);x.fill();
+  const ud=x.createLinearGradient(0,329,0,336);ud.addColorStop(0,'rgba(90,30,30,0)');ud.addColorStop(1,'rgba(90,30,30,.18)');x.fillStyle=ud;x.fill();
+  x.fillStyle=lc[1];x.beginPath();x.moveTo(cx-13.5,336.4-kc);x.quadraticCurveTo(cx,335.4,cx+13.5,336.4-kc);x.bezierCurveTo(cx+10,343,cx+4,345,cx,345);x.bezierCurveTo(cx-4,345,cx-10,343,cx-13.5,336.4-kc);x.fill();
+  const ld=x.createLinearGradient(0,336,0,345);ld.addColorStop(0,'rgba(90,30,30,.2)');ld.addColorStop(.45,'rgba(90,30,30,0)');x.fillStyle=ld;x.fill();
+  R(cx,348.5,9,'170,104,92',.22*ct);
+  x.strokeStyle='rgba(98,44,42,.85)';x.lineWidth=1.1;x.beginPath();x.moveTo(cx-15.5,335.8-kc);x.bezierCurveTo(cx-8,335.6,cx-3,337.2,cx,336.3);x.bezierCurveTo(cx+3,337.2,cx+8,335.6,cx+15.5,335.8-kc);x.stroke();
+  [-1,1].forEach(d=>{x.strokeStyle='rgba(120,60,54,.45)';x.lineWidth=1;x.beginPath();x.moveTo(cx+d*15,335.4-kc);x.quadraticCurveTo(cx+d*17,335.8-kc,cx+d*17.5,334.4-kc*1.3);x.stroke()});
+  x.fillStyle='rgba(255,236,230,.35)';x.beginPath();x.ellipse(cx+1.5,340.5,3.6,.9,0,0,7);x.fill();
+  x.fillStyle='rgba(255,236,230,.3)';x.beginPath();x.ellipse(cx-5,332.2,2.4,.7,-.2,0,7);x.fill();
+  x.restore();
   function eye(ex,ey,d){
     R(ex+d*2,ey-8,26,'184,116,104',.26*F.shadow);
+    R(ex-d*24,ey-14,16,'160,100,90',.28*ct);R(ex+d*6,ey-24,22,'180,120,108',.16*ct);R(ex,ey+20,18,'255,242,232',.16);
     x.save();x.translate(ex,ey);x.rotate(-d*F.eyeTilt*Math.PI/180);x.scale(1.4*F.eyeSize,1.4*F.eyeSize*F.eyeOpen);
     const ir=F.irisS,ic=IRIS[F.iris];
     const lid=()=>{x.moveTo(-d*19,2);x.bezierCurveTo(-d*10,-9.5,d*10,-10.5,d*21,-4)};
@@ -367,7 +379,14 @@ const drawFace=(x,w,h)=>{x.scale(2,2);
     for(let k=0;k<3;k++){const px=d*(8+k*4);x.beginPath();x.moveTo(px,7.2-k*1.2);x.lineTo(px+d*1.2,9.4-k*1.2);x.stroke()}
     x.restore();
     x.lineCap='round';
-    for(let k=0;k<26;k++){const t=k/25,px=ex+d*(-18+52*F.browLen*t),py=ey-44-F.browUp-Math.sin(t*Math.PI*.92)*F.browArch+t*2-F.browTail*t;x.strokeStyle=`rgba(46,32,30,${Math.min(1,(.25+.5*(1-Math.abs(t-.35)))*F.browDark)})`;x.lineWidth=F.browThick;x.beginPath();x.moveTo(px,py+1.6);x.lineTo(px+d*4,py-1.4);x.stroke()}}
+    // brows: tapered soft base, then two layers of hair strokes (rising at the head, sweeping out along the tail)
+    const bk=F.browThick/1.3,by=t=>ey-40-F.browUp-Math.sin(t*Math.PI*.92)*F.browArch+t*2-F.browTail*t,bw=t=>bk*(7.5*(1-t)+1.6*t-3*Math.pow(1-t,6)),bx=t=>ex+d*(-20+58*F.browLen*t);
+    const bd=a=>Math.min(1,a*F.browDark);
+    x.fillStyle=`rgba(52,36,34,${bd(.45)})`;x.beginPath();for(let k=0;k<=20;k++){const t=k/20;x.lineTo(bx(t),by(t)-bw(t)*.55)}for(let k=20;k>=0;k--){const t=k/20;x.lineTo(bx(t),by(t)+bw(t)*.45)}x.fill();
+    let bs=5;const br=()=>(bs=bs*16807%2147483647)/2147483647;// own seed: redrawing the face must not shift the scene's rnd()
+    for(let k=0;k<110;k++){const t=k/109,px=bx(t)+(br()-.5)*1.4,py=by(t)+(br()-.5)*bw(t)*.8,lean=t<.18?.4:1;
+      x.strokeStyle=`rgba(${t<.2?60:38},${t<.2?42:28},${t<.2?38:28},${bd(.3+.45*(1-Math.abs(t-.4)))})`;x.lineWidth=(.8+.6*(1-t))*Math.sqrt(bk);
+      x.beginPath();x.moveTo(px,py+1.8);x.lineTo(px+d*4.2*lean,py-1.8+t*1.2);x.stroke()}}
   eye(cx-F.eyeSp,268-F.eyeUp,-1);eye(cx+F.eyeSp,268-F.eyeUp,1);
   if(MARKS[F.mark]){x.fillStyle=MARKS[F.mark];x.beginPath();x.moveTo(cx,200);x.quadraticCurveTo(cx+3,207,cx,214);x.quadraticCurveTo(cx-3,207,cx,200);x.fill()}};
 const faceTex=ctex(2048,1024,drawFace);
@@ -380,7 +399,7 @@ const M={
   outer:toon(pal.outer,{roughness:.58}),outerDS:toon(pal.outer,{side:THREE.DoubleSide,roughness:.58,normalMap:foldTex,normalScale:new THREE.Vector2(.5,.5)}),
   trim:toon(pal.trim,{roughness:.5}),belt:toon('#ffffff',{map:beltTex,side:THREE.DoubleSide,roughness:.5}),ribbon:toon(pal.ribbon,{side:THREE.DoubleSide,roughness:.45}),
   hair:toon('#1b1a21',{roughness:.45}),hairDS:toon('#1b1a21',{side:THREE.DoubleSide,roughness:.45}),hairCard:toon('#ffffff',{map:hairTex,side:THREE.DoubleSide,roughness:.4}),
-  skin:toon('#eec5aa',{roughness:.62,emissive:'#3a1d14'}),face:toon('#ffffff',{map:faceTex,roughness:.6,emissive:'#3a1d14'}),
+  skin:toon('#eec5aa',{roughness:.62,emissive:'#26120c'}),face:toon('#ffffff',{map:faceTex,roughness:.6,emissive:'#26120c'}),
   gold:toon('#c79a4a',{roughness:.32,metalness:.75}),bronze:toon('#80683c',{roughness:.45,metalness:.5}),jade:toon('#74dcb9',{roughness:.22,emissive:'#0b3328'}),
   boot:toon('#17181d',{roughness:.6}),scab:toon('#1f1c27',{roughness:.4}),wrap:toon('#2c2232'),red:toon('#c9372d',{side:THREE.DoubleSide,roughness:.5})};
 function applyPal(i){pal=PALS[i];M.inner.color.copy(LC(pal.inner));M.outer.color.copy(LC(pal.outer));M.outerDS.color.copy(LC(pal.outer));M.trim.color.copy(LC(pal.trim));M.ribbon.color.copy(LC(pal.ribbon));
@@ -438,7 +457,8 @@ const armL=makeArm(1),armR=makeArm(-1);
 
 // head: sculpted sphere (brow, sockets, nose, cheekbones, lips, chin); shapeHead() rebuilds it from the 捏臉 parameters F
 const headG=new THREE.Group();headG.position.y=HY+.004;headG.scale.set(F.headS*F.faceW,F.headS,F.headS);body.add(headG);
-const headGeo=new THREE.SphereGeometry(.118,96,64);
+// dense enough that lips, alae and lids are wider than one face of the mesh
+const headGeo=new THREE.SphereGeometry(.118,192,144);
 const headBase=headGeo.attributes.position.array.slice();
 const pyN=py=>Math.cos(py/512*Math.PI),pxN=(px,py)=>Math.sin(px/1024*Math.PI*2)*Math.sin(py/512*Math.PI);// face texture pixel -> head-sphere coordinates
 function shapeHead(){
@@ -447,18 +467,34 @@ function shapeHead(){
  const WT=[[1,.9],[.3,.92+F.foreW],[0,.9+F.foreW],[-.2,.87+F.cheekW],[-.45,.8+F.cheekW],[-.65,.68+F.jawW],[-.82,.53+F.jawW],[-.95,.42+F.chinW],[-1,.38+F.chinW]];
  const wAt=y=>{for(let i=1;i<WT.length;i++){const [y0,w0]=WT[i-1],[y1,w1]=WT[i];if(y<=y0&&y>=y1)return w0+(w1-w0)*(y0-y)/(y0-y1)}return .2};
  const eyeY=268-F.eyeUp,eNy=-.07+pyN(eyeY)-pyN(268),eNx=.33+pxN(F.eyeSp,eyeY)-pxN(55,268);
- const nTip=-.32+pyN(309-F.noseUp)-pyN(309),nL=-.02-nTip,lipD=pyN(334-F.lipUp)-pyN(334);
+ const nTip=-.32+pyN(309-F.noseUp)-pyN(309),lipD=pyN(334-F.lipUp)-pyN(334);
  for(let i=0;i<p.count;i++){let nx=headBase[i*3]/.118,ny=headBase[i*3+1]/.118,nz=headBase[i*3+2]/.118;let d=0;
   // features as small bumps along the surface normal
-  if(nz>0){const t=Math.min(1,Math.max(0,(-.02-ny)/nL));
-    d+=(.008+.04*F.noseH*Math.pow(t,1.8))*g(nx,(.034+.024*t)*F.noseW)*(ny>nTip-.02?1:g(ny-(nTip-.02),.03));
-    d+=.006*g(Math.abs(nx)-.055*F.noseW,.022*F.noseW)*g(ny-nTip,.028);
-    d+=.014*F.browBone*g(ny-.08,.06)*g(nx,.42);
-    d-=.022*g(Math.abs(nx)-eNx,.11*F.eyeSize)*g(ny-eNy,.07*F.eyeSize);
-    d+=.008*g(Math.abs(nx)-.5,.12)*g(ny+.2,.08)+F.cheekFull*.012*g(Math.abs(nx)-.45,.16)*g(ny+.3,.14);
-    d-=.005*g(Math.abs(nx)-.55,.16)*g(ny+.36,.12);
-    d+=F.lipThick*(.004*g(nx,.1*F.lipW)*g(ny+.44-lipD,.03)+.006*g(nx,.09*F.lipW)*g(ny+.49-lipD,.03));
-    d+=.01*g(nx,.13)*g(ny+.8,.08);
+  if(nz>0){const ax=Math.abs(nx),dn=nTip+.32,nEnd=-.29+dn,t=Math.min(1,Math.max(0,(-.01-ny)/(-.01-nEnd))),nw=F.noseW,lw=F.lipW,lt=F.lipThick;
+    // nose: narrow bridge rising to a rounded tip, alar wings with a groove behind them
+    d+=(.005+.034*F.noseH*Math.pow(t,1.8))*g(nx,(.026+.018*t)*nw)*(ny>nEnd-.01?1:g(ny-(nEnd-.01),.022));
+    d+=.007*F.noseH*g(nx,.038*nw)*g(ny-(nEnd+.005),.03);
+    d+=.0065*g(ax-.056*nw,.018*nw)*g(ny-(nEnd-.022),.02);
+    d-=.003*g(ax-.08*nw,.012)*g(ny-(nEnd-.01),.035);
+    // forehead and brow ridge over the eyes
+    d+=.012*F.browBone*g(ny-.1,.07)*g(nx,.45);
+    d+=.007*F.browBone*g(ax-.27,.13)*g(ny-.13,.04);
+    // eye sockets with the eyeball and lids filling them
+    d-=.028*g(ax-eNx,.1*F.eyeSize)*g(ny-eNy-.01,.075*F.eyeSize);
+    d+=.009*g(ax-eNx-.005,.07*F.eyeSize)*g(ny-eNy,.042*F.eyeSize);
+    d-=.004*g(ax-.17,.035)*g(ny+.04,.05);
+    // cheekbones, soft hollow below
+    d+=.01*g(ax-.47,.12)*g(ny+.19,.08)+F.cheekFull*.012*g(ax-.45,.16)*g(ny+.3,.14);
+    d-=.004*g(ax-.52,.12)*g(ny+.42,.1);
+    // mouth: philtrum, upper lip, parting line, lower lip, corners
+    d-=.002*g(nx,.011)*g(ny+.39-lipD,.035);
+    d+=.003*lt*g(nx,.1*lw)*g(ny+.452-lipD,.018*lt);
+    d-=.0025*g(nx,.11*lw)*g(ny+.472-lipD,.009);
+    d+=.004*lt*g(nx,.085*lw)*g(ny+.497-lipD,.02*lt);
+    d-=.003*g(ax-.105*lw,.018)*g(ny+.47-lipD,.02);
+    // dip under the lower lip, then the chin
+    d-=.003*g(nx,.07)*g(ny+.56-lipD*.5,.03);
+    d+=.008*g(nx,.11)*g(ny+.74,.08);
     d*=Math.min(1,nz*2.5)}
   let x=nx*(1+d),y=ny*(1+d),z=nz*(1+d);
   // flatter face plane, narrower and longer lower face, rounder skull at the back
