@@ -47,11 +47,11 @@ function vajraCast(){const lv=SL(),R=SK.sweep.range(),dmg=swordDmg()*4*G.k.sweep
     act(.28,null,()=>{ringFx(hx,hz,rr,0xffd86a);aoe(hx,hz,rr,dmg,{stun:lv>=3?1.5:.5,kb:1})})})}
 // 追魂符：符紙飛出、會轉彎追妖，碰到就爆
 function talisSeekCast(A){const st=bs(),n=EVc([3,5,8,12][st],3),a0=aimD(A),dmg=swordDmg()*3.2*G.k.beamD,R=1.4*EVm(st>=2?2/1.4:1);SFX.play('beam');
-  for(let i=0;i<n;i++){const a=a0+(i-(n-1)/2)*(st>=3?.5:.22);act(i*.04,null,()=>shot({x:HERO.pos.x,z:HERO.pos.z,dx:Math.sin(a),dz:Math.cos(a),spd:9,life:1.6,r:.35,home:4,homeDelay:.15,seek:8,col:0xffe08a,tex:talTex2,size:.5,spin:6,trail:1,
+  for(let i=0;i<n;i++){const a=fanA(a0,i,n,(st>=3?.5:.22));act(i*.04,null,()=>shot({x:HERO.pos.x,z:HERO.pos.z,dx:Math.sin(a),dz:Math.cos(a),spd:9,life:1.6,r:.35,home:4,homeDelay:.15,seek:8,col:0xffe08a,tex:talTex2,size:.5,spin:6,trail:1,
     onHit:(e,x,z)=>{ringFx(x,z,R,0xff8a3a,.35);aoe(x,z,R,dmg,{burn:st>=1?2:0,kb:.5});if(st>=3&&!simming)for(let k=0;k<2;k++){const b=Math.random()*6.28;shot({x,z,dx:Math.sin(b),dz:Math.cos(b),spd:8,life:.8,r:.35,home:5,seek:6,col:0xffe08a,tex:talTex2,size:.5,onHit:(e2,x2,z2)=>{aoe(x2,z2,1.1,dmg*.5)}})}}}))}}
 // 銅錢鏢：一串銅錢穿透，飛到底再回旋
 function coinCast(A){const st=bs(),lines=EVc([1,3,5,8][st],1),a0=aimD(A),L=SK.beam.range(),dmg=swordDmg()*2.4*G.k.beamD;SFX.play('beam');
-  for(let j=0;j<lines;j++){const a=lines>1?a0+(j-(lines-1)/2)*(st>=3?.32:.22):a0;for(let c=0;c<4;c++)act(c*.05,null,()=>{const sx=HERO.pos.x,sz=HERO.pos.z;
+  for(let j=0;j<lines;j++){const a=lines>1?fanA(a0,j,lines,(st>=3?.32:.22)):a0;for(let c=0;c<4;c++)act(c*.05,null,()=>{const sx=HERO.pos.x,sz=HERO.pos.z;
     shot({x:sx,z:sz,dx:Math.sin(a),dz:Math.cos(a),spdF:t=>t<.55?16:-14,life:1.15,r:.3,pierce:99,dmg,col:0xffe08a,tex:coinTex,size:.32,spin:20,onHit:(e,x,z,vx,vz)=>{if(st>=3)e.stun=Math.max(e.stun||0,.5);hurtEnemy(e,dmg,vx*.3,vz*.3,false,0)}})})}}
 // 引雷符：往妖最多處落雷
 function talisThunderCast(){const lv=TL(),n=EVc([4,6,6,8][lv],4),R=1.6,dmg=swordDmg()*3.6*G.k.thD,spots=crowdSpots(HERO.pos.x,HERO.pos.z,SK.thunder.range(),R,n);if(!spots.length)return false;SFX.play('thunder');
@@ -80,11 +80,11 @@ function stoneCast(){const lv=SL(),R=SK.sweep.range(),dmg=swordDmg()*4*G.k.sweep
     aoe(hx,hz,rr,dmg,{stun:lv>=3?2.5:1.5,bstun:.6})})}
 // 冰錐連射：扇面射出冰錐、緩速
 function iceConeCast(A){const st=bs(),n=EVc([5,9,15,24][st],5),a0=aimD(A),spread=[.8,1.3,2,Math.PI*2][st],dmg=swordDmg()*2.4*G.k.beamD;SFX.play('beam');
-  for(let i=0;i<n;i++){const a=st>=3?a0+i/n*6.28:a0-spread/2+spread*i/(n-1);act((i%5)*.03,null,()=>shot({x:HERO.pos.x,z:HERO.pos.z,dx:Math.sin(a),dz:Math.cos(a),spd:14,life:.75,r:.3,pierce:st>=2?2:1,dmg,col:0xbff4ff,size:.6,trail:1,
+  for(let i=0;i<n;i++){const a=st>=3?a0+i/n*6.28:fanA(a0,i,n,spread/(n-1));act((i%5)*.03,null,()=>shot({x:HERO.pos.x,z:HERO.pos.z,dx:Math.sin(a),dz:Math.cos(a),spd:14,life:.75,r:.3,pierce:st>=2?2:1,dmg,col:0xbff4ff,size:.6,trail:1,
     onHit:(e,x,z,vx,vz)=>{e.slowT=3;if(st>=3)e.stun=Math.max(e.stun||0,.8);hurtEnemy(e,dmg,vx*.4,vz*.4,false,0)}}))}}
 // 風刃：旋風直線推進，把妖捲走
 function windCast(A){const st=bs(),n=EVc([1,1,2,3][st],1),L=SK.beam.range()*EVm(st>=3?1.4:1),W=1.8*EVm(st>=1?2.4/1.8:1),a0=aimD(A),dmg=swordDmg()*1.3*G.k.beamD;SFX.play('beam');
-  for(let j=0;j<n;j++){const a=n>1?a0+(j-(n-1)/2)*.35:a0,dx=Math.sin(a),dz=Math.cos(a),sx=HERO.pos.x,sz=HERO.pos.z,T=L/8,parts=[],hitT=new Map();
+  for(let j=0;j<n;j++){const a=n>1?fanA(a0,j,n,.35):a0,dx=Math.sin(a),dz=Math.cos(a),sx=HERO.pos.x,sz=HERO.pos.z,T=L/8,parts=[],hitT=new Map();
     for(let i=0;i<5;i++)parts.push(spr(0xd8fff0,1.4-i*.15));
     act(T,(t,dt)=>{const d=t/T*L,x=sx+dx*d,z=sz+dz*d;parts.forEach((p,i)=>{const a2=t*14+i*1.3;p.position.set(x+Math.sin(a2)*.4*(i*.3),.3+i*.35,z+Math.cos(a2)*.4*(i*.3));p.material.opacity=.7});
         if(!simming&&Math.random()<.6)fx({p:tmp.set(x+(Math.random()-.5),.4,z+(Math.random()-.5)),col:0xc8ffe8,add:true,life:.4,s0:.7,s1:.1,op:.6,vy:1});
@@ -121,13 +121,13 @@ function turtleCast(){const lv=SL(),R=SK.sweep.range(),dmg=swordDmg()*4.2*G.k.sw
 // 照妖鏡光：被照到的妖 3 秒內受傷加倍
 function mirrorCast(A){const st=bs(),n=EVc([1,2,3,5][st],1),a0=aimD(A),L=SK.beam.range(),W=2.4,dmg=swordDmg()*3.6*G.k.beamD,mk=st>=3?5:3;SFX.play('beam');SFX.play('gold');
   const mir=spr(0xffe9a0,1.4);mir.position.set(HERO.pos.x,2.2,HERO.pos.z);act(.6,t=>{mir.material.opacity=1-t/.6},()=>unspr(mir));
-  for(let j=0;j<n;j++){const a=n>1?a0+(j-(n-1)/2)*.4:a0,hx=HERO.pos.x,hz=HERO.pos.z;const m=new THREE.Mesh(beamGeo,new THREE.MeshBasicMaterial({map:wBeamTex,color:0xffd86a,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide}));m.position.set(hx,.9,hz);m.rotation.y=a;m.scale.set(W,1,L);scene.add(m);
+  for(let j=0;j<n;j++){const a=n>1?fanA(a0,j,n,.4):a0,hx=HERO.pos.x,hz=HERO.pos.z;const m=new THREE.Mesh(beamGeo,new THREE.MeshBasicMaterial({map:wBeamTex,color:0xffd86a,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide}));m.position.set(hx,.9,hz);m.rotation.y=a;m.scale.set(W,1,L);scene.add(m);
     act(.5,t=>{m.material.opacity=1-t/.5},()=>{scene.remove(m);m.material.dispose()});
     for(const e of enemies)if(!e.dead&&inLine(e.x,e.z,hx,hz,a,L,W,e.r)){e.markT=mk;hurtEnemy(e,dmg,0,0,true,0);if(!simming)fx({p:tmp.set(e.x,1.2,e.z),col:0xffe9a0,add:true,life:.5,s0:.8,s1:.2,op:.9,vy:.5})}
     if(boss.alive&&inLine(boss.x,boss.z,hx,hz,a,L,W,boss.r)){boss.markT=mk;hurtBoss(dmg)}}}
 // 縛妖索：金繩串起沿路的妖，綁住精英或魔王並拉近
 function ropeCast(A){const st=bs(),n=EVc([1,1,2,3][st],1),a0=aimD(A),L=SK.beam.range()*1.1,W=1.1*EVm(st>=1?1.6/1.1:1),dmg=swordDmg()*3.4*G.k.beamD,hold=st>=2?2.2:1.4;SFX.play('beam');
-  for(let j=0;j<n;j++){const a=n>1?a0+(j-(n-1)/2)*.4:a0,hx=HERO.pos.x,hz=HERO.pos.z,dx=Math.sin(a),dz=Math.cos(a);
+  for(let j=0;j<n;j++){const a=n>1?fanA(a0,j,n,.4):a0,hx=HERO.pos.x,hz=HERO.pos.z,dx=Math.sin(a),dz=Math.cos(a);
     const pts=[];for(let i=0;i<=16;i++)pts.push(new THREE.Vector3());const line=new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),new THREE.LineBasicMaterial({color:0xffd86a,transparent:true}));scene.add(line);
     act(.7,t=>{const k=Math.min(1,t/.2);for(let i=0;i<=16;i++){const d=L*k*i/16;pts[i].set(hx+dx*d+Math.sin(i+t*20)*.08,.8,hz+dz*d)}line.geometry.setFromPoints(pts);line.material.opacity=t>.5?(.7-t)/.2:1},()=>{scene.remove(line);line.geometry.dispose();line.material.dispose()});
     for(const e of enemies)if(!e.dead&&inLine(e.x,e.z,hx,hz,a,L,W,e.r)){e.stun=Math.max(e.stun||0,hold);if(e.elite){e.x+=(hx-e.x)*.5;e.z+=(hz-e.z)*.5}hurtEnemy(e,dmg,0,0,false,0)}
@@ -184,7 +184,7 @@ function sixArmCast(){const lv=SL(),R=SK.sweep.range(),n=EVc(lv>=3?12:lv>=2?9:6,
     ()=>{scene.remove(g);g.traverse(o=>{if(o.geometry)o.geometry.dispose()});F.M.dispose();F.D.dispose();if(F.sword)F.sword.material.dispose()})}
 // 破煞金雷：金雷沿直線一路炸過去，對鬼怪傷害加倍
 function goldThunderCast(A){const st=bs(),n=EVc([1,1,3,5][st],1),a0=aimD(A),L=SK.beam.range()*EVm(st>=1?1.3:1),dmg=swordDmg()*3.2*G.k.beamD;SFX.play('thunder');
-  for(let j=0;j<n;j++){const a=n>1?a0+(j-(n-1)/2)*.42:a0,hx=HERO.pos.x,hz=HERO.pos.z,dx=Math.sin(a),dz=Math.cos(a),steps=Math.ceil(L/1.3);
+  for(let j=0;j<n;j++){const a=n>1?fanA(a0,j,n,.42):a0,hx=HERO.pos.x,hz=HERO.pos.z,dx=Math.sin(a),dz=Math.cos(a),steps=Math.ceil(L/1.3);
     for(let i=1;i<=steps;i++)act(i*.05,null,()=>{const x=hx+dx*i*1.3,z=hz+dz*i*1.3;boltAt(x,z,0,0,0xffe08a,.09,10);aoe(x,z,1.3,dmg,{ghost:1,stun:.3});if(i%2)SFX.play('thunder');
       if(st>=3&&i===steps)act(.15,null,()=>{boltAt(x,z,0,0,0xffffff,.35,16);ringFx(x,z,3,0xfff0b0,.5);aoe(x,z,3,dmg*3,{ghost:1,stun:1.2});shake=Math.max(shake,.5)})})}}
 // 玄冥冰焰：藍白冰焰噴流，燒加凍結，留下冰焰地
@@ -196,7 +196,7 @@ function iceFireCast(A){const st=bs(),a0=aimD(A),L=SK.beam.range()*.9,ang=.55*EV
       act(3,(t,dt)=>{m.material.opacity=.35*(1-t/3);tk-=dt;if(tk<=0){tk=.4;aoe(x,z,r,dmg*.8,{slow:2,boss:true})}},()=>{scene.remove(m);m.geometry.dispose();m.material.dispose()})}})}
 // 兩儀磁光：黑白磁光先把線上的妖吸在一起再爆開
 function magnetCast(A){const st=bs(),n=EVc([1,1,2,3][st],1),a0=aimD(A),L=SK.beam.range()*EVm(st>=1?1.3:1),W=2.6,dmg=swordDmg()*4.6*G.k.beamD;SFX.play('beam');
-  for(let j=0;j<n;j++){const a=n>1?a0+(j-(n-1)/2)*.5:a0,hx=HERO.pos.x,hz=HERO.pos.z,dx=Math.sin(a),dz=Math.cos(a),cx=hx+dx*L*.55,cz=hz+dz*L*.55;
+  for(let j=0;j<n;j++){const a=n>1?fanA(a0,j,n,.5):a0,hx=HERO.pos.x,hz=HERO.pos.z,dx=Math.sin(a),dz=Math.cos(a),cx=hx+dx*L*.55,cz=hz+dz*L*.55;
     const mk=c=>{const m=new THREE.Mesh(beamGeo,new THREE.MeshBasicMaterial({map:wBeamTex,color:c,transparent:true,depthWrite:false,side:THREE.DoubleSide}));m.position.set(hx,.85,hz);m.rotation.y=a;m.scale.set(W*.5,1,L);scene.add(m);return m};
     const bw=[mk(0xf8f4ea),mk(0x14141a)];bw[1].position.y=.8;
     act(1,(t,dt)=>{bw.forEach((m,i)=>{m.position.x=hx+dz*Math.sin(t*20+i*3)*.4;m.position.z=hz-dx*Math.sin(t*20+i*3)*.4;m.material.opacity=t>.85?(1-t)/.15:1});
@@ -280,16 +280,17 @@ const BEAM_MAP=[0,1,3,4];
 const evQ=()=>[.25,.5,.75,1][Math.min(3,save.realm>=15?3:save.realm>=12?2:save.realm>=9?1:0)];
 const EVc=(v,b)=>v<=b?v:Math.max(b+1,Math.floor(b+(v-b)*evQ()));
 const EVm=m=>1+(m-1)*evQ();
-const EV_CAP={bugs:60};const EV_BASE={beam0:1,beam1:1,beam2:1,seek:3,coin:1,icecone:5,wind:1,mirror:1,rope:1,goldlei:1,magnet:1,peach:3,firedance:3,zhoutian:36,sixarm:6,yinlei:4,rock:1,vine:3,wuxing:5,bugs:30,thunder2:14,thunder3:14};
+const EV_CAP={bugs:60},EV_MIN={beam0:[1,3,6,9]};// 劍氣長虹每級至少 1→3→6→9 道
+const EV_BASE={beam0:1,beam1:1,beam2:1,seek:3,coin:1,icecone:5,wind:1,mirror:1,rope:1,goldlei:1,magnet:1,peach:3,firedance:3,zhoutian:36,sixarm:6,yinlei:4,rock:1,vine:3,wuxing:5,bugs:30,thunder2:14,thunder3:14};
 const CN='零一二三四五六七八九';
 function cnNum(t){if(/^\d+$/.test(t))return +t;t=t.replace(/兩/g,'二');let n=0,cur=0;for(const ch of t){const d=CN.indexOf(ch);if(d>=0)cur=d;else if(ch==='十'){n+=(cur||1)*10;cur=0}else if(ch==='百'){n+=(cur||1)*100;cur=0}}return n+cur}
 function toCn(n){if(n<10)return n===2?'兩':CN[n];if(n<100){const t=Math.floor(n/10),o=n%10;return (t>1?CN[t]:'')+'十'+(o?CN[o]:'')}const h=Math.floor(n/100),r=n%100;return (h===2?'兩':CN[h])+'百'+(r?(r<10?'零':'')+toCn(r).replace(/^十/,'一十'):'')}
 // 說明文字也換成目前境界實際的數字
-function evText(S,t){if(!t||evQ()>=1)return t||'';const b=EV_BASE[S.id]||1,q=evQ();
+function evText(S,t,step){if(!t||evQ()>=1)return t||'';const b=EV_BASE[S.id]||1,q=evQ(),mn=(EV_MIN[S.id]&&step!==undefined)?EV_MIN[S.id][step]:0;
   return t.replace(/\+(\d+)%/g,(m,p)=>'+'+Math.max(1,Math.round(p*q))+'%')
    .replace(/(\d+|[一二兩三四五六七八九十百]+)\s*(道|條|張|串|根|顆|把|隻|處|拳)/g,(m,num,u,off,all)=>{const v=cnNum(num);if(!v)return m;const pre=all.slice(Math.max(0,off-3),off),c=all[off-1];if(c==='.'||/\d/.test(c||''))return m;
-     const rel=/\+\s*$/.test(pre)||/多跳\s*$/.test(pre),r=rel?Math.max(1,Math.floor(v*q)):EVc(v,/最多$/.test(pre)?(EV_CAP[S.id]||b):b);return (/\d/.test(num)?r+' ':toCn(r))+u})}
-function beamText(S,step){return evText(S,S.lv3?S.lv3[step]:S.lv[BEAM_MAP[step+1]-1])}
+     const rel=/\+\s*$/.test(pre)||/多跳\s*$/.test(pre),r=rel?Math.max(1,Math.floor(v*q)):Math.max(mn,EVc(v,/最多$/.test(pre)?(EV_CAP[S.id]||b):b));return (/\d/.test(num)?r+' ':toCn(r))+u})}
+function beamText(S,step){return evText(S,S.lv3?S.lv3[step]:S.lv[BEAM_MAP[step+1]-1],step+1)}
 // 存檔：裝備中的三招、已參悟的招、上次送招的境界
 const skById=id=>{for(const slot in SKILL_LIB){const s=SKILL_LIB[slot].find(s=>s.id===id);if(s)return s}return null};
 const skDefault=(slot,t)=>SKILL_LIB[slot].find(s=>s.tier===t&&s.dflt);

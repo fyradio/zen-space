@@ -742,7 +742,9 @@ const BEAM_LV=['一次射出 5 道（扇形）','10 道','18 道','360° 全方�
 const beamTex=ctex(64,16,(x,w,h)=>{const g=x.createLinearGradient(0,0,w,0);g.addColorStop(0,'rgba(255,40,30,0)');g.addColorStop(.28,'rgba(255,70,50,.6)');g.addColorStop(.5,'rgba(255,235,225,1)');
   g.addColorStop(.72,'rgba(255,70,50,.6)');g.addColorStop(1,'rgba(255,40,30,0)');x.fillStyle=g;x.fillRect(0,0,w,h)});
 const beamGeo=new THREE.PlaneGeometry(1,1).rotateX(-Math.PI/2).translate(0,0,.5);
-function beamDirs(a0){const lv=G.k.beamLv,n=EVc(BEAM_N[lv],1),sp=BEAM_SPREAD[lv];return Array.from({length:n},(_,j)=>lv>=4?a0+j/n*Math.PI*2:n>1?a0-sp/2+sp*j/(n-1):a0)}
+// 多道時第一道一定在瞄準的方向，其餘左右交錯展開（偶數道也不會讓正中間空掉）
+const fanA=(a0,j,n,st)=>a0+(j%2?1:-1)*Math.ceil(j/2)*st;
+function beamDirs(a0){const lv=G.k.beamLv,n=Math.max(EVc(BEAM_N[lv],1),EV_MIN.beam0[G.k.beamStep||0]),sp=BEAM_SPREAD[lv];return Array.from({length:n},(_,j)=>lv>=4?a0+j/n*Math.PI*2:n>1?fanA(a0,j,n,sp/(n-1)):a0)}
 function beamCast(A){const lv=G.k.beamLv,L=SK.beam.range(),W=SK.beam.w,a0=Math.atan2(A.dir[0],A.dir[1]),hx=HERO.pos.x,hz=HERO.pos.z,dmg=swordDmg()*7*G.k.beamD*[1,.9,.8,.75,.7][lv],hitN=new Map();
   SFX.play('beam');shake=Math.max(shake,.15+lv*.05);
   beamDirs(a0).forEach((a,j)=>{const dx=Math.sin(a),dz=Math.cos(a);

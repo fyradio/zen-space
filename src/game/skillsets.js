@@ -43,7 +43,7 @@ const DRAGON_N=[1,2,3,5,8],DRAGON_SPREAD=[0,.5,.9,1.6,Math.PI*2];
 const DRAGON_LV=['兩條火龍','三條火龍','五條火龍','八條火龍，四面八方'];
 function dragonCast(A){const lv=G.k.beamLv,L=SK.beam.range(),a0=Math.atan2(A.dir[0],A.dir[1]),n=EVc(DRAGON_N[lv],1),sp=DRAGON_SPREAD[lv],dmg=swordDmg()*6*G.k.beamD*[1,.9,.8,.7,.6][lv],hx=HERO.pos.x,hz=HERO.pos.z,hitN=new Map();
   SFX.play('beam');SFX.play('boom');shake=Math.max(shake,.2);
-  for(let j=0;j<n;j++){const a=lv>=4?a0+j/n*Math.PI*2:n>1?a0-sp/2+sp*j/(n-1):a0,dx=Math.sin(a),dz=Math.cos(a),mine=new Set(),T=L/15;let trail=0;
+  for(let j=0;j<n;j++){const a=lv>=4?a0+j/n*Math.PI*2:n>1?fanA(a0,j,n,sp/(n-1)):a0,dx=Math.sin(a),dz=Math.cos(a),mine=new Set(),T=L/15;let trail=0;
     const segs=[];if(!simming)for(let i=0;i<7;i++){const s=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex,color:i===0?0xffe08a:i<3?0xff8a2a:0xff4a1a,opacity:.95,blending:THREE.AdditiveBlending,depthWrite:false}));
       const sc=i===0?1.7:1.35-i*.12;s.scale.set(sc,sc,1);s.visible=false;scene.add(s);segs.push(s)}
     act(T+.4,t=>{segs.forEach((s,i)=>{const tt=t-i*.05;if(tt<0||tt>T){s.visible=false;return}const dd=tt/T*L,w=Math.sin(dd*1.3+j)*.5;s.visible=true;s.position.set(hx+dx*dd+dz*w,.75+Math.sin(dd*2.2)*.2,hz+dz*dd-dx*w)});

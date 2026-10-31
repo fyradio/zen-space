@@ -101,7 +101,7 @@ const RIVER_LV=['河面變寬','兩道冰河','三道，冰封 1.5 秒','五道�
 const RIVER_N=[1,1,2,3,5],RIVER_W=[2,2.6,2.6,2.6,2.6],RIVER_SP=[0,0,.6,1.1,2.2];
 function riverCast(A){const lv=G.k.beamLv,L=SK.beam.range(),a0=Math.atan2(A.dir[0],A.dir[1]),dmg=swordDmg()*7.5*G.k.beamD*[1,1,.9,.8,.7][lv],hx=HERO.pos.x,hz=HERO.pos.z,n=EVc(RIVER_N[lv],1),W=2*EVm(RIVER_W[lv]/2);
   SFX.play('beam');SFX.play('bell');shake=Math.max(shake,.25);
-  for(let j=0;j<n;j++){const a=n>1?a0-RIVER_SP[lv]/2+RIVER_SP[lv]*j/(n-1):a0,dx=Math.sin(a),dz=Math.cos(a),hit=new Set();
+  for(let j=0;j<n;j++){const a=n>1?fanA(a0,j,n,RIVER_SP[lv]/(n-1)):a0,dx=Math.sin(a),dz=Math.cos(a),hit=new Set();
     const m=new THREE.Mesh(beamGeo,new THREE.MeshBasicMaterial({color:0x9fe8ff,transparent:true,opacity:0,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide}));m.position.set(hx,.1,hz);m.rotation.y=a;scene.add(m);
     act(.8,t=>{const k=Math.min(1,t/.18);m.scale.set(W*(.6+.4*k),1,L*k);m.material.opacity=.6*(t>.4?Math.max(0,1-(t-.4)/.4):1);
         const front=L*k;for(const e of enemies){if(e.dead||hit.has(e))continue;const px=e.x-hx,pz=e.z-hz,al=px*dx+pz*dz,pe=Math.abs(px*dz-pz*dx);if(al>0&&al<front&&pe<W/2+e.r){hit.add(e);e.slowT=3;if(lv>=2)e.stun=Math.max(e.stun||0,1.5);hurtEnemy(e,dmg,dx*.5,dz*.5,false,4)}}

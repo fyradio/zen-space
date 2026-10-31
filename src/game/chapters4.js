@@ -122,7 +122,7 @@ function soulCast(){const lv=G.k.sweepLv,R=SK.sweep.range(),dmg=swordDmg()*4.2*G
     ()=>{scene.remove(ph);M.dispose();BM.dispose();blade.geometry.dispose()})}
 const HONG_LV=['光柱變寬','兩道貫虹','三道，被貫穿的定身 1 秒','五道貫虹'];const HONG_N=[1,1,2,3,5],HONG_W=[1.8,2.6,2.6,2.6,2.6],HONG_SP=[0,0,.5,.9,1.8];
 function hongCast(A){const lv=G.k.beamLv,L=SK.beam.range(),a0=Math.atan2(A.dir[0],A.dir[1]),dmg=swordDmg()*9*G.k.beamD*[1,1,.9,.8,.7][lv],hx=HERO.pos.x,hz=HERO.pos.z,n=EVc(HONG_N[lv],1),W=1.8*EVm(HONG_W[lv]/1.8);SFX.play('beam');shake=Math.max(shake,.3);
-  for(let j=0;j<n;j++){const a=n>1?a0-HONG_SP[lv]/2+HONG_SP[lv]*j/(n-1):a0,dx=Math.sin(a),dz=Math.cos(a),hit=new Set();
+  for(let j=0;j<n;j++){const a=n>1?fanA(a0,j,n,HONG_SP[lv]/(n-1)):a0,dx=Math.sin(a),dz=Math.cos(a),hit=new Set();
     const m=new THREE.Mesh(beamGeo,new THREE.MeshBasicMaterial({map:beamTex,color:0xfff0b0,transparent:true,opacity:0,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide}));m.position.set(hx,.8,hz);m.rotation.y=a;scene.add(m);
     act(.7,t=>{const k=Math.min(1,t/.12);m.scale.set(W*(.7+.3*k),1,L*k);m.material.opacity=.9*(t>.3?Math.max(0,1-(t-.3)/.4):1);
         for(const e of enemies){if(e.dead||hit.has(e))continue;const px=e.x-hx,pz=e.z-hz,al=px*dx+pz*dz,pe=Math.abs(px*dz-pz*dx);if(al>0&&al<L*k&&pe<W/2+e.r){hit.add(e);if(lv>=2)e.stun=Math.max(e.stun||0,1);hurtEnemy(e,dmg,dx*.6,dz*.6,true,4)}}
