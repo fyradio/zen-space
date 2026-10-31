@@ -27,9 +27,8 @@ MAPS[9]=()=>{duelMap(0x3a3050,0xb784ff);duelDecor(0x4a4060,0xd8b8ff,false)};MAPS
 // ---------- 招式庫 ----------
 const aimA=b=>Math.atan2(HERO.pos.x-b.x,HERO.pos.z-b.z);
 function tele(b,x,z){fx({p:tmp.set(b.x,1.2,b.z),col:b.def&&b.def.col||0xc8b8ff,add:true,life:.5,s0:1,s1:3,op:.9,vy:0});const r=Math.hypot(x,z);if(r>ARENA-2){x*=(ARENA-2)/r;z*=(ARENA-2)/r}b.x=x;b.z=z;fx({p:tmp.set(x,1.2,z),col:0xffffff,add:true,life:.4,s0:1,s1:2.5,op:.8,vy:0})}
-function domain(b,name){const sa=Math.random()*6.28,sx=Math.sin(sa)*ARENA*.6,sz=Math.cos(sa)*ARENA*.6;banner(`${b.def.name}・領域`,'全場紅圈，快跑到安全的角落！',true);shake=Math.max(shake,.4);
-  for(let x=-17;x<=17;x+=4)for(let z=-17;z<=17;z+=4){if(x*x+z*z>19*19)continue;if((x-sx)**2+(z-sz)**2<4.6*4.6)continue;warn(x,z,2.9,2.6,b.dmg*.9,null,b.def.col||0xff3b2a)}
-  const m=new THREE.Mesh(new THREE.RingGeometry(1.4,1.9,32).rotateX(-Math.PI/2),new THREE.MeshBasicMaterial({color:0x7fff9a,transparent:true,opacity:.8,blending:THREE.AdditiveBlending,depthWrite:false}));m.position.set(sx,.12,sz);scene.add(m);act(3,t=>{m.scale.setScalar(1+.15*Math.sin(t*8))},()=>{scene.remove(m);m.material.dispose()})}
+function domain(b,name){const sa=Math.random()*6.28,sx=Math.sin(sa)*ARENA*.6,sz=Math.cos(sa)*ARENA*.6;banner(`${b.def.name}・領域`,'墨染全場，快站進綠色圈圈！',true);shake=Math.max(shake,.4);
+  domainWarn(0,0,ARENA-1.5,sx,sz,4.6,2.8,b.dmg*.9)}
 function clash(b){if(G.clash)return;G.clash={t:3,n:0,need:16};let el=$('#clashBox');if(!el){el=document.createElement('div');el.id='clashBox';el.style.cssText='position:fixed;left:50%;top:34%;transform:translate(-50%,-50%);z-index:30;text-align:center;pointer-events:none;color:#ffe9a0;font:900 26px/1.3 system-ui;text-shadow:0 0 12px #e8a830,0 2px 4px #000';document.body.appendChild(el)}
   el.style.display='block';banner('法寶對撞！','狂點畫面，拼法力！',true);const C=G.clash;
   act(3,t=>{if(!G||G.over){el.style.display='none';return}el.innerHTML=`狂點畫面！<br><span style="display:inline-block;width:200px;height:12px;border:2px solid #ffe9a0;border-radius:9px;overflow:hidden;vertical-align:middle"><i style="display:block;height:100%;width:${Math.min(100,C.n/C.need*100)}%;background:linear-gradient(90deg,#ff8a2a,#ffe9a0)"></i></span>`;b.stun=Math.max(b.stun||0,.2)},
