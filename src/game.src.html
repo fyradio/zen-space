@@ -952,7 +952,7 @@ function spawnTick(dt){const m=minute(),rate=1.25*(1+1.1*m+.18*m*m)*G.mod.spawn*
 /* ================= 戰鬥 ================= */
 function hurtEnemy(e,dmg,kx=0,kz=0,crit=false,fly=0){if(e.hp<=0)return;if(e.markT>0)dmg*=2;e.hp-=dmg;e.flash=.1;if(!fly){e.x+=kx;e.z+=kz}else{e.x+=kx*.3;e.z+=kz*.3};showNum(e.x,1+e.y,e.z,dmg,crit?'c':e.elite?'b':'n');if(e.hp<=0)killEnemy(e,kx,kz,fly)}
 function killEnemy(e,kx=0,kz=0,fly=0){if(e.t.revive&&!e.revived&&!fly){e.revived=true;e.hp=e.max*.5;e.stun=2.2;e.down=2.2;if(!simming)fx({p:tmp.set(e.x,.4,e.z),col:0xe8e2d0,life:.4,s0:.5,s1:1.4,op:.7,vy:.3});return}
-  G.kills++;e.dead=true;SFX.play('kill');if(G.ult<G.k.ultNeed&&++G.ult>=G.k.ultNeed&&!simming){SFX.play('ready');say(`大絕好了！按右下角的「${SK.ult.ic}」！`,3)}if(G.kills%250===0&&G.kills<=1250&&!simming){banner('殺氣凝劍','飛劍 +1');SFX.play('gold')}dashLine(e,false);if(G.kills>=G.nextPill){G.nextPill+=100;dropPill(e.x,e.z)}
+  G.kills++;e.dead=true;SFX.play('kill');if(G.ult<G.k.ultNeed)G.ult++;if(G.kills%250===0&&G.kills<=1250&&!simming){banner('殺氣凝劍','飛劍 +1');SFX.play('gold')}dashLine(e,false);if(G.kills>=G.nextPill){G.nextPill+=100;dropPill(e.x,e.z)}
   if(fly&&!simming)launch(e,kx,kz,fly);else fx({p:tmp.set(e.x,.6,e.z),col:0x0a0d0e,life:.7,s0:.5,s1:1.6,op:.75,vy:.9});fx({p:tmp.set(e.x,.6,e.z),col:0x6fffd0,add:true,life:.35,s0:.8,s1:.2,op:.9,vy:0});
   dropSoul(e.x,e.z,e.t.soul);if(e.elite){G.eliteKilled=true;for(let i=0;i<14;i++)dropSoul(e.x+(Math.random()-.5)*2,e.z+(Math.random()-.5)*2,1);banner('精英伏誅','殺氣大漲・仙緣頓悟');SFX.play('boss');setTimeout(()=>openCards(true),700)}
   $('#power').classList.add('pop')}
@@ -1191,6 +1191,7 @@ function updateCamera(dt,snap){const C=CAMS[camIdx],zoom=G?1:.45;let D=(camOverr
 function stepGame(dt){const g=G;
   // move
   for(const k of ['rootT','slowT','charm','ultLock'])if(g[k]>0)g[k]-=dt;
+  {const r=ready('ult');if(r&&!g.ultRdy&&!simming){SFX.play('ready');if(!save.tipUlt){save.tipUlt=1;writeSave();say(`大絕好了！按右下角的「${SK.ult.ic}」！`,3)}}g.ultRdy=r}// 真的能放時才響、提示只在第一次
   if((g.rootT>0||g.slowT>0||g.charm>0)&&!simming&&(g.stT=(g.stT||0)-dt)<=0){g.stT=.22;fx({p:tmp.set(HERO.pos.x+(Math.random()-.5)*.8,.3+Math.random()*.9,HERO.pos.z+(Math.random()-.5)*.8),col:g.rootT>0?0xffc860:g.charm>0?0xc07cff:0x5aff6a,add:true,life:.5,s0:.5,s1:.1,op:.9,vy:1})}
   if(g.medit>0)g.medit-=dt;const inp=inputDir();const moving=inp.l>.12&&!(g.rootT>0)&&!(g.medit>0);g.moving=moving;
   if(g.sky)skySteer(g,dt,inp,moving);else if(moving){const sp=g.s.move*inp.l*(g.slowT>0?.5:1);g.walked+=sp*dt;if(g.walked>=2.4){g.walked=0;qiBurst()}root.position.x+=inp.x*sp*dt;root.position.z+=inp.y*sp*dt;root.rotation.y=angLerp(root.rotation.y,Math.atan2(inp.x,inp.y),1-Math.exp(-dt*(g.sky?6:12)));
