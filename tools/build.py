@@ -91,10 +91,13 @@ def build(src_name, out_name, test_name, page_name=None):
     print('syntax   OK')
 
     open(os.path.join(ROOT, out_name), 'w', encoding='utf8').write(out)
+    if page_name:
+        # iOS only reads the home-screen icon / manifest / title from <head>, so lift them out of the fragment
+        head = ''.join(re.findall(r'<title>.*?</title>|<link rel="(?:manifest|apple-touch-icon|icon)"[^>]*>|<meta name="(?:theme-color|apple-mobile-web-app-capable|mobile-web-app-capable|apple-mobile-web-app-title)"[^>]*>', out))
     if page_name:  # GitHub Pages needs a real document (charset + viewport); the Artifact wraps the fragment itself
         open(os.path.join(ROOT, page_name), 'w', encoding='utf8').write(
             '<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" '
-            'content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no"></head><body>' + out + '</body></html>')
+            'content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">' + head + '</head><body>' + out + '</body></html>')
         print(page_name, 'written')
     test = out.replace(f'<script src="{THREE_CDN}"></script>', f'<script src="file://{THREE_LOCAL}"></script>')
     test = ('<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" '

@@ -24,11 +24,11 @@ if(save.won['10-2']&&!save.ending){save.ending=1;if((save.realm||0)<18)save.real
 save.ults=save.ults||['wan'];save.ult=save.ult||'wan';save.lastSeen=save.lastSeen||Date.now();
 const chUnlocked=i=>i===0||(i===11?!!save.ending:false)||i!==11&&[0,1,2].some(n=>save.won[`${i-1}-${n}`]);
 const DF=(()=>{let tab='go',libTab='sweep',tick=0,lookTab=0,lt=0,ld={g:0,x:0,b:0,h:0};
-  const TABS=[['go','出戰'],['med','靜室'],['garden','藥園'],['alch','丹房'],['look','造型'],['lib','藏經閣'],['shop','坊市'],['duel','鬥法台']];
+  const TABS=[['go','出戰'],['med','靜室'],['garden','藥園'],['alch','丹房'],['look','造型'],['lib','藏經閣'],['shop','坊市'],['duel','鬥法台'],['save','存檔'],['title','回標題']];
   const el=$('#dfBody');
   function head(){$('#dfRealm').textContent=REALMS[save.realm];$('#dfStone').textContent=`靈石 ${fmt(save.inv.stone)}・妖丹 ${save.inv.yaodan}`}
-  function tabs(){$('#dfTabs').innerHTML=TABS.map(([k,n])=>`<button data-tab="${k}" aria-pressed="${k===tab}">${n}${k==='med'&&canBreak(false)?'<i class="dot"></i>':''}${k==='garden'&&save.garden.some(p=>p&&ripe(p))?'<i class="dot"></i>':''}</button>`).join('');
-    $$('#dfTabs [data-tab]').forEach(b=>b.onclick=()=>{tab=b.dataset.tab;SFX.play('soul');render()})}
+  function tabs(){$('#dfTabs').innerHTML=TABS.map(([k,n])=>`<button data-tab="${k}" aria-pressed="${k===tab}"${k==='save'||k==='title'?' class="act"':''}>${n}${k==='med'&&canBreak(false)?'<i class="dot"></i>':''}${k==='garden'&&save.garden.some(p=>p&&ripe(p))?'<i class="dot"></i>':''}</button>`).join('');
+    $$('#dfTabs [data-tab]').forEach(b=>b.onclick=()=>{const k=b.dataset.tab;SFX.play('soul');if(k==='save'){slotPicker('save');return}if(k==='title'){TITLE.show();return}tab=k;render()})}
   const ripe=p=>Date.now()-p.t0>=HERBS[p.h].min*60000;
   const left=p=>{const m=Math.max(0,HERBS[p.h].min*60000-(Date.now()-p.t0))/60000;return m>=60?`${Math.floor(m/60)} 小時 ${Math.ceil(m%60)} 分`:`${Math.ceil(m)} 分`};
   const offline=()=>{const h=Math.min(8,(Date.now()-save.lastSeen)/3600000);return Math.floor(h*(6+4*save.realm))};
@@ -114,4 +114,4 @@ const DF=(()=>{let tab='go',libTab='sweep',tick=0,lookTab=0,lt=0,ld={g:0,x:0,b:0
       $('#alcName').textContent=`${['下品','中品','上品','極品'][q]}${r.n} ×${cnt}！`;SFX.play(q>=2?'gold':'ready');setTimeout(()=>{ov.classList.remove('on');render()},1400)}
     raf=requestAnimationFrame(step)}
   setInterval(()=>{if(!G&&$('#startOv').classList.contains('on')&&tab==='garden')body()},5000);
-  return {render,set tab(v){tab=v}}})();
+  return {render,go,set tab(v){tab=v}}})();
