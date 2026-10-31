@@ -1035,7 +1035,7 @@ const upJ=e=>{if(e.pointerId===joy.id){joy.on=false;joy.id=null;joy.x=joy.y=0;dr
 // at rest the stick waits faintly at the bottom left so the thumb knows where to go
 function drawJoy(){const el=$('#joy'),k=$('#joyKnob');const x=joy.on?joy.ox:$('#safeL').getBoundingClientRect().left+96,y=joy.on?joy.oy:innerHeight-96;
   el.style.left=x+'px';el.style.top=y+'px';el.classList.toggle('on',joy.on);k.style.transform=`translate(${joy.x*50}px,${joy.y*50}px)`}canvas.addEventListener('pointerup',upJ);canvas.addEventListener('pointercancel',upJ);
-addEventListener('keydown',e=>{keys.add(e.key.toLowerCase());if(e.key==='Escape'&&G&&!G.over)togglePause();if(e.key.toLowerCase()==='v')setCam(camIdx+1);const sk={j:'sweep',k:'beam',l:'thunder',u:'ult',' ':'ult','1':'sweep','2':'beam','3':'thunder','4':'ult'}[e.key.toLowerCase()];if(sk&&G&&!G.paused){e.preventDefault();castSkill(sk,null)}});addEventListener('keyup',e=>keys.delete(e.key.toLowerCase()));
+addEventListener('keydown',e=>{keys.add(e.key.toLowerCase());if(e.key==='Escape'&&G&&!G.over)togglePause();if(e.key.toLowerCase()==='v')cycleCam();const sk={j:'sweep',k:'beam',l:'thunder',u:'ult',' ':'ult','1':'sweep','2':'beam','3':'thunder','4':'ult'}[e.key.toLowerCase()];if(sk&&G&&!G.paused){e.preventDefault();castSkill(sk,null)}});addEventListener('keyup',e=>keys.delete(e.key.toLowerCase()));
 function inputDir(){let x=joy.x,y=joy.y;if(keys.has('a')||keys.has('arrowleft'))x-=1;if(keys.has('d')||keys.has('arrowright'))x+=1;if(keys.has('w')||keys.has('arrowup'))y-=1;if(keys.has('s')||keys.has('arrowdown'))y+=1;
   if(G.auto){// test pilot (world space): drift around the square, steer away from nearby monsters and red circles
     const a=G.t*.4;x=Math.cos(a)*.5-HERO.pos.x*.05;y=Math.sin(a)*.5-(G.sky?0:HERO.pos.z*.05);
@@ -1058,7 +1058,7 @@ let sayT=0;function say(t,s=4){const b=$('#bubble');b.textContent=t;b.classList.
 let tipShown=false;function hideTip(){if(!tipShown){tipShown=true;sayT=Math.min(sayT,1.2)}}
 function togglePause(){if(!G||G.over)return;if($('#cardOv').classList.contains('on'))return;cancelAim();const on=!$('#pauseOv').classList.contains('on');$('#pauseOv').classList.toggle('on',on);G.paused=on;
   if(on)$('#pauseInfo').textContent=`已斬 ${G.kills} 隻妖，離雞啼還有 ${clockText()}`}
-$('#viewBtn').onclick=()=>setCam(camIdx+1);$('#sfxBtn').onclick=()=>{SFX.resume();const on=SFX.toggle();$('#sfxBtn').textContent=on?'音':'靜';if(on)BGM.resumeIfOn();else BGM.stop()};
+$('#viewBtn').onclick=()=>cycleCam();$('#sfxBtn').onclick=()=>{SFX.resume();const on=SFX.toggle();$('#sfxBtn').textContent=on?'音':'靜';if(on)BGM.resumeIfOn();else BGM.stop()};
 $('#powerBtn').onclick=()=>{POWER.cycle();$('#powerBtn').textContent='省電模式：'+POWER.label};$('#powerBtn').textContent='省電模式：'+POWER.label;
 addEventListener('pointerdown',()=>{SFX.resume();if(!G&&!BGM.mood)BGM.play('home')},{once:true});$('#sfxBtn').textContent=SFX.on?'音':'靜';$('#pauseBtn').onclick=togglePause;$('#resume').onclick=togglePause;$('#giveUp').onclick=()=>{$('#pauseOv').classList.remove('on');endNight(false,true)};
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&G&&!G.paused&&!G.over)togglePause()});
@@ -1068,7 +1068,7 @@ function pickChar(c){if(c!==who){saveFace();useChar(c);applyFace({g:1,x:1});appl
   $$('[data-who]').forEach(b=>b.setAttribute('aria-pressed',String(+b.dataset.who===who)))}
 $$('[data-who]').forEach(b=>b.onclick=()=>pickChar(+b.dataset.who));pickChar(who);
 if(save.pal)applyPal(save.pal);
-function startNight(len,opt={}){BGM.play('night');bannerT=0;$('#banner').classList.remove('on');$('#breakBtn').hidden=true;SFX.resume();tryLandscape();leaveSky();if((opt.ch||0)===11)endlessPick();buildMap(opt.ch||0);setUlt(save.ult);resetWorld();cancelAim();G=newNight(len);G.sky=!!(CHC[opt.ch||0]&&CHC[opt.ch||0].sky);setSkills(G.tier=skillTier());hsAura.visible=save.realm>=18;G.ch=opt.ch||0;G.nt=opt.nt||0;G.endless=G.ch===11;G.clearK=G.ch<=8?Math.round([2200,3100,2650][G.nt]*(G.sky?.88:1)*1.5/50)*50:0;G.showClear=G.clearK&&save.realm>chRec(G.ch);$('#bossMark').hidden=G.endless;G.mod=[{spawn:1,boss:1,elite2:0},{spawn:1.4,boss:1,elite2:1},{spawn:1.2,boss:1.5,elite2:0}][G.nt];G.paused=false;$('#pillBtn').hidden=!(save.inv.pill.hui>0);$('#pillN').textContent=save.inv.pill.hui;$('#skills').hidden=$('#joy').hidden=false;drawJoy();$('#startOv').classList.remove('on');$('#endOv').classList.remove('on');$('#hud').hidden=false;
+function startNight(len,opt={}){BGM.play('night');bannerT=0;$('#banner').classList.remove('on');$('#breakBtn').hidden=true;SFX.resume();tryLandscape();leaveSky();if((opt.ch||0)===11)endlessPick();buildMap(opt.ch||0);setUlt(save.ult);resetWorld();cancelAim();G=newNight(len);G.sky=!!(CHC[opt.ch||0]&&CHC[opt.ch||0].sky);G.camAuto=G.sky;setSkills(G.tier=skillTier());hsAura.visible=save.realm>=18;G.ch=opt.ch||0;G.nt=opt.nt||0;G.endless=G.ch===11;G.clearK=G.ch<=8?Math.round([2200,3100,2650][G.nt]*(G.sky?.88:1)*1.5/50)*50:0;G.showClear=G.clearK&&save.realm>chRec(G.ch);$('#bossMark').hidden=G.endless;G.mod=[{spawn:1,boss:1,elite2:0},{spawn:1.4,boss:1,elite2:1},{spawn:1.2,boss:1.5,elite2:0}][G.nt];G.paused=false;$('#pillBtn').hidden=!(save.inv.pill.hui>0);$('#pillN').textContent=save.inv.pill.hui;$('#skills').hidden=$('#joy').hidden=false;drawJoy();$('#startOv').classList.remove('on');$('#endOv').classList.remove('on');$('#hud').hidden=false;
   $('#bossMark').style.left=(BOSS_AT*100)+'%';spawnRing('ghost',8,7.5);// an opening ring so the first monsters are seen walking in
   renderBuffs();tipShown=false;say('左手走路，右手放技能！按住技能拖曳可以瞄準',6);
   setTimeout(()=>{if(G&&!G.over&&G.kills<3)say('吸青色的魂火可以頓悟喔！',4)},9000)}
@@ -1135,10 +1135,10 @@ let camIdx=0,camYaw=0,camP=CAMS[0].P,camD=CAMS[0].D;try{camIdx=+localStorage.get
 function setCam(i){camIdx=i%CAMS.length;try{localStorage.setItem('zk-cam',String(camIdx))}catch(e){}if(G&&!G.over)banner(CAMS[camIdx].n,'視角')}
 let camOverride=0,lookCam=null;// lookCam: 'face' | 'body' while the 洞府 造型 tab is open (close-up, figure held still)
 function updateCamera(dt,snap){const C=CAMS[camIdx],zoom=G?1:.45;let D=(camOverride||C.D*(isTouch?1:.96))*zoom,P=camOverride?.35:G?C.P:.42;
-  if(G&&G.sky)D*=1.08;
+  let autoYaw=null;if(G&&G.sky&&G.camAuto&&!camOverride){const A=skyShot(dt);P=A.P;D=A.D*(isTouch?1:.96);autoYaw=A.yaw}
   let lookTy=null;if(!G&&lookCam){const tot=(bodyY(HY)+.15)*F.height;if(lookCam==='body'){D=tot*2.9;lookTy=tot*.54}else{D=1.2*F.height;lookTy=1.43+bodyY(HY)*F.height-HY}P=.08}
-  const k=snap?1:1-Math.exp(-dt*4);camP=lerp(camP,P,k);camD=lerp(camD,D,k);
-  const wantYaw=C.follow&&G?root.rotation.y+Math.PI:0;camYaw=angLerp(camYaw,wantYaw,snap?1:1-Math.exp(-dt*(C.follow?1.8:5)));
+  const k=snap?1:1-Math.exp(-dt*(G&&G.camAuto?1.2:4));camP=lerp(camP,P,k);camD=lerp(camD,D,k);
+  const auto=G&&G.sky&&G.camAuto,wantYaw=auto?(autoYaw===null?camYaw:autoYaw):C.follow&&G?root.rotation.y+Math.PI:0;camYaw=angLerp(camYaw,wantYaw,snap?1:1-Math.exp(-dt*(auto?.9:C.follow?1.8:5)));
   if(camOverride)tmp.set(0,.5,0);else tmp.set(HERO.pos.x,HERO.pos.y+(lookTy!==null?lookTy:G?.4+(.92-camP)*.8:1),HERO.pos.z);if(snap)camT.copy(tmp);else camT.lerp(tmp,1-Math.exp(-dt*6));
   const sx=shake>0?(Math.random()-.5)*shake*.5:0,sz=shake>0?(Math.random()-.5)*shake*.5:0;shake=Math.max(0,shake-dt*1.6);
   camera.position.set(camT.x+Math.sin(camYaw)*Math.cos(camP)*camD+sx,camT.y+Math.sin(camP)*camD,camT.z+Math.cos(camYaw)*Math.cos(camP)*camD+sz);camera.lookAt(camT);camera.updateMatrixWorld();sky.position.copy(camera.position)}
