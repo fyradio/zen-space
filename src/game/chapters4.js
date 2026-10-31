@@ -139,8 +139,8 @@ function soulFig(col,op=.55){const f=body.clone(true);f.position.set(0,0,0);f.ro
 let _sgt=null;function soulGlowTex(){if(_sgt)return _sgt;const c=document.createElement('canvas');c.width=c.height=128;const x=c.getContext('2d'),g=x.createRadialGradient(64,64,4,64,64,64);g.addColorStop(0,'rgba(255,255,255,1)');g.addColorStop(.35,'rgba(255,240,200,.45)');g.addColorStop(1,'rgba(255,220,150,0)');x.fillStyle=g;x.fillRect(0,0,128,128);return _sgt=new THREE.CanvasTexture(c)}
 // ---------- 大絕：元嬰出竅 ----------
 let soulTrail=null;
-// 元嬰出竅：頭頂飛出半透明金色的小主角，帶拖影和小飛劍，在妖群間高速穿梭斬妖；本體原地打坐、無敵
-function yuanyingCast(){const dmg=swordDmg()*6,DUR=8;G.ultBoss=0;G.slow=.4;shake=Math.max(shake,.5);SFX.play('ult');buzz(60);const u=$('#ultFx');u.classList.remove('on');void u.offsetWidth;u.classList.add('on');banner('元嬰出竅','元嬰替你斬妖，本體這段時間無敵',true);
+// 元嬰出竅：頭頂飛出半透明金色的小主角，帶拖影和小飛劍，在妖群間高速穿梭斬妖；本體照常走動；出竅瞬間 1.2 秒無敵，之後受傷減半
+function yuanyingCast(){const dmg=swordDmg()*6,DUR=8;G.ultBoss=0;G.slow=.4;shake=Math.max(shake,.5);SFX.play('ult');buzz(60);const u=$('#ultFx');u.classList.remove('on');void u.offsetWidth;u.classList.add('on');banner('元嬰出竅','元嬰替你斬妖，本體受傷減半',true);
   if(!soulTrail)soulTrail=new Trail(30,.55,0xffc040);
   const av=new THREE.Group(),fig=soulFig(0xd89420,.8),M=fig.userData.M;fig.scale.setScalar(.95);av.add(fig);
   const glow=new THREE.Sprite(new THREE.SpriteMaterial({map:soulGlowTex(),color:0xffd86a,transparent:true,opacity:.7,blending:THREE.AdditiveBlending,depthWrite:false}));glow.scale.set(3,3.6,1);glow.position.y=.9;av.add(glow);
@@ -148,7 +148,7 @@ function yuanyingCast(){const dmg=swordDmg()*6,DUR=8;G.ultBoss=0;G.slow=.4;shake
   const L=new FxLight(0xffd86a,2,6,1.5);L.position.y=.8;av.add(L);av.position.set(HERO.pos.x,HERO.pos.y+1.6,HERO.pos.z);scene.add(av);
   const st={tg:null,cd:0,hitT:0};const pickTg=()=>{const near=enemies.filter(e=>!e.dead&&onScreen(e.x,.4,e.z)).sort((a,b)=>Math.hypot(a.x-av.position.x,a.z-av.position.z)-Math.hypot(b.x-av.position.x,b.z-av.position.z)).slice(0,5);
     if(boss.alive&&bossOnScreen()&&(Math.random()<.35||!near.length))return boss;return near[Math.floor(Math.random()*near.length)]||null};
-  act(DUR,(t,dt)=>{G.iframe=Math.max(G.iframe,.3);const back=t>DUR-.6;let tx,tz,ty=1.1;
+  act(DUR,(t,dt)=>{if(t<1.2)G.iframe=Math.max(G.iframe,.3);G.yyHalf=1;const back=t>DUR-.6;let tx,tz,ty=1.1;
       if(back){tx=HERO.pos.x;tz=HERO.pos.z;ty=HERO.pos.y+1.6}else{if(!st.tg||st.tg.dead||(st.tg===boss&&!boss.alive))st.tg=pickTg();if(st.tg){tx=st.tg.x;tz=st.tg.z}else{const a=t*3;tx=HERO.pos.x+Math.sin(a)*2.5;tz=HERO.pos.z+Math.cos(a)*2.5}}
       const dx=tx-av.position.x,dz=tz-av.position.z,dy=ty-av.position.y,d=Math.hypot(dx,dz)||1,v=Math.min(d,(back?14:17)*dt);av.position.x+=dx/d*v;av.position.z+=dz/d*v;av.position.y+=dy*Math.min(1,dt*6);av.rotation.y=Math.atan2(dx,dz);
       fig.rotation.x=Math.min(.5,d*.08);sw.rotation.y+=dt*14;soulTrail.push(tmp.set(av.position.x,av.position.y+.75,av.position.z));soulTrail.build(.9*Math.min(1,(DUR-t)/.4));
@@ -157,7 +157,7 @@ function yuanyingCast(){const dmg=swordDmg()*6,DUR=8;G.ultBoss=0;G.slow=.4;shake
         for(const e of enemies)if(!e.dead&&Math.hypot(e.x-av.position.x,e.z-av.position.z)<2.4)hurtEnemy(e,dmg,0,0,true,4);
         if(boss.alive&&Math.hypot(boss.x-av.position.x,boss.z-av.position.z)<2.4+boss.r){const room=boss.max*.22-G.ultBoss;if(room>0){const dd=Math.min(dmg*2,room);G.ultBoss+=dd;boss.allow+=dd;hurtBoss(dd,true)}}
         st.tg=pickTg()}},
-    ()=>{scene.remove(av);M.dispose();glow.material.dispose();soulTrail.build(0);fx({p:tmp.set(HERO.pos.x,1.5,HERO.pos.z),col:0xffe9a0,add:true,life:.4,s0:1,s1:3,op:.9,vy:0})})}
+    ()=>{if(G)G.yyHalf=0;scene.remove(av);M.dispose();glow.material.dispose();soulTrail.build(0);fx({p:tmp.set(HERO.pos.x,1.5,HERO.pos.z),col:0xffe9a0,add:true,life:.4,s0:1,s1:3,op:.9,vy:0})})}
 ULT_DEF.yuanying={n:'元嬰出竅',ic:'嬰',col:0xffe9a0,shape:'self',ult:1,range:()=>8,cast:yuanyingCast};
 // ---------- 水墨過場 ----------
 Object.assign(INK.scenes,{

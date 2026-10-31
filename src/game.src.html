@@ -669,7 +669,7 @@ for(const k of ['sweep','beam','thunder','ult','blink']){const S=SK[k],b=documen
   const up=e=>{if(!aim||e.pointerId!==aim.id)return;const a=aim;cancelAim();if(e.type==='pointerup'&&!a.cancel)castSkill(a.k,a.moved?aimInfo(a.k,a):null)};
   b.addEventListener('pointerup',up);b.addEventListener('pointercancel',up)}
 function cancelAim(){if(aim&&skBtn[aim.k])skBtn[aim.k].classList.remove('aiming');aim=null;$('#cancelZone').classList.remove('on','hot')}
-const ready=k=>!!G&&(k==='ult'?G.ult>=G.k.ultNeed:k==='blink'?save.realm>=12&&G.cd.blink<=0:G.cd[k]<=0);
+const ready=k=>!!G&&(k==='ult'?G.ult>=G.k.ultNeed&&!(G.ultLock>0):k==='blink'?save.realm>=12&&G.cd.blink<=0:G.cd[k]<=0);
 const facing=()=>[Math.sin(root.rotation.y),Math.cos(root.rotation.y)];
 function screenToWorld(dx,dy){const c=Math.cos(camYaw),s=Math.sin(camYaw);return [dx*c+dy*s,-dx*s+dy*c]}
 function autoAim(k){const S=SK[k],hx=HERO.pos.x,hz=HERO.pos.z;if(S.aim)return S.aim();if(S.shape==='auto'||S.shape==='self')return {dir:facing()};
@@ -701,7 +701,7 @@ function showAim(){for(const m of Object.values(IND))m.visible=false;if(!aim||!G
   else{IND.circ.visible=IND.edge.visible=true;IND.circ.position.set(A.pt[0],.06,A.pt[1]);IND.circ.scale.setScalar(S.r());IND.edge.position.set(A.pt[0],.07,A.pt[1]);IND.edge.scale.setScalar(S.r())}}
 function castSkill(k,A){if(!G||G.paused||G.over||!ready(k))return false;A=A||autoAim(k);
   const d=A.dir||(A.pt?[A.pt[0]-HERO.pos.x,A.pt[1]-HERO.pos.z]:[0,0]);if(d[0]||d[1])root.rotation.y=Math.atan2(d[0],d[1]);G.castT=.45;
-  if(k==='ult'){G.ult=0;SK.ult.cast(A)}else{G.skMulNow=SK[k].mul||1;let ok;try{ok=SK[k].cast(A)}finally{G.skMulNow=1}if(ok===false){const b=skBtn[k];b.classList.remove('no');void b.offsetWidth;b.classList.add('no');return false}G.cd[k]=SK[k].cd()}
+  if(k==='ult'){G.ult=0;G.ultLock=G.k.ultCd;SK.ult.cast(A)}else{G.skMulNow=SK[k].mul||1;let ok;try{ok=SK[k].cast(A)}finally{G.skMulNow=1}if(ok===false){const b=skBtn[k];b.classList.remove('no');void b.offsetWidth;b.classList.add('no');return false}G.cd[k]=SK[k].cd()}
   G.casts=(G.casts||0)+1;return true}
 // timed skill effects that follow game time (so pause / slow motion apply)
 const acts=[];const act=(life,step,end)=>{acts.push({t:0,life,step,end})};
@@ -818,7 +818,7 @@ function startTribulation(){if(!G||G.over||G.paused||G.breaking||!canBreak(true)
       const t=skillTier();SHIELD.setTier(t);if(t!==G.tier){setSkills(G.tier=t);for(const k in G.cd)G.cd[k]=0;say(`${SKILL_SETS[t].name}新招：${SK.sweep.n}、${SK.beam.n}、${SK.thunder.n}！`,5)}else say('突破了！血補滿，這一夜傷害再 +20%',4)})}
 function checkBreak(){const b=$('#breakBtn');const can=!G.breaking&&canBreak(true);if(can&&b.hidden){b.hidden=false;if(!simming){SFX.play('ready');say('可以突破了！按左上「突破」引雷劫',4)}}else if(!can&&!b.hidden)b.hidden=true}
 function updSkillUI(){for(const k in SK){const b=skBtn[k];let p,txt='';
-    if(k==='ult'){p=Math.min(1,G.ult/G.k.ultNeed);b.classList.toggle('ready',p>=1);b.style.setProperty('--p',(p*100).toFixed(1)+'%')}
+    if(k==='ult'){p=Math.min(1,G.ult/G.k.ultNeed,G.ultLock>0?1-G.ultLock/G.k.ultCd:1);b.classList.toggle('ready',p>=1);b.style.setProperty('--p',(p*100).toFixed(1)+'%')}
     else{const c=G.cd[k];p=c>0?c/SK[k].cd():0;b.style.setProperty('--p',(p*100).toFixed(1)+'%');txt=c>0?String(Math.ceil(c)):''}
     if(b._t!==txt){b._t=txt;b.querySelector('b').textContent=txt}}}
 
@@ -874,7 +874,7 @@ function newNight(len){return {nextPill:67,walked:0,moving:false,len,boost:480/l
   hp:Math.round(150*realmMult()),maxhp:Math.round(150*realmMult()),iframe:0,breaking:false,regenAcc:0,eliteDone:false,bossDone:false,bossKilled:false,eliteKilled:false,
   s:{dmg:realmMult(),rate:1,count:3,pierce:1,range:7.5,move:3.2,magnet:1.8,regen:0,orbit:0,talis:0,talisN:0,lamp:0,size:1,crit:.12},
   skills:{},volley:0,orbitHit:new Map(),talisCd:2,lampCd:1.5,stand:0,auto:false,castT:0,ult:40,ultBoss:0,cd:{sweep:0,beam:0,thunder:0,blink:0},
-  k:{sweepR:1,sweepD:1,sweepCd:1,sweepLv:0,beamLv:0,beamStep:0,beamD:1,beamCd:1,thLv:0,thN:6,thR:1,thD:1,ultNeed:120,ultN:1}}}
+  k:{sweepR:1,sweepD:1,sweepCd:1,sweepLv:0,beamLv:0,beamStep:0,beamD:1,beamCd:1,thLv:0,thN:6,thR:1,thD:1,ultNeed:120,ultN:1,ultCd:18}}}
 const minute=()=>G.t/G.len*8;// night progress in "minutes" of an 8-minute night
 const hpScale=()=>1.25*Math.pow(1+.2*minute(),1.3);
 // 殺氣凝劍: every 250 kills adds a flying sword (up to +5), so the slaughter itself makes you visibly stronger
@@ -899,7 +899,7 @@ const CARDS=[
   {k:'sweepUp',get ic(){return SK.sweep.ic},get n(){return SK.sweep.n+'・進化'},up:1,d:r=>`${SK.sweep.lv[G.k.sweepLv]}${r?'，冷卻 -15%':''}`,f:r=>{G.k.sweepLv=Math.min(3,G.k.sweepLv+1);G.k.sweepD*=1.3;if(G.k.sweepLv===1)G.k.sweepR=1.3;if(r)G.k.sweepCd*=.85},max:()=>G.k.sweepLv>=3},
   {k:'beamUp',get ic(){return SK.beam.ic},get n(){return SK.beam.n+'・進化'},up:1,d:r=>`${beamText(SK.beam,G.k.beamStep)}${r?'，傷害 +30%':''}`,f:r=>{G.k.beamStep=Math.min(3,G.k.beamStep+1);G.k.beamLv=BEAM_MAP[G.k.beamStep];if(r)G.k.beamD*=1.3},max:()=>G.k.beamStep>=3},
   {k:'thUp',get ic(){return SK.thunder.ic},get n(){return SK.thunder.n+'・進化'},up:1,d:r=>`${SK.thunder.lv[G.k.thLv]}${r?'，威力再加強':''}`,f:r=>{G.k.thLv=Math.min(3,G.k.thLv+1);G.k.thN+=r?4:2;G.k.thD*=1.15},max:()=>G.k.thLv>=3},
-  {k:'ultUp',ic:'絕',n:'大絕・精進',up:1,d:r=>`大絕充能快 ${[20,30,45][r]}%、威力更大`,f:r=>{G.k.ultNeed=Math.max(40,Math.round(G.k.ultNeed*(1-[.2,.3,.45][r])));G.k.ultN=Math.min(1.6,G.k.ultN+.2)},max:()=>G.k.ultNeed<=40}];
+  {k:'ultUp',ic:'絕',n:'大絕・精進',up:1,d:r=>`大絕充能快 ${[20,30,45][r]}%、威力更大`,f:r=>{G.k.ultNeed=Math.max(Math.round(G.k.ultBase*.6),Math.round(G.k.ultNeed*(1-[.2,.3,.45][r])));G.k.ultCd=Math.max(12,G.k.ultCd-[2,3,4][r]);G.k.ultN=Math.min(1.6,G.k.ultN+.2)},max:()=>G.k.ultNeed<=Math.round(G.k.ultBase*.6)&&G.k.ultCd<=12}];
 const RAR=['凡品','靈品','仙品'];
 let offer=[];
 // gold = 仙緣頓悟 after an elite or the boss: every card is 靈品 or better
@@ -1052,7 +1052,7 @@ function stepWarns(dt){for(const w of warnPool){if(!w.on)continue;w.t+=dt;const 
 
 /* ================= 主角受傷 ================= */
 let shake=0;
-function hurtHero(dmg,kx,kz,src='碰撞'){if(G.iframe>0||G.over)return;if(G.turtle>0){G.turtle--;G.iframe=.4;SFX.play('bell');fx({p:tmp.set(HERO.pos.x,1,HERO.pos.z),col:0x5ad8a0,add:true,life:.4,s0:1.4,s1:3.4,op:.9,vy:0});return}
+function hurtHero(dmg,kx,kz,src='碰撞'){if(G.iframe>0||G.over)return;if(G.yyHalf)dmg*=.5;if(G.turtle>0){G.turtle--;G.iframe=.4;SFX.play('bell');fx({p:tmp.set(HERO.pos.x,1,HERO.pos.z),col:0x5ad8a0,add:true,life:.4,s0:1.4,s1:3.4,op:.9,vy:0});return}
   if(G.bellOn){G.bellN--;G.iframe=.2;SFX.play('bell');if(G.bellN>0){fx({p:tmp.set(HERO.pos.x,1,HERO.pos.z),col:0xffd65a,add:true,life:.25,s0:1,s1:2.5,op:.8,vy:0});return}G.bellOn=false;G.iframe=.5;shake=Math.max(shake,.3);if(!simming)for(let i=0;i<14;i++){const a=i/14*6.28;fx({p:tmp.set(HERO.pos.x+Math.sin(a)*.8,.3+Math.random()*1.6,HERO.pos.z+Math.cos(a)*.8),col:i%2?SHIELD.color:0xffb03a,add:true,life:.6+Math.random()*.3,s0:.35,s1:.1,op:1,vy:1.5+Math.random()*2})}fx({p:tmp.set(HERO.pos.x,1,HERO.pos.z),col:0xffd65a,add:true,life:.5,s0:1.5,s1:4,op:.9,vy:0});
     for(const e of enemies){const dx=e.x-HERO.pos.x,dz=e.z-HERO.pos.z,d=Math.hypot(dx,dz);if(d<2.8){e.x+=dx/(d||1)*2;e.z+=dz/(d||1)*2;hurtEnemy(e,swordDmg()*1.5)}}return}G.hurtBy=G.hurtBy||{};G.hurtBy[src]=Math.round((G.hurtBy[src]||0)+dmg);G.hp-=dmg;G.iframe=.85;shake=Math.max(shake,.25);SFX.play('hurt');buzz(30);const h=$('#hurt');h.classList.add('on');setTimeout(()=>h.classList.remove('on'),60);
   if(G.hp<=0){if(save.inv.paper>0&&!G.revived){save.inv.paper--;writeSave();G.revived=true;G.hp=G.maxhp*.5;G.iframe=2.5;banner('替身紙人','替你擋了一劫，原地復活');SFX.play('gold');
@@ -1104,7 +1104,7 @@ function pickChar(c){if(c!==who){saveFace();useChar(c);applyFace({g:1,x:1});appl
 $$('[data-who]').forEach(b=>b.onclick=()=>pickChar(+b.dataset.who));pickChar(who);
 if(save.pal)applyPal(save.pal);
 function startNight(len,opt={}){BGM.play('night');bannerT=0;$('#banner').classList.remove('on');$('#breakBtn').hidden=true;SFX.resume();tryLandscape();leaveSky();if((opt.ch||0)===11)endlessPick();buildMap(opt.ch||0);setUlt(save.ult);resetWorld();cancelAim();G=newNight(len);G.sky=!!(CHC[opt.ch||0]&&CHC[opt.ch||0].sky);G.camAuto=G.sky;setSkills(G.tier=skillTier());setBlink();resetJoy();WARM.redo();SHIELD.setTier(skillTier());hsAura.visible=save.realm>=18;G.ch=opt.ch||0;G.nt=opt.nt||0;G.endless=G.ch===11;if(G.ch===12)G.endBoss=['yinshi','xuanbing','jinjia','shenhan','xuehe'][Math.floor(Math.random()*5)];G.replay=G.ch<=10&&[0,1,2].some(n=>save.won[`${G.ch}-${n}`]);// 破過一次再玩：照境界的斬妖目標（煉氣 3300、築基 4500、結丹 6000、元嬰 8000），魔王死了也不會提早天亮
-  G.clearT=[3300,3300,3300,3300,4500,4500,6000,6000,6000,8000,8000][G.ch]||0;G.clearK=G.replay?Math.round(G.clearT*[1,1.3,1.15][G.nt]/50)*50:G.ch<=8?Math.round([2200,3100,2650][G.nt]*(G.sky?.88:1)*1.5/50)*50:0;G.showClear=G.clearK&&(G.replay||save.realm>chRec(G.ch));$('#bossMark').hidden=G.endless;G.mod=[{spawn:1,boss:1,elite2:0},{spawn:1.4,boss:1,elite2:1},{spawn:1.2,boss:1.5,elite2:0}][G.nt];G.paused=false;$('#pillBtn').hidden=!(save.inv.pill.hui>0);$('#pillN').textContent=save.inv.pill.hui;$('#skills').hidden=$('#joy').hidden=false;drawJoy();$('#startOv').classList.remove('on');$('#endOv').classList.remove('on');$('#hud').hidden=false;
+  G.k.ultBase=G.k.ultNeed;G.clearT=[3300,3300,3300,3300,4500,4500,6000,6000,6000,8000,8000][G.ch]||0;G.clearK=G.replay?Math.round(G.clearT*[1,1.3,1.15][G.nt]/50)*50:G.ch<=8?Math.round([2200,3100,2650][G.nt]*(G.sky?.88:1)*1.5/50)*50:0;G.showClear=G.clearK&&(G.replay||save.realm>chRec(G.ch));$('#bossMark').hidden=G.endless;G.mod=[{spawn:1,boss:1,elite2:0},{spawn:1.4,boss:1,elite2:1},{spawn:1.2,boss:1.5,elite2:0}][G.nt];G.paused=false;$('#pillBtn').hidden=!(save.inv.pill.hui>0);$('#pillN').textContent=save.inv.pill.hui;$('#skills').hidden=$('#joy').hidden=false;drawJoy();$('#startOv').classList.remove('on');$('#endOv').classList.remove('on');$('#hud').hidden=false;
   $('#bossMark').style.left=(BOSS_AT*100)+'%';if(G.ch!==12)spawnRing('ghost',8,7.5);// an opening ring so the first monsters are seen walking in
   renderBuffs();tipShown=false;say('左手走路，右手放技能！按住技能拖曳可以瞄準',6);
   setTimeout(()=>{if(G&&!G.over&&G.kills<3)say('吸青色的魂火可以頓悟喔！',4)},9000)}
@@ -1182,7 +1182,7 @@ function updateCamera(dt,snap){const C=CAMS[camIdx],zoom=G?1:.45;let D=(camOverr
   camera.position.set(camT.x+Math.sin(camYaw)*Math.cos(camP)*camD+sx,camT.y+Math.sin(camP)*camD,camT.z+Math.cos(camYaw)*Math.cos(camP)*camD+sz);camera.lookAt(camT);camera.updateMatrixWorld();sky.position.copy(camera.position)}
 function stepGame(dt){const g=G;
   // move
-  for(const k of ['rootT','slowT','charm'])if(g[k]>0)g[k]-=dt;
+  for(const k of ['rootT','slowT','charm','ultLock'])if(g[k]>0)g[k]-=dt;
   if((g.rootT>0||g.slowT>0||g.charm>0)&&!simming&&(g.stT=(g.stT||0)-dt)<=0){g.stT=.22;fx({p:tmp.set(HERO.pos.x+(Math.random()-.5)*.8,.3+Math.random()*.9,HERO.pos.z+(Math.random()-.5)*.8),col:g.rootT>0?0xffc860:g.charm>0?0xc07cff:0x5aff6a,add:true,life:.5,s0:.5,s1:.1,op:.9,vy:1})}
   if(g.medit>0)g.medit-=dt;const inp=inputDir();const moving=inp.l>.12&&!(g.rootT>0)&&!(g.medit>0);g.moving=moving;
   if(moving){const sp=g.s.move*inp.l*(g.slowT>0?.5:1);g.walked+=sp*dt;if(g.walked>=2.4){g.walked=0;qiBurst()}root.position.x+=inp.x*sp*dt;root.position.z+=inp.y*sp*dt;root.rotation.y=angLerp(root.rotation.y,Math.atan2(inp.x,inp.y),1-Math.exp(-dt*(g.sky?6:12)));
