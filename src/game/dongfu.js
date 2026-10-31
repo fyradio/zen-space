@@ -15,7 +15,8 @@ const CH=[{n:'序章',p:'白石村',rec:0},{n:'第一章',p:'荒村夜',rec:0},{
 const NIGHTS=['夜一・一般','夜二・快攻','夜三・圍城'];
 let CH_READY=12;// how many chapters are playable so far (the rest show 製作中)
 save.inv=Object.assign({stone:0,seed:{ning:3,chi:1,shen:0},herb:{ning:0,chi:0,shen:0},pill:{hui:1,juqi:0,zhuji:0,ningdan:0,huaying:0},yaodan:0,paper:0},save.inv||{});
-save.garden=save.garden||[null,null,null,null];save.won=save.won||{};save.ults=save.ults||['wan'];save.ult=save.ult||'wan';save.lastSeen=save.lastSeen||Date.now();
+save.garden=save.garden||[null,null,null,null];save.won=save.won||{};if(save.won['10-2']&&!save.ending){save.ending=1;if((save.realm||0)<18)save.realm=18}// 舊存檔：打贏過老祖就補開結局、無盡之夜、化神
+save.ults=save.ults||['wan'];save.ult=save.ult||'wan';save.lastSeen=save.lastSeen||Date.now();
 const chUnlocked=i=>i===0||(i===11?!!save.ending:false)||i!==11&&[0,1,2].some(n=>save.won[`${i-1}-${n}`]);
 const DF=(()=>{let tab='go',tick=0,lookTab=0,lt=0,ld={g:0,x:0,b:0,h:0};
   const TABS=[['go','出戰'],['med','靜室'],['garden','藥園'],['alch','丹房'],['look','造型'],['lib','藏經閣'],['shop','坊市'],['duel','鬥法台']];

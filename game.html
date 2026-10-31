@@ -1368,6 +1368,12 @@ function boltAt(x,z,dmg,r,col=0xd8f0ff,th=.06,top=9){if(!G||G.over)return;const 
   for(const e of enemies){if(!e.dead&&(e.x-x)**2+(e.z-z)**2<r*r)hurtEnemy(e,dmg,e.x-x,e.z-z,false,3)}if(boss.alive&&(boss.x-x)**2+(boss.z-z)**2<(r+boss.r)**2)hurtBoss(dmg)}
 const bellMesh=new THREE.Mesh(new THREE.LatheGeometry(V2([[0,1.9],[.35,1.85],[.5,1.6],[.6,1.1],[.72,.4],[.9,.05],[.92,0]]),24),new THREE.MeshBasicMaterial({color:0xffd65a,transparent:true,opacity:.3,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide}));
 bellMesh.visible=false;scene.add(bellMesh);
+// 金鐘罩裂痕：剩一半開始裂、剩兩成裂滿並閃爍（顏色 金→橘→紅）
+const bellCrack=(()=>{const c=document.createElement('canvas');c.width=256;c.height=128;const x=c.getContext('2d');x.strokeStyle='#fff';x.lineCap='round';
+  const crack=(sx,sy,n,w)=>{let px=sx,py=sy;x.lineWidth=w;x.beginPath();x.moveTo(px,py);for(let i=0;i<n;i++){px+=(Math.random()-.5)*30;py+=10+Math.random()*12;x.lineTo(px,py);if(Math.random()<.3){x.moveTo(px,py)}}x.stroke()};
+  for(let i=0;i<14;i++)crack(10+i*18+Math.random()*8,Math.random()*30,6+Math.floor(Math.random()*4),2+Math.random()*2);
+  const t=new THREE.CanvasTexture(c);t.wrapS=THREE.RepeatWrapping;const m=new THREE.Mesh(bellMesh.geometry,new THREE.MeshBasicMaterial({map:t,color:0xffffff,transparent:true,opacity:0,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide}));m.scale.setScalar(1.01);bellMesh.add(m);return m})();
+const BELL_C=[new THREE.Color(0xff3a2a),new THREE.Color(0xff6a10),new THREE.Color(0xffd65a)];
 // 萬劍歸宗: giant swords dropping point-first from the sky
 const falls=[];for(let i=0;i<40;i++){const g=new THREE.Group();g.visible=false;scene.add(g);
   part(new THREE.BoxGeometry(.09,.02,1.3),swordMat,g,{ol:false});const tp=new THREE.ConeGeometry(.06,.22,4);tp.rotateX(Math.PI/2);part(tp,swordMat,g,{p:[0,0,.75],ol:false});
@@ -2460,7 +2466,7 @@ const CARDS=[
   {k:'talis',ic:'符',n:'雷火符',skill:1,d:r=>G.s.talis?`符籙威力 +${[40,70,120][r]}%，一次多丟一張`:`新招：每 2.6 秒往最近的妖丟符，大爆炸＋燃燒`,
     f:r=>{if(G.s.talis){G.s.talis*=1+[.4,.7,1.2][r];G.s.talisN=Math.min(4,G.s.talisN+1)}else{G.s.talis=[1,1.4,2][r];G.s.talisN=1}}},
   {k:'lamp',ic:'燈',n:'燈燈助陣',skill:1,d:r=>G.s.lamp?`燈燈火球更快更痛 +${[40,70,120][r]}%`:`新招：燈燈每秒吐一顆追蹤火球，爆開燃燒`,f:r=>{G.s.lamp=G.s.lamp?G.s.lamp*(1+[.4,.7,1.2][r]):[1,1.4,2][r]}},
-  {k:'bell',ic:'鐘',n:'金鐘罩',skill:1,d:r=>`金鐘罩：擋 ${[10,20,30][r]} 下傷害，破了之後 ${[10,7,5][r]} 秒重新罩上${G.s.bell?'（取較好的）':''}，破的時候震開周圍的妖`,f:r=>{G.bellMax=Math.max(G.bellMax||0,[10,20,30][r]);G.s.bell=Math.min(G.s.bell||99,[10,7,5][r]);G.bellT=G.s.bell;G.bellOn=false}},
+  {k:'bell',ic:'鐘',n:'金鐘罩',skill:1,d:r=>`金鐘罩：擋 ${[10,20,30][r]} 下傷害，破了之後 ${[10,7,5][r]} 秒重新罩上${G.s.bell?'（取較好的）':''}，破的時候震開周圍的妖`,f:r=>{G.bellR=Math.max(G.bellR??-1,r);G.bellMax=Math.max(G.bellMax||0,[10,20,30][r]);G.s.bell=Math.min(G.s.bell||99,[10,7,5][r]);G.bellT=G.s.bell;G.bellOn=false},minR:()=>(G.bellR??-1)+1,max:()=>G.bellR>=2},
   // upgrades for the four right-hand skills
   {k:'sweepUp',get ic(){return SK.sweep.ic},get n(){return SK.sweep.n+'・進化'},up:1,d:r=>`${SK.sweep.lv[G.k.sweepLv]}${r?'，冷卻 -15%':''}`,f:r=>{G.k.sweepLv=Math.min(3,G.k.sweepLv+1);G.k.sweepD*=1.3;if(G.k.sweepLv===1)G.k.sweepR=1.3;if(r)G.k.sweepCd*=.85},max:()=>G.k.sweepLv>=3},
   {k:'beamUp',get ic(){return SK.beam.ic},get n(){return SK.beam.n+'・進化'},up:1,d:r=>`${SK.beam.lv[G.k.beamLv]}${r?'，傷害 +30%':''}`,f:r=>{G.k.beamLv=Math.min(4,G.k.beamLv+1);if(r)G.k.beamD*=1.3},max:()=>G.k.beamLv>=4},
@@ -2471,7 +2477,7 @@ let offer=[];
 // gold = 仙緣頓悟 after an elite or the boss: every card is 靈品 or better
 function openCards(gold){if(!G||G.over)return;cancelAim();if($('#cardOv').classList.contains('on')){G.pendingGold=(G.pendingGold||0)+(gold?1:0);return}
   G.paused=true;const pool=CARDS.filter(c=>(!c.when||c.when())&&!(c.max&&c.max()));offer=[];
-  const rar=c=>c.evo?2:gold?(Math.random()<.5?2:1):(()=>{const y=Math.random();return y<.08?2:y<.36?1:0})();
+  const rar=c=>Math.max(c.minR?c.minR():0,c.evo?2:gold?(Math.random()<.5?2:1):(()=>{const y=Math.random();return y<.08?2:y<.36?1:0})());// 「數值取較好」的卡只出比手上更高的品階
   const take=c=>{pool.splice(pool.indexOf(c),1);offer.push({c,r:rar(c)})};
   // the evolution, when it unlocks, is always offered first
   const evo=pool.find(c=>c.evo&&!G.s[c.k]);if(evo)take(evo);
@@ -2564,8 +2570,11 @@ function stepSkills(dt){
   if(G.s.thunder){G.thunderCd=(G.thunderCd??1.5)-dt;if(G.thunderCd<=0){G.thunderCd=3;SFX.play('thunder');const used=new Set();
     for(let j=0;j<G.s.thunder;j++){const tg=(j===0&&boss.alive&&bossOnScreen())?boss:nearest(HERO.pos.x+(Math.random()-.5)*6,HERO.pos.z+(Math.random()-.5)*6,9,used);if(!tg)break;used.add(tg);setTimeout(()=>bolt(tg.x,tg.z),j*90)}}}
   // 金鐘罩: a golden bell over the hero that soaks one hit
-  if(G.s.bell){if(!G.bellOn){G.bellT=(G.bellT||0)+dt;if(G.bellT>=G.s.bell){G.bellOn=true;G.bellT=0;G.bellN=G.bellMax||10}}bellMesh.visible=G.bellOn;bellMesh.position.set(HERO.pos.x,0,HERO.pos.z);bellMesh.rotation.y+=dt;
-    bellMesh.material.opacity=.28+Math.sin(G.t*4)*.06}else bellMesh.visible=false;
+  if(G.s.bell){if(!G.bellOn){G.bellT=(G.bellT||0)+dt;if(G.bellT>=G.s.bell){G.bellOn=true;G.bellT=0;G.bellN=G.bellMax||10;G.bellDrop=0;SFX.play('bell');shake=Math.max(shake,.15)}}bellMesh.visible=G.bellOn;
+    const fr=G.bellOn?G.bellN/(G.bellMax||10):1,dropK=Math.min(1,(G.bellDrop=(G.bellDrop||0)+dt)/.3);bellMesh.position.set(HERO.pos.x,(1-dropK)*(1-dropK)*4,HERO.pos.z);bellMesh.rotation.y+=dt;
+    if(dropK>=1&&!G.bellLanded&&G.bellOn){G.bellLanded=true;fx({p:tmp.set(HERO.pos.x,.2,HERO.pos.z),col:0xffd65a,add:true,life:.45,s0:1,s1:3.4,op:.9,vy:0})}if(dropK<1)G.bellLanded=false;
+    bellMesh.material.color.copy(fr>.5?BELL_C[2]:fr>.2?BELL_C[1]:BELL_C[0]);const crit=fr<=.2;
+    bellMesh.material.opacity=(crit?.32+Math.abs(Math.sin(G.t*14))*.25:.28+Math.sin(G.t*4)*.06);bellCrack.material.opacity=fr>.5?0:fr>.2?.35:.75*(crit?.6+.4*Math.abs(Math.sin(G.t*14)):1);bellCrack.material.color.copy(bellMesh.material.color)}else bellMesh.visible=false;
   // 萬劍歸宗: a rain of giant swords onto everything on screen
   stepActs(dt);
   stepFalls(dt);
@@ -2617,7 +2626,7 @@ function stepWarns(dt){for(const w of warnPool){if(!w.on)continue;w.t+=dt;const 
 /* ================= 主角受傷 ================= */
 let shake=0;
 function hurtHero(dmg,kx,kz,src='碰撞'){if(G.iframe>0||G.over)return;
-  if(G.bellOn){G.bellN--;G.iframe=.2;SFX.play('bell');if(G.bellN>0){fx({p:tmp.set(HERO.pos.x,1,HERO.pos.z),col:0xffd65a,add:true,life:.25,s0:1,s1:2.5,op:.8,vy:0});return}G.bellOn=false;G.iframe=.5;shake=Math.max(shake,.2);fx({p:tmp.set(HERO.pos.x,1,HERO.pos.z),col:0xffd65a,add:true,life:.5,s0:1.5,s1:4,op:.9,vy:0});
+  if(G.bellOn){G.bellN--;G.iframe=.2;SFX.play('bell');if(G.bellN>0){fx({p:tmp.set(HERO.pos.x,1,HERO.pos.z),col:0xffd65a,add:true,life:.25,s0:1,s1:2.5,op:.8,vy:0});return}G.bellOn=false;G.iframe=.5;shake=Math.max(shake,.3);if(!simming)for(let i=0;i<14;i++){const a=i/14*6.28;fx({p:tmp.set(HERO.pos.x+Math.sin(a)*.8,.3+Math.random()*1.6,HERO.pos.z+Math.cos(a)*.8),col:i%2?0xffd65a:0xffb03a,add:true,life:.6+Math.random()*.3,s0:.35,s1:.1,op:1,vy:1.5+Math.random()*2})}fx({p:tmp.set(HERO.pos.x,1,HERO.pos.z),col:0xffd65a,add:true,life:.5,s0:1.5,s1:4,op:.9,vy:0});
     for(const e of enemies){const dx=e.x-HERO.pos.x,dz=e.z-HERO.pos.z,d=Math.hypot(dx,dz);if(d<2.8){e.x+=dx/(d||1)*2;e.z+=dz/(d||1)*2;hurtEnemy(e,swordDmg()*1.5)}}return}G.hurtBy=G.hurtBy||{};G.hurtBy[src]=Math.round((G.hurtBy[src]||0)+dmg);G.hp-=dmg;G.iframe=.85;shake=Math.max(shake,.25);SFX.play('hurt');buzz(30);const h=$('#hurt');h.classList.add('on');setTimeout(()=>h.classList.remove('on'),60);
   if(G.hp<=0){if(save.inv.paper>0&&!G.revived){save.inv.paper--;writeSave();G.revived=true;G.hp=G.maxhp*.5;G.iframe=2.5;banner('替身紙人','替你擋了一劫，原地復活');SFX.play('gold');
       for(const e of enemies){const dx=e.x-HERO.pos.x,dz=e.z-HERO.pos.z,d=Math.hypot(dx,dz);if(d<4)hurtEnemy(e,swordDmg()*3,dx/(d||1)*2,dz/(d||1)*2,false,5)}return}G.hp=0;endNight(false)}}
@@ -2685,7 +2694,7 @@ function resetWorld(){corpses.length=0;acts.forEach(a=>{if(a.end)a.end()});acts.
 function endNight(win,gaveUp=false){if(G.over)return;G.over=true;G.paused=true;cancelAim();showAim();
   // 修行進度: kills / boss / elite / dawn count toward the next breakthrough; a lost night counts half the kills
   const full=G.bossKilled&&boss.def&&boss.def.duel&&boss.fled&&boss.hp<=0;const stone=Math.round((G.kills/8+(G.bossKilled?30:0)+(G.eliteKilled?10:0)+(full?40:0))*(win||G.endless?1:.5)*(1+G.nt*.25));save.inv.stone+=stone;if(G.bossKilled)save.inv.yaodan+=full?2:1;G.reward=stone;
-  if(win&&G.ch===10&&G.nt===2&&G.bossKilled){save.ending=1;if(save.realm<18){save.realm=18;G.huashen=true}}if(G.ch===11){save.board=(save.board||[]).concat([{k:G.kills,b:G.bossN||0,t:Math.round(G.t),d:new Date(Date.now()-new Date().getTimezoneOffset()*60000).toISOString().slice(0,10)}]).sort((a,b)=>b.k-a.k).slice(0,5)}
+  if(win&&G.ch===10&&G.nt===2&&(G.bossKilled||boss.fled)){save.ending=1;if(save.realm<18){save.realm=18;G.huashen=true}}if(G.ch===11){save.board=(save.board||[]).concat([{k:G.kills,b:G.bossN||0,t:Math.round(G.t),d:new Date(Date.now()-new Date().getTimezoneOffset()*60000).toISOString().slice(0,10)}]).sort((a,b)=>b.k-a.k).slice(0,5)}
   let newUlt=null;if(win){save.won[`${G.ch}-${G.nt}`]=1;const u=ULTS.find(u=>u.ch===G.ch&&!save.ults.includes(u.k)&&u.ch>0);if(u){save.ults.push(u.k);newUlt=u}}
   const st=save.st;st.kills+=Math.round(G.kills*(win||G.endless?1:.5));if(G.bossKilled)st.boss+=G.endless?(G.bossN||0):1;if(G.eliteKilled)st.elite++;if(win)st.wins++;st.best=Math.max(st.best,G.kills);
   save.nights++;if(win)save.wins++;save.best=Math.max(save.best,G.kills);writeSave();$('#breakBtn').hidden=true;
@@ -2878,7 +2887,8 @@ const CH=[{n:'序章',p:'白石村',rec:0},{n:'第一章',p:'荒村夜',rec:0},{
 const NIGHTS=['夜一・一般','夜二・快攻','夜三・圍城'];
 let CH_READY=12;// how many chapters are playable so far (the rest show 製作中)
 save.inv=Object.assign({stone:0,seed:{ning:3,chi:1,shen:0},herb:{ning:0,chi:0,shen:0},pill:{hui:1,juqi:0,zhuji:0,ningdan:0,huaying:0},yaodan:0,paper:0},save.inv||{});
-save.garden=save.garden||[null,null,null,null];save.won=save.won||{};save.ults=save.ults||['wan'];save.ult=save.ult||'wan';save.lastSeen=save.lastSeen||Date.now();
+save.garden=save.garden||[null,null,null,null];save.won=save.won||{};if(save.won['10-2']&&!save.ending){save.ending=1;if((save.realm||0)<18)save.realm=18}// 舊存檔：打贏過老祖就補開結局、無盡之夜、化神
+save.ults=save.ults||['wan'];save.ult=save.ult||'wan';save.lastSeen=save.lastSeen||Date.now();
 const chUnlocked=i=>i===0||(i===11?!!save.ending:false)||i!==11&&[0,1,2].some(n=>save.won[`${i-1}-${n}`]);
 const DF=(()=>{let tab='go',tick=0,lookTab=0,lt=0,ld={g:0,x:0,b:0,h:0};
   const TABS=[['go','出戰'],['med','靜室'],['garden','藥園'],['alch','丹房'],['look','造型'],['lib','藏經閣'],['shop','坊市'],['duel','鬥法台']];
