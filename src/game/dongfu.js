@@ -75,9 +75,9 @@ const DF=(()=>{let tab='go',libTab='sweep',tick=0,lookTab=0,lt=0,ld={g:0,x:0,b:0
       let h=`<div class="libtabs">${LT.map(([k,n])=>`<button data-lt="${k}" aria-pressed="${libTab===k}">${n}</button>`).join('')}</div>`;
       if(libTab==='ult'){h+=ULTS.map(u=>{const has=save.ults.includes(u.k),buy=!has&&u.price&&(!u.need||u.need()),lock=!has&&!buy;
           return `<div class="ultrow"><button class="ultpick${save.ult===u.k?' on':''}" data-ult="${u.k}" ${has?'':'disabled'}><b>${u.n}</b><span>${has?u.d:u.lockTxt?u.lockTxt+'：'+u.d:u.price?u.d:`打贏${CH[u.ch].n}解鎖：${u.d}`}</span></button>${buy?`<button class="btn${inv.stone>=u.price?' go':''}" data-ubuy="${u.k}" ${inv.stone>=u.price?'':'disabled'}>參悟 ${u.price}</button>`:''}</div>`}).join('')}
-      else{h+=`<p class="tag">每格三種招，按一下換上；高一個大境界的招強 1.3 倍。到境界送預設招，其他用靈石參悟。</p>`;
+      else{h+=`<p class="tag">每格三種招，按一下換上；高一個大境界的招強 1.3 倍。到境界送預設招，其他用靈石參悟。頓悟進化的效果隨境界放大（煉氣 1/4、築基 1/2、結丹 3/4、元嬰全開），下面寫的是你現在的數字。</p>`;
         for(let t=0;t<4;t++){const list=SKILL_LIB[libTab].filter(S=>S.tier===t);h+=`<h3 class="libh">${TN[t]}${t>tier?`<small>（${REALMS[TR[t]]}開放）</small>`:''}</h3><div class="libgrid">`+list.map(S=>{const own=save.skOwn.includes(S.id),on=save.sk&&save.sk[libTab]===S.id,can=t<=tier,c='#'+S.col.toString(16).padStart(6,'0');
-            const text=libTab==='beam'?[0,1,2].map(i=>beamText(S,i)).join(' → '):(S.lv?S.lv.join(' → '):'');
+            const text=libTab==='beam'?[0,1,2].map(i=>beamText(S,i)).join(' → '):(S.lv?S.lv.map(t=>evText(S,t)).join(' → '):'');
             return `<div class="skcard${on?' on':''}${can?'':' lock'}"><span class="skic" style="border-color:${c};text-shadow:0 0 8px ${c}">${S.ic}</span><div><b>${S.n}${S.dflt?'<em>預設</em>':''}</b><span>${S.d||''}</span><small>進化：${text}</small></div>${own?`<button class="btn${on?'':' go'}" data-skeq="${S.id}" ${on?'disabled':''}>${on?'使用中':'換上'}</button>`:can?`<button class="btn${inv.stone>=SKILL_PRICE[t]?' go':''}" data-skbuy="${S.id}" ${inv.stone>=SKILL_PRICE[t]?'':'disabled'}>參悟 ${SKILL_PRICE[t]}</button>`:'<button class="btn" disabled>未開放</button>'}</div>`}).join('')+'</div>'}}
       el.innerHTML=h;
       $$('#dfBody [data-lt]').forEach(b=>b.onclick=()=>{libTab=b.dataset.lt;SFX.play('soul');render()});

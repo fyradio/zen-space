@@ -99,7 +99,7 @@ function lotusCast(){const lv=G.k.sweepLv,R=SK.sweep.range(),dmg=swordDmg()*5.2*
 // 玄冰長河: a wide river of ice down a line, freezing what it crosses
 const RIVER_LV=['河面變寬','兩道冰河','三道，冰封 1.5 秒','五道冰河'];
 const RIVER_N=[1,1,2,3,5],RIVER_W=[2,2.6,2.6,2.6,2.6],RIVER_SP=[0,0,.6,1.1,2.2];
-function riverCast(A){const lv=G.k.beamLv,L=SK.beam.range(),a0=Math.atan2(A.dir[0],A.dir[1]),dmg=swordDmg()*7.5*G.k.beamD*[1,1,.9,.8,.7][lv],hx=HERO.pos.x,hz=HERO.pos.z,n=RIVER_N[lv],W=RIVER_W[lv];
+function riverCast(A){const lv=G.k.beamLv,L=SK.beam.range(),a0=Math.atan2(A.dir[0],A.dir[1]),dmg=swordDmg()*7.5*G.k.beamD*[1,1,.9,.8,.7][lv],hx=HERO.pos.x,hz=HERO.pos.z,n=EVc(RIVER_N[lv],1),W=2*EVm(RIVER_W[lv]/2);
   SFX.play('beam');SFX.play('bell');shake=Math.max(shake,.25);
   for(let j=0;j<n;j++){const a=n>1?a0-RIVER_SP[lv]/2+RIVER_SP[lv]*j/(n-1):a0,dx=Math.sin(a),dz=Math.cos(a),hit=new Set();
     const m=new THREE.Mesh(beamGeo,new THREE.MeshBasicMaterial({color:0x9fe8ff,transparent:true,opacity:0,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide}));m.position.set(hx,.1,hz);m.rotation.y=a;scene.add(m);
@@ -109,7 +109,7 @@ function riverCast(A){const lv=G.k.beamLv,L=SK.beam.range(),a0=Math.atan2(A.dir[
       ()=>{scene.remove(m);m.material.dispose()})}}
 // 紫霄雷網: bolts rain on the nearest monsters and lightning links them into a net
 const NET_LV=['落雷更多，雷網：被劈到的妖之間連電','雷網麻痺 1.5 秒','雷暴：落雷再翻倍'];
-function netCast(){const lv=G.k.thLv,n=8+G.k.thN+(lv>=3?8:0),dmg=swordDmg()*2.6*G.k.thD,hx=HERO.pos.x,hz=HERO.pos.z,R=SK.thunder.range(),used=new Set(),hits=[];
+function netCast(){const lv=G.k.thLv,n=8+G.k.thN+(lv>=3?Math.max(1,Math.floor(8*evQ())):0),dmg=swordDmg()*2.6*G.k.thD,hx=HERO.pos.x,hz=HERO.pos.z,R=SK.thunder.range(),used=new Set(),hits=[];
   for(let i=0;i<n;i++){const tg=(i===0&&boss.alive&&bossOnScreen())?boss:pickNear(hx,hz,R,used);if(!tg)break;used.add(tg);hits.push(tg)}
   if(!hits.length)return false;SFX.play('thunder');shake=Math.max(shake,.3);
   hits.forEach((tg,i)=>act(i*.05+.1,null,()=>{boltAt(tg.x,tg.z,dmg,1.2,0xb889ff,.07);if(tg!==boss&&lv>=2)tg.stun=Math.max(tg.stun||0,lv>=3?1.5:.6)}));

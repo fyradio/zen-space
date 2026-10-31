@@ -107,7 +107,7 @@ function endlessFly(){const g=G;if(!g||!g.endless||g.over||g.paused)return;if(bo
 // ---------- 元嬰技能組 ----------
 const SOUL_LV=['範圍 +30%、傷害 +30%','雙斬：回頭再斬一次','斬得更重，斬完回復一成生命'];
 // 元神斬：主角身上站出金色虛影，揮一把巨大金劍橫掃一圈，地上留下金色劍痕；二段斬反手再揮
-function soulCast(){const lv=G.k.sweepLv,R=SK.sweep.range(),dmg=swordDmg()*4.2*G.k.sweepD*(lv>=3?1.25:1),n=lv>=2?2:1;SFX.play('sweep');shake=Math.max(shake,.3);buzz(25);
+function soulCast(){const lv=G.k.sweepLv,R=SK.sweep.range(),dmg=swordDmg()*4.2*G.k.sweepD*EVm(lv>=3?1.25:1),n=lv>=2?2:1;SFX.play('sweep');shake=Math.max(shake,.3);buzz(25);
   const ph=new THREE.Group(),fig=soulFig(0xffe08a,.5),M=fig.userData.M;fig.scale.setScalar(1.7);ph.add(fig);ph.position.set(HERO.pos.x,0,HERO.pos.z);ph.rotation.y=root.rotation.y;scene.add(ph);
   const arm=new THREE.Group();arm.position.y=1.5;ph.add(arm);const BM=new THREE.MeshBasicMaterial({color:0xfff0b0,transparent:true,opacity:.9,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide});
   const blade=new THREE.Mesh(new THREE.PlaneGeometry(.5,R*.95).rotateX(-Math.PI/2).translate(0,0,R*.5),BM);arm.add(blade);const tip=new THREE.Mesh(new THREE.ConeGeometry(.25,.8,4).rotateX(Math.PI/2).translate(0,0,R),BM);arm.add(tip);
@@ -121,7 +121,7 @@ function soulCast(){const lv=G.k.sweepLv,R=SK.sweep.range(),dmg=swordDmg()*4.2*G
         if(boss.alive&&Math.hypot(boss.x-HERO.pos.x,boss.z-HERO.pos.z)<rr+boss.r)hurtBoss(dmg)}},
     ()=>{scene.remove(ph);M.dispose();BM.dispose();blade.geometry.dispose()})}
 const HONG_LV=['光柱變寬','兩道貫虹','三道，被貫穿的定身 1 秒','五道貫虹'];const HONG_N=[1,1,2,3,5],HONG_W=[1.8,2.6,2.6,2.6,2.6],HONG_SP=[0,0,.5,.9,1.8];
-function hongCast(A){const lv=G.k.beamLv,L=SK.beam.range(),a0=Math.atan2(A.dir[0],A.dir[1]),dmg=swordDmg()*9*G.k.beamD*[1,1,.9,.8,.7][lv],hx=HERO.pos.x,hz=HERO.pos.z,n=HONG_N[lv],W=HONG_W[lv];SFX.play('beam');shake=Math.max(shake,.3);
+function hongCast(A){const lv=G.k.beamLv,L=SK.beam.range(),a0=Math.atan2(A.dir[0],A.dir[1]),dmg=swordDmg()*9*G.k.beamD*[1,1,.9,.8,.7][lv],hx=HERO.pos.x,hz=HERO.pos.z,n=EVc(HONG_N[lv],1),W=1.8*EVm(HONG_W[lv]/1.8);SFX.play('beam');shake=Math.max(shake,.3);
   for(let j=0;j<n;j++){const a=n>1?a0-HONG_SP[lv]/2+HONG_SP[lv]*j/(n-1):a0,dx=Math.sin(a),dz=Math.cos(a),hit=new Set();
     const m=new THREE.Mesh(beamGeo,new THREE.MeshBasicMaterial({map:beamTex,color:0xfff0b0,transparent:true,opacity:0,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide}));m.position.set(hx,.8,hz);m.rotation.y=a;scene.add(m);
     act(.7,t=>{const k=Math.min(1,t/.12);m.scale.set(W*(.7+.3*k),1,L*k);m.material.opacity=.9*(t>.3?Math.max(0,1-(t-.3)/.4):1);
@@ -129,7 +129,7 @@ function hongCast(A){const lv=G.k.beamLv,L=SK.beam.range(),a0=Math.atan2(A.dir[0
         if(boss.alive&&!hit.has(boss)){const px=boss.x-hx,pz=boss.z-hz,al=px*dx+pz*dz,pe=Math.abs(px*dz-pz*dx);if(al>0&&al<L*k&&pe<W/2+boss.r){hit.add(boss);hurtBoss(dmg,true)}}},
       ()=>{scene.remove(m);m.material.dispose()})}}
 const SHADOW_LV=['劍影 +3 把','持續更久','劍影更快更痛、再 +4 把、會追魔王'];
-function shadowCast(){const lv=G.k.thLv,n=8+G.k.thN+(lv>=1?3:0)+(lv>=3?4:0),dur=3.6+(lv>=2?1.4:0),dmg=swordDmg()*3.4*G.k.thD*(lv>=3?1.3:1),spd=lv>=3?15:11;
+function shadowCast(){const lv=G.k.thLv,n=8+G.k.thN+(lv>=1?Math.max(1,Math.floor(3*evQ())):0)+(lv>=3?Math.max(1,Math.floor(4*evQ())):0),dur=3.6+(lv>=2?1.4:0),dmg=swordDmg()*3.4*G.k.thD*EVm(lv>=3?1.3:1),spd=lv>=3?15:11;
   if(!enemies.some(e=>!e.dead&&onScreen(e.x,.4,e.z))&&!boss.alive)return false;SFX.play('thunder');
   for(let i=0;i<n;i++){const m=new THREE.Mesh(new THREE.ConeGeometry(.12,1.1,4),new THREE.MeshBasicMaterial({color:0xdfe8ff,transparent:true,opacity:.9,blending:THREE.AdditiveBlending,depthWrite:false}));m.rotation.order='YXZ';scene.add(m);
     const s={x:HERO.pos.x,z:HERO.pos.z,tg:null,cd:0,hit:new Map(),a:i/n*6.28};
