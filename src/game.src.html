@@ -1057,7 +1057,8 @@ function inputDir(){let x=joy.x,y=joy.y;if(keys.has('a')||keys.has('arrowleft'))
     for(const h of HZ){const dx=HERO.pos.x-h.x,dz=HERO.pos.z-h.z,d=Math.hypot(dx,dz)||1;
       if(h.k==='fan'&&d<h.r+1.2){x+=dx/d*3;y+=dz/d*3}
       else if(h.k==='line'){const ux=Math.sin(h.a0),uz=Math.cos(h.a0),al=dx*ux+dz*uz,pe=dx*uz-dz*ux;if(al>-1&&al<h.len+1&&Math.abs(pe)<h.w/2+1){const sg=Math.sign(pe)||1;x+=uz*sg*3;y+=-ux*sg*3}}
-      else if(h.k==='wave'){const R=h.spd*h.t;if(d>R-.5&&d-R<3){const gx=h.x+Math.sin(h.gapA)*d,gz=h.z+Math.cos(h.gapA)*d;x+=(gx-HERO.pos.x)*1.5;y+=(gz-HERO.pos.z)*1.5}}}}
+      else if(h.k==='wave'){const R=h.spd*h.t;if(d>R-.5&&d-R<3){const gx=h.x+Math.sin(h.gapA)*d,gz=h.z+Math.cos(h.gapA)*d;x+=(gx-HERO.pos.x)*1.5;y+=(gz-HERO.pos.z)*1.5}}
+      else if(h.k==='domain'){const sx=h.sx-HERO.pos.x,sz=h.sz-HERO.pos.z,sd=Math.hypot(sx,sz)||1;if(sd>h.sr*.5){x+=sx/sd*30;y+=sz/sd*30}}}}
   else{const c=Math.cos(camYaw),sn=Math.sin(camYaw),wx=x*c+y*sn,wz=-x*sn+y*c;x=wx;y=wz}// screen → world
   if(G.charm>0){x=-x;y=-y}// 魅惑: the stick is reversed
   const l=Math.hypot(x,y);if(l>1){x/=l;y/=l}return {x,y,l:Math.min(1,l)}}

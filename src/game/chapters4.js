@@ -28,11 +28,11 @@ MAPS[9]=()=>{duelMap(0x3a3050,0xb784ff);duelDecor(0x4a4060,0xd8b8ff,false)};MAPS
 const aimA=b=>Math.atan2(HERO.pos.x-b.x,HERO.pos.z-b.z);
 function tele(b,x,z){fx({p:tmp.set(b.x,1.2,b.z),col:b.def&&b.def.col||0xc8b8ff,add:true,life:.5,s0:1,s1:3,op:.9,vy:0});const r=Math.hypot(x,z);if(r>ARENA-2){x*=(ARENA-2)/r;z*=(ARENA-2)/r}b.x=x;b.z=z;fx({p:tmp.set(x,1.2,z),col:0xffffff,add:true,life:.4,s0:1,s1:2.5,op:.8,vy:0})}
 function domain(b,name){const sa=Math.random()*6.28,sx=Math.sin(sa)*ARENA*.6,sz=Math.cos(sa)*ARENA*.6;banner(`${b.def.name}・領域`,'墨染全場，快站進綠色圈圈！',true);shake=Math.max(shake,.4);
-  domainWarn(0,0,ARENA-1.5,sx,sz,4.6,2.8,b.dmg*.9)}
+  domainWarn(0,0,ARENA-1.5,sx,sz,4.6,3.2,b.dmg*.75)}
 function clash(b){if(G.clash)return;G.clash={t:3,n:0,need:16};let el=$('#clashBox');if(!el){el=document.createElement('div');el.id='clashBox';el.style.cssText='position:fixed;left:50%;top:34%;transform:translate(-50%,-50%);z-index:30;text-align:center;pointer-events:none;color:#ffe9a0;font:900 26px/1.3 system-ui;text-shadow:0 0 12px #e8a830,0 2px 4px #000';document.body.appendChild(el)}
   el.style.display='block';banner('法寶對撞！','狂點畫面，拼法力！',true);const C=G.clash;
   act(3,t=>{if(!G||G.over){el.style.display='none';return}el.innerHTML=`狂點畫面！<br><span style="display:inline-block;width:200px;height:12px;border:2px solid #ffe9a0;border-radius:9px;overflow:hidden;vertical-align:middle"><i style="display:block;height:100%;width:${Math.min(100,C.n/C.need*100)}%;background:linear-gradient(90deg,#ff8a2a,#ffe9a0)"></i></span>`;b.stun=Math.max(b.stun||0,.2)},
-    ()=>{el.style.display='none';if(!G||G.over){return}G.clash=null;if(C.n>=C.need){banner('法寶對撞・你贏了！','',true);SFX.play('bossDie');shake=.8;b.stun=2.5;b.allow=Math.max(b.allow,b.max*.08);hurtBoss(b.max*.07,true)}else{banner('法力不如人……','',true);hurtHero(b.dmg*.8,0,0,'法寶對撞')}})}
+    ()=>{el.style.display='none';if(!G||G.over){return}G.clash=null;if(C.n>=C.need){banner('法寶對撞・你贏了！','',true);SFX.play('bossDie');shake=.8;b.stun=2.5;b.allow=Math.max(b.allow,b.max*.08);hurtBoss(b.max*.07,true)}else{banner('法力不如人……','',true);hurtHero(b.dmg*.6,0,0,'法寶對撞')}})}
 document.addEventListener('pointerdown',()=>{if(window.__clashHit)window.__clashHit()});window.__clashHit=()=>{if(G&&G.clash)G.clash.n++};
 const AT={
   fan:(b,n=1)=>{const a0=aimA(b);for(let i=0;i<n;i++)warnFan(b.x,b.z,a0+(i-(n-1)/2)*.9,1.1,7.5,.9,b.dmg*.7)},
@@ -60,13 +60,13 @@ function robed(o){return g=>{const R=toon(o.robe,{emissive:o.em||0x080810}),A=to
   return {body,L,Li:2.2,spin:b=>orb.forEach((m,i)=>{const a=b.t*1.6+i/orb.length*6.28;m.position.set(Math.sin(a)*1.5,1.6+Math.sin(b.t*2+i)*.3,Math.cos(a)*1.5);m.rotation.y=a})}}}
 // ---------- 魔王 ----------
 Object.assign(BOSSES,{
-  yinshi:{duel:1,col:0x7fff9a,name:'陰屍宗主',line:'陰屍宗主：「嬰兒？正好拿來煉屍。」',rage:'陰屍宗主：「屍海翻騰！」',tip:'陰屍宗主愛召屍傀，也會放全場領域，找綠色圈圈站！',r:1.2,dmg:13,spd:1.5,keep:3,
+  yinshi:{duel:1,col:0x7fff9a,name:'陰屍宗主',line:'陰屍宗主：「嬰兒？正好拿來煉屍。」',rage:'陰屍宗主：「屍海翻騰！」',tip:'陰屍宗主愛召屍傀，也會放全場領域，找綠色圈圈站！',r:1.2,dmg:11,spd:1.5,keep:3,
     build:robed({robe:0x2a3a30,acc:0x6a8a5a,glow:0x7fff9a,eye:0x7fff9a,skin:0x9aa890,em:0x0a2010,n:5,orb:new THREE.SphereGeometry(.26,8,6),extra:(b,A,R)=>{part(new THREE.BoxGeometry(.5,.7,.5),A,b,{p:[0,2.65,0]});part(new THREE.CylinderGeometry(.04,.04,2.6,6),toon(0x3a2a1a),b,{p:[.85,1.3,.3]});part(new THREE.SphereGeometry(.2,10,8),new THREE.MeshBasicMaterial({color:0x7fff9a}),b,{p:[.85,2.65,.3]});part(new THREE.BoxGeometry(.6,1.6,.25),toon(0x1a1a14),b,{p:[0,1.2,-.8],r:[.2,0,0]});part(new THREE.BoxGeometry(.36,.06,.02),toon(0xe8d86a),b,{p:[0,2.05,.27]})}}),
     act:duelAct([b=>AT.rain(b,8),b=>AT.ring(b),b=>AT.fan(b,3),b=>AT.homing(b,3)],2.8,['skel',4,8])},
-  xuanbing:{duel:1,col:0x9fe8ff,name:'玄冰妖王',line:'玄冰妖王：「凍成冰雕，陪我看一萬年雪。」',rage:'玄冰妖王：「六月飛雪——！」',tip:'玄冰妖王會瞬移到你身邊再橫掃，留意殘影！',r:1.2,dmg:13,spd:1.9,keep:3,
+  xuanbing:{duel:1,col:0x9fe8ff,name:'玄冰妖王',line:'玄冰妖王：「凍成冰雕，陪我看一萬年雪。」',rage:'玄冰妖王：「六月飛雪——！」',tip:'玄冰妖王會瞬移到你身邊再橫掃，留意殘影！',r:1.2,dmg:11,spd:1.9,keep:3,
     build:robed({robe:0xcfe8f4,acc:0x9fe8ff,glow:0x9fe8ff,eye:0x4aaaff,skin:0xe8f0f4,em:0x1a3a4a,n:6,orb:new THREE.OctahedronGeometry(.3),extra:(b,A)=>{for(let i=0;i<7;i++){const a=(i-3)*.32;part(new THREE.ConeGeometry(.06,.45,4),A,b,{p:[Math.sin(a)*.28,2.45,Math.cos(a)*.1],r:[0,0,-a*.6]})}[-1,0,1].forEach(d=>part(new THREE.ConeGeometry(.22,1.6,8),toon(0xf4fbff,{emissive:0x2a4a5a}),b,{p:[d*.45,.9,-.75],r:[-1.1,0,d*.35]}));[-1,1].forEach(d=>part(new THREE.ConeGeometry(.08,.32,4),toon(0xf4fbff),b,{p:[d*.18,2.35,0]}))}}),
     act:duelAct([AT.blink,b=>AT.lines(b,5),b=>AT.rain(b,10),b=>AT.fan(b,3),AT.blink,b=>AT.ring(b)],2.4)},
-  jinjia:{duel:1,col:0xffc84a,name:'金甲老怪',line:'金甲老怪：「肉身成聖，一拳碎你的元嬰！」',rage:'金甲老怪：「金身不壞——！」',tip:'金甲老怪是體修，近身砸地很痛，看到圈圈就退開！',r:1.5,dmg:14,spd:2.2,keep:0,
+  jinjia:{duel:1,col:0xffc84a,name:'金甲老怪',line:'金甲老怪：「肉身成聖，一拳碎你的元嬰！」',rage:'金甲老怪：「金身不壞——！」',tip:'金甲老怪是體修，近身砸地很痛，看到圈圈就退開！',r:1.5,dmg:11,spd:2.2,keep:0,
     build:robed({robe:0x8a6a20,acc:0xffd86a,glow:0xffc84a,eye:0xffe08a,skin:0xc89868,em:0x3a2808,n:3,s:1.25,orb:new THREE.DodecahedronGeometry(.3),extra:(b,A)=>{const G2=toon(0xd8a83a,{emissive:0x3a2808,metalness:.6,roughness:.35});part(new THREE.BoxGeometry(1.5,1,.9),G2,b,{p:[0,1.55,0]});[-1,1].forEach(d=>{part(new THREE.SphereGeometry(.42,12,10),G2,b,{p:[d*.85,1.95,0],s:[1,.75,1]});part(new THREE.CylinderGeometry(.2,.24,.9,8),G2,b,{p:[d*.95,1.25,.15]});part(new THREE.BoxGeometry(.42,.42,.42),G2,b,{p:[d*.98,.72,.25]});part(new THREE.CylinderGeometry(.18,.22,.8,8),G2,b,{p:[d*.3,.4,0]})});part(new THREE.BoxGeometry(1.2,.16,.85),toon(0x6a1a14),b,{p:[0,1.05,0]});part(new THREE.SphereGeometry(.22,8,6),G2,b,{p:[0,2.55,0],s:[1.2,.6,1.2]})}}),
     act:duelAct([b=>AT.slam(b,5.5),AT.dash,b=>{AT.slam(b,4);act(.7,null,()=>AT.slam(b,7))},b=>AT.ring(b),AT.dash],2.3,['yaksha',3,10])},
   shenhan:{duel:1,col:0xdfe6ff,name:'沈寒',line:'沈寒：「師弟……跑。我……控制不住了。」',rage:'沈寒：「不要看我的劍——！」',tip:'師兄被血河老祖佔據了身體！他的劍影很快，別硬接。',r:1.1,dmg:13,spd:2.4,keep:2,
