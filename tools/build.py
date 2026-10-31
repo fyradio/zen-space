@@ -41,7 +41,13 @@ PAGES = [('hero.src.html', 'hero.html', 'hero.test.html', None), ('game.src.html
 
 
 def include(text):
-    return re.sub(r'/\*@include ([\w./]+)\*/', lambda m: open(os.path.join(ROOT, 'src', m.group(1)), encoding='utf8').read(), text)
+    # nested includes (e.g. arena.js pulls hero_core.js in a second time for player two) are expanded too
+    for _ in range(4):
+        new = re.sub(r'/\*@include ([\w./]+)\*/', lambda m: open(os.path.join(ROOT, 'src', m.group(1)), encoding='utf8').read(), text)
+        if new == text:
+            break
+        text = new
+    return text
 
 
 def build(src_name, out_name, test_name, page_name=None):

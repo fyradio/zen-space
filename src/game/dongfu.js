@@ -85,7 +85,7 @@ const DF=(()=>{let tab='go',libTab='sweep',tick=0,lookTab=0,lt=0,ld={g:0,x:0,b:0
       $$('#dfBody [data-ubuy]').forEach(b=>b.onclick=()=>{const u=ULTS.find(u=>u.k===b.dataset.ubuy);if(inv.stone<u.price)return;inv.stone-=u.price;save.ults.push(u.k);save.ult=u.k;writeSave();SFX.play('gold');banner('參悟大絕',u.n);render()});
       $$('#dfBody [data-skeq]').forEach(b=>b.onclick=()=>{const S=skById(b.dataset.skeq);save.sk[S.slot]=S.id;writeSave();SFX.play('ready');render()});
       $$('#dfBody [data-skbuy]').forEach(b=>b.onclick=()=>{const S=skById(b.dataset.skbuy),p=SKILL_PRICE[S.tier];if(inv.stone<p)return;inv.stone-=p;save.skOwn.push(S.id);save.sk[S.slot]=S.id;writeSave();SFX.play('gold');banner('參悟新招',S.n);render()})}
-    else if(tab==='duel'){const ok=save.realm>=15;el.innerHTML=`<div class="dfsec"><h3>鬥法台</h3><p class="tag">${ok?'三局兩勝，公平鬥法（兩邊一樣強）：護體靈光 → 肉身 → 元嬰。飛劍自動瞄準，閃身瞬間無敵。':'成嬰（元嬰初期）之後開放。'}</p>
+    else if(tab==='duel'){const ok=save.realm>=15;el.innerHTML=`<div class="dfsec"><h3>鬥法台</h3><p class="tag">${ok?'一局決勝。三層命：護體 → 肉身 → 元嬰（肉身破了元嬰會逃，追上斬掉才算贏）。對電腦：五位鬥法魔王隨機一位，操作同一般關卡，贏了算修行勝場。雙人同機：左右各一支搖桿＋「劍招」「閃身」，飛劍自動打。':'成嬰（元嬰初期）之後開放。'}</p>
         <button class="btn gold" id="duelAI" ${ok?'':'disabled'}>對電腦（贏下來算修行勝場：${save.st.duel} 場）</button>
         <button class="btn" id="duel2P" ${ok?'':'disabled'}>雙人同機（左右各一人）</button></div>`;
       $('#duelAI').onclick=()=>DUEL.open('ai');$('#duel2P').onclick=()=>DUEL.open('2p')}

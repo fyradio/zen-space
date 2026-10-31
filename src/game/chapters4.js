@@ -87,6 +87,7 @@ Object.assign(BOSSES,{
 CHC[9]={map:9,fog:0x1a1430,ground:0x2a2440,rate:.3,noElite:1,mobs:[['skel',2,0],['yaksha',1.2,0],['ghost',1,0]],elite:'skel',boss:['yinshi','xuanbing','jinjia']};
 CHC[10]={map:10,fog:0x24101a,ground:0x3a2028,rate:.3,noElite:1,mobs:[['skel',2,0],['lamp',1.2,0],['drown',1,0]],elite:'skel',boss:['jie','shenhan','xuehe']};
 CHC[11]={rate:1.6,map:0,fog:0x1a1a26,ground:0xb8b0c0,mobs:[['ghost',2,0]],elite:'skel',boss:['lantern']};
+CHC[12]={map:9,fog:0x1a1430,ground:0x2a2440,rate:0,noElite:1,mobs:[['ghost',1,0]],elite:'skel',boss:['yinshi']};// 鬥法台（對電腦）
 const ENDLESS_BOSS=['lantern','general','fox','bell','hungry','ferry','yinshi','xuanbing','jinjia','shenhan','xuehe'];
 // 無盡之夜：沒有雞啼，魔王一波一波輪番上（每波更硬），中間夾精英；倒下才結束
 function stepEndless(dt){const g=G;if(g.enNext===undefined){g.enNext=30;g.wave=0}

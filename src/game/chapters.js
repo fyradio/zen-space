@@ -1,7 +1,7 @@
 /* ================= 章節：地圖、妖怪、魔王、開場劇情 =================
    CHC[ch] = { map, fog, ground, mobs:[[種類,權重,從第幾分鐘起]], elite, boss, cut }
    難度：妖血 ×1.1^推薦境界×(1+0.08×章)；魔王血 ×1.1^推薦境界×(1+0.15×章)。 */
-const chRec=ch=>CH[ch]?CH[ch].rec:0;
+const chRec=ch=>ch===12?save.realm:CH[ch]?CH[ch].rec:0;// 12＝鬥法台：對手跟著你的境界
 const chDmg=ch=>Math.pow(1.06,chRec(ch))*(1+.12*Math.min(4,Math.max(0,ch-1)));// monsters hit harder as the recommended realm (and your own HP) grows
 const chHp=ch=>Math.pow(1.1,chRec(ch))*(1+.16*ch),chBoss=ch=>Math.pow(1.1,chRec(ch))*(1+.04*ch);
 /* ---------- 地圖 ---------- */
@@ -44,7 +44,7 @@ const MAPS={
       part(new THREE.BoxGeometry(.4,.8,.4),stone,g,{p:[0,.4,0]});part(new THREE.BoxGeometry(.6,.4,.6),stone,g,{p:[0,1,0]});part(new THREE.ConeGeometry(.5,.35,4),stone,g,{p:[0,1.38,0],r:[0,Math.PI/4,0]});HOUSES.push({x:g.position.x,z:g.position.z,r:.4})}
     for(let i=0;i<8;i++){const a=rnd()*Math.PI*2,r=20+rnd()*8;bareTree(Math.sin(a)*r,Math.cos(a)*r,1.1+rnd()*.5)}}};
 let curMap=-1;
-function buildMap(ch){if(curMap===ch)return;clearMap();(MAPS[ch]||MAPS[0])();curMap=ch;const c=CHC[ch]||CHC[0];
+function buildMap(ch){const c=CHC[ch]||CHC[0],mk=c.map??ch,key=mk+'/'+ch;if(curMap===key)return;clearMap();(MAPS[mk]||MAPS[0])();curMap=key;
   ground.material.color.set(c.ground||0xffffff);NIGHT_FOG.copy(LC(c.fog||FOGHEX));FOG.copy(NIGHT_FOG);sky.material.uniforms.bot.value.copy(NIGHT_FOG);scene.fog.color.copy(NIGHT_FOG);scene.background.copy(NIGHT_FOG)}
 /* ---------- 新妖怪 ---------- */
 const scareGeo=(()=>{const S='#a8894a',W='#6a4a2e',C='#5a4a3a',K='#141210',R='#8a2a20';

@@ -1,57 +1,92 @@
-/* ================= 鬥法台：雙人同機（左右各一組搖桿＋兩招）／對電腦 =================
-   公平鬥法（兩邊一樣強）：護體靈光 40 → 肉身 100 → 元嬰 30，三局兩勝。
-   招式：飛劍（點一下，自動瞄準對手）、瞬移閃身（往搖桿方向衝一段，瞬間無敵）。飛劍對撞會互相抵銷。 */
-const DUEL=(()=>{let ov,cv,x,W,H,st=null,raf=0,last=0;
-  const mk=(side,col)=>({side,col,x:0,y:0,sh:40,hp:100,sl:30,cdA:0,cdB:0,inv:0,jx:0,jy:0,flash:0,face:side?-1:1});
-  function build(){if(ov)return;ov=document.createElement('div');ov.id='duelOv';ov.style.cssText='position:fixed;inset:0;z-index:60;background:#0d0a1c;touch-action:none;user-select:none;-webkit-user-select:none;display:none';
-    ov.innerHTML=`<canvas style="position:absolute;inset:0;width:100%;height:100%"></canvas>
-      <button class="dbtn" data-b="1a" style="left:27%;bottom:16%">劍</button><button class="dbtn" data-b="1b" style="left:27%;bottom:44%">閃</button>
-      <button class="dbtn" data-b="2a" style="right:27%;bottom:16%">劍</button><button class="dbtn" data-b="2b" style="right:27%;bottom:44%">閃</button>
-      <button id="duelX" style="position:absolute;left:50%;transform:translateX(-50%);top:6px;padding:6px 12px;border-radius:10px;border:1px solid #fff5;background:#0008;color:#fff;font-size:15px">離開</button>
-      <div id="duelMsg" style="position:absolute;left:0;right:0;top:34%;text-align:center;color:#ffe9a0;font:900 30px/1.4 system-ui;text-shadow:0 0 12px #e8a830,0 2px 4px #000;pointer-events:none"></div>
-      <div id="duelEnd" style="display:none;position:absolute;inset:0;background:#000a;align-items:center;justify-content:center;flex-direction:column;gap:14px;color:#fff;font:700 24px system-ui"><div id="duelRes"></div><div><button class="btn gold" id="duelAgain">再來一場</button> <button class="btn" id="duelBye">回洞府</button></div></div>
-      <style>.dbtn{position:absolute;width:62px;height:62px;border-radius:50%;border:2px solid #ffe9a0;background:#2a1a4acc;color:#ffe9a0;font:900 24px system-ui;box-shadow:0 0 12px #b784ff88}.dbtn:active{background:#6a4ab0}</style>`;
-    document.body.appendChild(ov);cv=ov.querySelector('canvas');x=cv.getContext('2d');
-    ov.querySelectorAll('.dbtn').forEach(b=>b.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();if(!st)return;const p=st.p[+b.dataset.b[0]-1];b.dataset.b[1]==='a'?fire(p):dash(p)}));
-    $('#duelX').onclick=close;$('#duelBye').onclick=close;$('#duelAgain').onclick=()=>open(st.mode);
-    const joy={};ov.addEventListener('pointerdown',e=>{if(!st||e.target.tagName==='BUTTON')return;const r=cv.getBoundingClientRect(),px=(e.clientX-r.left)/r.width,py=(e.clientY-r.top)/r.height;
-      const side=px<.3?0:px>.7?1:-1;if(side<0||py<.3||(side===1&&st.mode==='ai'))return;joy[e.pointerId]={side,ox:e.clientX,oy:e.clientY}});
-    ov.addEventListener('pointermove',e=>{const j=joy[e.pointerId];if(!j||!st)return;let dx=e.clientX-j.ox,dy=e.clientY-j.oy;const d=Math.hypot(dx,dy);if(d>46){dx*=46/d;dy*=46/d}const p=st.p[j.side];p.jx=dx/46;p.jy=dy/46});
-    const up=e=>{const j=joy[e.pointerId];if(!j)return;delete joy[e.pointerId];if(st){const p=st.p[j.side];p.jx=p.jy=0}};ov.addEventListener('pointerup',up);ov.addEventListener('pointercancel',up)}
-  function open(mode){build();SFX.resume();ov.style.display='block';$('#duelEnd').style.display='none';
-    ov.querySelectorAll('[data-b^="2"]').forEach(b=>b.style.display=mode==='ai'?'none':'');
-    const r=cv.getBoundingClientRect();cv.width=W=Math.round(r.width);cv.height=H=Math.round(r.height);
-    st={mode,p:[mk(0,'#7fe3c6'),mk(1,'#ff6a5a')],bolts:[],fx:[],w:[0,0],round:1,state:'go',t:0,ai:{cd:.8,dc:0,sx:1,sy:0,st:0}};reset();BGM.play('boss');last=performance.now();cancelAnimationFrame(raf);raf=requestAnimationFrame(loop)}
-  function close(){cancelAnimationFrame(raf);st=null;if(ov)ov.style.display='none';BGM.play('home');DF.render&&DF.render()}
-  function reset(){const [a,b]=st.p;a.x=W*.2;b.x=W*.8;a.y=b.y=H*.55;for(const p of st.p){p.sh=40;p.hp=100;p.sl=30;p.cdA=p.cdB=.5;p.inv=1;p.jx=p.jy=0}st.bolts.length=0;st.state='go';st.t=0;msg(`第 ${st.round} 局`,1.2)}
-  let msgT=0;function msg(t,s){$('#duelMsg').textContent=t;msgT=s}
-  function fire(p){if(p.cdA>0||st.state!=='go')return;const o=st.p[1-p.side],dx=o.x-p.x,dy=o.y-p.y,d=Math.hypot(dx,dy)||1;p.cdA=.55;st.bolts.push({x:p.x,y:p.y,vx:dx/d*400,vy:dy/d*400,own:p.side,t:0});SFX.play('sweep')}
-  function dash(p){if(p.cdB>0||st.state!=='go')return;let dx=p.jx,dy=p.jy;if(Math.hypot(dx,dy)<.2){const o=st.p[1-p.side];dx=p.x-o.x;dy=p.y-o.y}const d=Math.hypot(dx,dy)||1;p.cdB=2.2;p.inv=.3;p.x+=dx/d*120;p.y+=dy/d*120;st.fx.push({x:p.x,y:p.y,r:10,t:0,c:p.col});SFX.play('soul')}
-  function hurt(p,d){if(p.inv>0)return;p.inv=.15;p.flash=.15;SFX.play('hurt');let s=Math.min(p.sh,d);p.sh-=s;d-=s;if(d>0){const h=Math.min(p.hp,d);p.hp-=h;d-=h}if(d>0)p.sl=Math.max(0,p.sl-d);}
-  function ai(dt){const a=st.ai,p=st.p[1],o=st.p[0];a.cd-=dt;a.dc-=dt;a.st-=dt;if(a.st<=0){a.st=.6+Math.random()*.8;a.sx=Math.random()<.5?1:-1}
-    const dx=o.x-p.x,dy=o.y-p.y,d=Math.hypot(dx,dy)||1,want=W*.3;let mx=0,my=0;if(d>want+30){mx=dx/d;my=dy/d}else if(d<want-30){mx=-dx/d;my=-dy/d}
-    mx+= -dy/d*a.sx*.8;my+=dx/d*a.sx*.8;const m=Math.hypot(mx,my)||1;p.jx=mx/m*.8;p.jy=my/m*.8;
-    if(a.cd<=0){a.cd=.9+Math.random()*.5;fire(p)}
-    for(const b of st.bolts)if(b.own===0&&Math.hypot(b.x-p.x,b.y-p.y)<110&&a.dc<=0&&p.cdB<=0&&Math.random()<.04){a.dc=.8;p.jx=-b.vy/400;p.jy=b.vx/400;dash(p)}}
-  function step(dt){const [a,b]=st.p;for(const p of st.p){p.cdA-=dt;p.cdB-=dt;p.inv-=dt;p.flash-=dt}
-    if(st.state==='go'){if(st.mode==='ai')ai(dt);
-      for(const p of st.p){p.x=Math.max(20,Math.min(W-20,p.x+p.jx*150*dt));p.y=Math.max(40,Math.min(H-20,p.y+p.jy*150*dt))}
-      for(let i=st.bolts.length-1;i>=0;i--){const bo=st.bolts[i];bo.x+=bo.vx*dt;bo.y+=bo.vy*dt;bo.t+=dt;const o=st.p[1-bo.own];let dead=bo.x<-20||bo.x>W+20||bo.y<-20||bo.y>H+20||bo.t>3;
-        if(!dead&&Math.hypot(bo.x-o.x,bo.y-o.y)<22){hurt(o,8);st.fx.push({x:bo.x,y:bo.y,r:6,t:0,c:'#ffe9a0'});dead=true}
-        if(!dead)for(let j=i-1;j>=0;j--){const c=st.bolts[j];if(c.own!==bo.own&&Math.hypot(c.x-bo.x,c.y-bo.y)<12){st.fx.push({x:bo.x,y:bo.y,r:8,t:0,c:'#fff'});st.bolts.splice(j,1);i--;dead=true;break}}
-        if(dead)st.bolts.splice(i,1)}
-      const dead=st.p.findIndex(p=>p.sl<=0);if(dead>=0){const win=1-dead;st.w[win]++;st.state='end';st.t=0;msg(`${st.mode==='ai'?(win?'電腦':'你'):(win?'右方':'左方')}贏下這一局`,1.8);SFX.play('bossDie')}}
-    else if(st.state==='end'&&(st.t+=dt)>2){if(st.w[0]>=2||st.w[1]>=2)finish();else{st.round++;reset()}}
-    if(msgT>0&&(msgT-=dt)<=0)$('#duelMsg').textContent='';st.fx.forEach(f=>f.t+=dt);st.fx=st.fx.filter(f=>f.t<.4)}
-  function finish(){st.state='over';const w=st.w[0]>=2?0:1,ai=st.mode==='ai';let t=ai?(w?'電腦勝，再接再厲':'你贏了！'):(w?'右方勝！':'左方勝！');
-    if(ai&&!w){save.st.duel++;writeSave();t+=`（累計鬥法台勝場 ${save.st.duel}）`;SFX.play('win')}$('#duelRes').textContent=t;$('#duelEnd').style.display='flex'}
-  function draw(){x.fillStyle='#0d0a1c';x.fillRect(0,0,W,H);const g=x.createRadialGradient(W/2,H/2,10,W/2,H/2,W*.6);g.addColorStop(0,'#2a1e4a');g.addColorStop(1,'#0d0a1c');x.fillStyle=g;x.fillRect(0,0,W,H);
-    x.strokeStyle='rgba(183,132,255,.45)';x.lineWidth=3;x.strokeRect(12,36,W-24,H-48);x.beginPath();x.arc(W/2,H*.55,H*.22,0,7);x.stroke();x.beginPath();x.moveTo(W/2,36);x.lineTo(W/2,H-12);x.setLineDash([6,8]);x.stroke();x.setLineDash([]);
-    for(const f of st.fx){x.strokeStyle=f.c;x.globalAlpha=1-f.t/.4;x.lineWidth=3;x.beginPath();x.arc(f.x,f.y,f.r+f.t*90,0,7);x.stroke();x.globalAlpha=1}
-    for(const b of st.bolts){x.fillStyle=b.own?'#ffb0a0':'#b0ffe8';x.shadowColor=x.fillStyle;x.shadowBlur=10;x.beginPath();x.arc(b.x,b.y,6,0,7);x.fill();x.shadowBlur=0}
-    for(const p of st.p){x.globalAlpha=p.inv>0&&p.flash<=0?.55:1;x.fillStyle=p.flash>0?'#fff':p.col;x.shadowColor=p.col;x.shadowBlur=16;x.beginPath();x.arc(p.x,p.y,17,0,7);x.fill();x.shadowBlur=0;x.fillStyle='#0d0a1c';x.beginPath();x.arc(p.x+(p.side?-5:5),p.y-3,3,0,7);x.fill();x.globalAlpha=1;
-      if(p.sh>0){x.strokeStyle='rgba(127,224,255,'+(.3+p.sh/60)+')';x.lineWidth=3;x.beginPath();x.arc(p.x,p.y,23,0,7);x.stroke()}}
-    for(const p of st.p){const bx=p.side?W-12-170:12,by=8;x.font='12px system-ui';x.fillStyle='#fff';x.fillText((st.mode==='ai'?(p.side?'電腦':'你'):(p.side?'右':'左'))+'　'+'●'.repeat(st.w[p.side])+'○'.repeat(2-st.w[p.side]),bx,by+10);
-      [[p.sh/40,'#7fe0ff',0],[p.hp/100,'#ff6a5a',1],[p.sl/30,'#ffd65a',2]].forEach(([v,c,i])=>{x.fillStyle='#fff2';x.fillRect(bx,by+16+i*7,170,5);x.fillStyle=c;x.fillRect(bx,by+16+i*7,170*Math.max(0,v),5)})}}
-  function loop(now){raf=requestAnimationFrame(loop);const dt=Math.min(.05,(now-last)/1000);last=now;if(!st)return;step(dt);draw()}
-  return{open,close}})();
+/* ================= 鬥法台（3D）=================
+   對電腦：五個鬥法魔王隨機一位，用一般關卡的操作打（G.ch===12，見 CHC[12]）。
+   雙人同機：左半邊玩家一（目前的主角）、右半邊玩家二（另一位主角，同樣有完整動作和捏臉）。
+     各一支搖桿＋「劍招」「閃身」，飛劍自動打對手；三層命：護體 → 肉身 → 元嬰（肉身破了變小元嬰，
+     12 秒內被斬掉就輸，撐過就重聚肉身回 30 血）。一局決勝，照各自境界（同一支手機＝同一個存檔，一樣強）。
+   玩家二的角色：把 hero_core.js 再引入一次（在函式裡，有自己的一份骨架、捏臉、動畫），模型搬進主場景。 */
+let HERO2=null;
+function makeHero2(){if(HERO2)return HERO2;
+  HERO2=(function(){
+/*@include hero_core.js*/
+    return {root,body,HERO,lantern,shadow,sky,scene,useChar,applyFace,applyBody,buildHair,setMode:m=>{mode=m},walk:v=>{walkPh+=v},animate:dt=>{clock+=dt;animateHero(dt)}}})();
+  const inner=HERO2.scene,main=root.parent;for(const o of [...inner.children]){if(o===HERO2.sky||o.isDirectionalLight||o.isHemisphereLight)continue;main.add(o)}
+  return HERO2}
+const DUEL=(()=>{let st=null,ov=null;const BOSSKEYS=['yinshi','xuanbing','jinjia','shenhan','xuehe'];
+  function open(m){SFX.resume();$('#startOv').classList.remove('on');if(m==='ai'){startNight(150,{ch:12,nt:0});return}start2p()}
+  // ---------- 雙人同機 ----------
+  function ui(){if(ov)return ov;ov=document.createElement('div');ov.id='duel2';ov.innerHTML=`
+    <div class="d2bar l"><b id="d2n0"></b><i class="sh"><u id="d2s0"></u></i><i class="hp"><u id="d2h0"></u></i><i class="so"><u id="d2o0"></u></i></div>
+    <div class="d2bar r"><b id="d2n1"></b><i class="sh"><u id="d2s1"></u></i><i class="hp"><u id="d2h1"></u></i><i class="so"><u id="d2o1"></u></i></div>
+    <div class="d2zone l" data-p="0"><span class="d2joy"><i></i></span></div><div class="d2zone r" data-p="1"><span class="d2joy"><i></i></span></div>
+    <button class="d2b a l" data-p="0" data-k="a">劍招</button><button class="d2b b l" data-p="0" data-k="b">閃身</button>
+    <button class="d2b a r" data-p="1" data-k="a">劍招</button><button class="d2b b r" data-p="1" data-k="b">閃身</button>
+    <button id="d2x">離開</button><div id="d2msg"></div>
+    <div id="d2end"><div id="d2res"></div><div class="row"><button class="btn gold" id="d2again">再來一局</button><button class="btn" id="d2bye">回洞府</button></div></div>`;
+    document.body.appendChild(ov);
+    const st2=document.createElement('style');st2.textContent=`#duel2{position:fixed;inset:0;z-index:40;display:none;pointer-events:none;font-family:var(--f-ui)}
+      .d2bar{position:absolute;top:calc(env(safe-area-inset-top,0px) + 8px);width:min(36vw,260px);display:grid;gap:3px}.d2bar.l{left:calc(env(safe-area-inset-left,0px) + 12px)}.d2bar.r{right:calc(env(safe-area-inset-right,0px) + 12px);text-align:right}
+      .d2bar b{font-weight:400;font-size:13px;color:#fff;text-shadow:0 1px 3px #000}.d2bar i{display:block;height:6px;border-radius:9px;background:#fff2;overflow:hidden}.d2bar i u{display:block;height:100%;width:100%}
+      .d2bar .sh u{background:#7fe0ff}.d2bar .hp u{background:#ff6a5a}.d2bar .so u{background:#ffd65a}.d2bar.r i u{margin-left:auto}
+      .d2zone{position:absolute;bottom:0;top:30%;width:44%;pointer-events:auto;touch-action:none}.d2zone.l{left:0}.d2zone.r{right:0}
+      .d2joy{position:absolute;width:110px;height:110px;margin:-55px 0 0 -55px;border-radius:50%;border:2px solid #fff4;background:#0003;display:none}.d2joy i{position:absolute;left:35px;top:35px;width:40px;height:40px;border-radius:50%;background:#fff6}
+      .d2b{all:unset;position:absolute;pointer-events:auto;width:58px;height:58px;border-radius:50%;display:grid;place-items:center;font-size:15px;color:#fff;border:2px solid;background:#0a141399;touch-action:none}
+      .d2b.a{bottom:calc(env(safe-area-inset-bottom,0px) + 18px)}.d2b.b{bottom:calc(env(safe-area-inset-bottom,0px) + 88px);width:50px;height:50px}
+      .d2b.l.a{left:calc(44% - 74px)}.d2b.l.b{left:calc(44% - 62px)}.d2b.r.a{right:calc(44% - 74px)}.d2b.r.b{right:calc(44% - 62px)}
+      .d2b.l{border-color:#7fe3c6}.d2b.r{border-color:#ff8a7a}.d2b.b{border-color:#b46cff}.d2b[disabled]{opacity:.35}
+      #d2x{all:unset;position:absolute;left:50%;top:calc(env(safe-area-inset-top,0px) + 8px);transform:translateX(-50%);pointer-events:auto;padding:5px 14px;border-radius:9px;border:1px solid #fff5;background:#0008;color:#fff;font-size:13px}
+      #d2msg{position:absolute;left:0;right:0;top:32%;text-align:center;color:#ffe9a0;font:400 30px/1.4 var(--f-title);text-shadow:0 0 12px #e8a830,0 2px 4px #000}
+      #d2end{position:absolute;inset:0;display:none;place-items:center;align-content:center;gap:14px;background:#000a;pointer-events:auto;color:#fff;font-size:22px}#d2end .row{display:flex;gap:12px}#d2end .btn{width:auto;padding:0 18px}`;document.head.appendChild(st2);
+    // 搖桿：在自己那半邊按下的位置當中心
+    ov.querySelectorAll('.d2zone').forEach(z=>{const p=+z.dataset.p,j=z.querySelector('.d2joy'),k=j.querySelector('i');let id=null,ox=0,oy=0;
+      z.addEventListener('pointerdown',e=>{if(!st||id!==null)return;id=e.pointerId;try{z.setPointerCapture(id)}catch(_){}const r=z.getBoundingClientRect();ox=e.clientX;oy=e.clientY;j.style.left=(ox-r.left)+'px';j.style.top=(oy-r.top)+'px';j.style.display='block'});
+      z.addEventListener('pointermove',e=>{if(e.pointerId!==id||!st)return;let dx=e.clientX-ox,dy=e.clientY-oy;const d=Math.hypot(dx,dy);if(d>45){dx*=45/d;dy*=45/d}k.style.transform=`translate(${dx}px,${dy}px)`;st.p[p].jx=dx/45;st.p[p].jy=dy/45});
+      const up=e=>{if(e.pointerId!==id)return;id=null;j.style.display='none';k.style.transform='';if(st){st.p[p].jx=st.p[p].jy=0}};z.addEventListener('pointerup',up);z.addEventListener('pointercancel',up)});
+    ov.querySelectorAll('.d2b').forEach(b=>b.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();if(!st||st.over)return;const P=st.p[+b.dataset.p];b.dataset.k==='a'?slash(P):blink2(P)}));
+    $('#d2x').onclick=close2;$('#d2bye').onclick=close2;$('#d2again').onclick=()=>{close2(true);start2p()};
+    addEventListener('keydown',e=>{if(!st)return;const k=e.key.toLowerCase();if(k==='f')slash(st.p[0]);if(k==='g')blink2(st.p[0]);if(k==='.')slash(st.p[1]);if(k==='/')blink2(st.p[1])});
+    return ov}
+  function mkP(i,api,col,name){return {i,api,col,name,x:i?4:-4,z:0,rot:i?-Math.PI/2:Math.PI/2,jx:0,jy:0,sh:30,hp:100,soul:0,soulT:0,cdA:1,cdB:0,swT:.5+i*.3,inv:0,cast:0}}
+  function start2p(){const H2=makeHero2();ui();leaveSky();buildMap(9);resetWorld();G=null;med=null;bannerT=0;$('#banner').classList.remove('on');sayT=0;$('#bubble').classList.remove('on');$('#pillBtn').hidden=true;$('#bossBox').classList.remove('on');$('#endOv').classList.remove('on');boss.alive=false;boss.g.visible=false;clearHZ();
+    const other=1-who;H2.useChar(other);H2.applyFace({g:1,x:1});H2.applyBody();H2.buildHair();H2.root.visible=H2.lantern.visible=H2.shadow.visible=true;
+    st={p:[mkP(0,null,0x7fe3c6,CHARS[who].n),mkP(1,H2,0xff8a7a,CHARS[other].n)],shots:[],over:false,t:0};
+    $('#d2n0').textContent='左・'+st.p[0].name;$('#d2n1').textContent=st.p[1].name+'・右';
+    ov.style.display='block';$('#d2end').style.display='none';$('#hud').hidden=$('#skills').hidden=$('#joy').hidden=true;BGM.play('boss');msg('鬥法開始！',1.6);D2.on=true}
+  function close2(again){D2.on=false;st=null;if(ov)ov.style.display='none';if(HERO2){HERO2.root.visible=HERO2.lantern.visible=HERO2.shadow.visible=false}root.scale.setScalar(1);body.visible=true;
+    if(again===true)return;BGM.play('home');$('#startOv').classList.add('on');buildMap(0);DF.render()}
+  let msgT=0;function msg(t,s){$('#d2msg').textContent=t;msgT=s}
+  const foe=P=>st.p[1-P.i];
+  function hurtP(P,d){if(st.over||P.inv>0)return;P.inv=.18;SFX.play('hurt');buzz(20);
+    if(P.soul){P.soul-=d;if(P.soul<=0){P.soul=0;win(foe(P))}return}
+    const s=Math.min(P.sh,d);P.sh-=s;d-=s;if(d<=0)return;P.hp-=d;
+    if(P.hp<=0){P.hp=0;P.soul=25;P.soulT=12;msg(`${P.name}肉身被毀，元嬰出竅！`,2);SFX.play('boss');shake=.6}}
+  function slash(P){if(P.cdA>0||P.soul||st.over)return;P.cdA=3.5;P.cast=.45;const Q=foe(P),a=Math.atan2(Q.x-P.x,Q.z-P.z),L=10,W=1.6;P.rot=a;SFX.play('beam');
+    const m=new THREE.Mesh(beamGeo,new THREE.MeshBasicMaterial({map:wBeamTex,color:P.col,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide}));m.position.set(P.x,.9,P.z);m.rotation.y=a;m.scale.set(W,1,L);scene.add(m);
+    let t=0;st.fx=st.fx||[];st.fx.push({t:0,life:.4,f:k=>{m.material.opacity=1-k;m.scale.x=W*(1+k*.5)},end:()=>{scene.remove(m);m.material.dispose()}});
+    if(inLine(Q.x,Q.z,P.x,P.z,a,L,W,.4))hurtP(Q,16)}
+  function blink2(P){if(P.cdB>0||st.over)return;P.cdB=3;let dx=P.jx,dz=P.jy;if(Math.hypot(dx,dz)<.2){const Q=foe(P);dx=P.x-Q.x;dz=P.z-Q.z}const d=Math.hypot(dx,dz)||1,sx=P.x,sz=P.z;P.x+=dx/d*4;P.z+=dz/d*4;P.inv=.25;SFX.play('soul');
+    const r=Math.hypot(P.x,P.z);if(r>ARENA-1.5){P.x*=(ARENA-1.5)/r;P.z*=(ARENA-1.5)/r}for(let i=0;i<6;i++){const k=i/5;fx({p:tmp.set(sx+(P.x-sx)*k,.8,sz+(P.z-sz)*k),col:0xb46cff,add:true,life:.4,s0:1,s1:.2,op:.9,vy:.3})}}
+  function win(P){st.over=true;msg('',0);SFX.play('win');$('#d2res').textContent=`${P.i?'右方':'左方'}・${P.name} 勝！`;setTimeout(()=>{if(st)$('#d2end').style.display='grid'},1400)}
+  function step(dt){if(!st)return;st.t+=dt;if(msgT>0&&(msgT-=dt)<=0)$('#d2msg').textContent='';
+    for(const P of st.p){P.cdA-=dt;P.cdB-=dt;P.inv-=dt;P.cast-=dt;
+      if(!st.over){const sp=(P.soul?4.4:3.4),mv=Math.hypot(P.jx,P.jy)>.15;if(mv){P.x+=P.jx*sp*dt;P.z+=P.jy*sp*dt;P.rot=angLerp(P.rot,Math.atan2(P.jx,P.jy),1-Math.exp(-dt*12))}
+        const r=Math.hypot(P.x,P.z);if(r>ARENA-1.5){P.x*=(ARENA-1.5)/r;P.z*=(ARENA-1.5)/r}for(const h of HOUSES){const dx=P.x-h.x,dz=P.z-h.z,d=Math.hypot(dx,dz),rr=h.r+.3;if(d<rr&&d>1e-4){P.x=h.x+dx/d*rr;P.z=h.z+dz/d*rr}}
+        if(P.soul){P.soulT-=dt;if(P.soulT<=0){P.soul=0;P.hp=30;msg(`${P.name}重聚肉身！`,1.6)}}
+        P.swT-=dt;if(P.swT<=0&&!P.soul){P.swT=.7;const Q=foe(P),a=Math.atan2(Q.x-P.x,Q.z-P.z);st.shots.push({x:P.x,z:P.z,vx:Math.sin(a),vz:Math.cos(a),o:P,t:0,s:spr(P.col,.6)})}
+        const m=mv?'walk':P.cast>0?'cast':'idle';
+        if(P.i===0){mode=m;if(mv)walkPh+=dt*7;root.position.set(P.x,0,P.z);root.rotation.y=P.rot;root.scale.setScalar(P.soul?.55:1)}
+        else{P.api.setMode(m);if(mv)P.api.walk(dt*7);P.api.root.position.set(P.x,0,P.z);P.api.root.rotation.y=P.rot;P.api.root.scale.setScalar(P.soul?.55:1)}
+        if(P.soul&&!simming&&Math.random()<.3)fx({p:tmp.set(P.x,.8,P.z),col:0xffd86a,add:true,life:.5,s0:.8,s1:.2,op:.8,vy:.4})}}
+    for(let i=st.shots.length-1;i>=0;i--){const s=st.shots[i],Q=foe(s.o);s.t+=dt;const ax=Q.x-s.x,az=Q.z-s.z,l=Math.hypot(ax,az)||1;s.vx+=(ax/l-s.vx)*Math.min(1,dt*2.2);s.vz+=(az/l-s.vz)*Math.min(1,dt*2.2);const n=Math.hypot(s.vx,s.vz)||1;s.vx/=n;s.vz/=n;
+      s.x+=s.vx*12*dt;s.z+=s.vz*12*dt;s.s.position.set(s.x,1,s.z);let dead=s.t>2.2;
+      if(l<.6&&!st.over){hurtP(Q,4);dead=true;fx({p:tmp.set(s.x,1,s.z),col:s.o.col,add:true,life:.25,s0:.8,s1:1.6,op:.9,vy:0})}
+      for(let j=i-1;j>=0&&!dead;j--){const o=st.shots[j];if(o.o!==s.o&&(o.x-s.x)**2+(o.z-s.z)**2<.3){dead=true;o.t=99;fx({p:tmp.set(s.x,1,s.z),col:0xffffff,add:true,life:.25,s0:.6,s1:1.4,op:.9,vy:0})}}
+      if(dead){unspr(s.s);st.shots.splice(i,1)}}
+    if(st.fx)for(let i=st.fx.length-1;i>=0;i--){const f=st.fx[i];f.t+=dt;f.f(Math.min(1,f.t/f.life));if(f.t>=f.life){f.end();st.fx.splice(i,1)}}
+    for(const P of st.p){const k=P.i;$('#d2s'+k).style.width=(P.sh/30*100)+'%';$('#d2h'+k).style.width=(P.hp)+'%';$('#d2o'+k).style.width=(P.soul/25*100)+'%'}
+    ov.querySelectorAll('.d2b').forEach(b=>{const P=st.p[+b.dataset.p];b.disabled=(b.dataset.k==='a'?P.cdA>0||P.soul:P.cdB>0)})}
+  // 鏡頭：兩人中點、拉遠到兩個都框得進來
+  function cam(dt){if(!st)return;const [a,b]=st.p,mx=(a.x+b.x)/2,mz=(a.z+b.z)/2,sep=Math.hypot(a.x-b.x,a.z-b.z),D=Math.min(14,Math.max(6.5,sep*.8+4.5)),P=.74,k=1-Math.exp(-dt*4);
+    camT.lerp(tmp.set(mx,.6,mz),k);camD=lerp(camD,D,k);camera.position.set(camT.x,camT.y+Math.sin(P)*camD,camT.z+Math.cos(P)*camD);camera.lookAt(camT);camera.updateMatrixWorld();sky.position.copy(camera.position)}
+  if(HERO2===null){}
+  return {open,step,cam,get on(){return D2.on}}})();
+const D2={on:false};
