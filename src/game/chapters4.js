@@ -95,6 +95,15 @@ function stepEndless(dt){const g=G;if(g.enNext===undefined){g.enNext=30;g.wave=0
   if(g.enOn&&!boss.alive){g.enOn=false;g.enNext=g.t+25;g.enElite=g.t+12}
   if(g.enElite&&g.t>=g.enElite){g.enElite=0;startElite()}}
 function endlessPick(){const m=Math.floor(Math.random()*6),src=CHC[m];Object.assign(CHC[11],{map:m,fog:src.fog,ground:src.ground,mobs:src.mobs.concat([['skel',1,2]]),elite:src.elite});curMap=-1}
+// 無盡之夜：打到一半按「飛」御劍上天（雲海、天上的妖），按「落」回地面；魔王在場時不能切
+CHC[14]={sky:1,rate:1.6,map:6,mobs:[['bird',2,0]],elite:'crow'};
+function endlessFly(){const g=G;if(!g||!g.endless||g.over||g.paused)return;if(boss.alive){say('魔王還在，先斬了牠再走！',2);return}
+  if((g.flyCd||0)>g.t)return;g.flyCd=g.t+3;
+  for(const e of enemies)if(!e.dead&&!e.elite){e.dead=true;if(!simming)fx({p:tmp.set(e.x,.6,e.z),col:0xcfe8ff,add:true,life:.4,s0:.4,s1:1.4,op:.7,vy:.5})}clearHZ();
+  const up=!g.sky;fx({p:tmp.set(HERO.pos.x,1,HERO.pos.z),col:up?0x9fe8ff:0xffe9a0,add:true,life:.6,s0:1,s1:6,op:.9,vy:0});shake=Math.max(shake,.4);SFX.play('ult');
+  if(up){const m=6+Math.floor(Math.random()*3),src=CHC[m];Object.assign(CHC[14],{map:m,fog:src.fog,ground:src.ground,mobs:src.mobs,elite:src.elite});curMap=-1;buildMap(14);g.C=CHC[14];g.sky=true;g.head=root.rotation.y;g.skyCam=0;g.camAuto=false;banner('御劍升空','搖桿轉向，一直往前飛')}
+  else{leaveSky();curMap=-1;buildMap(11);g.C=null;g.sky=false;g.vx=g.vz=0;root.position.set(0,0,0);banner('落地','回到地上')}
+  $('#flyBtn').textContent=g.sky?'落':'飛';WARM.redo()}
 // ---------- 元嬰技能組 ----------
 const SOUL_LV=['範圍 +30%、傷害 +30%','雙斬：回頭再斬一次','斬得更重，斬完回復一成生命'];
 // 元神斬：主角身上站出金色虛影，揮一把巨大金劍橫掃一圈，地上留下金色劍痕；二段斬反手再揮

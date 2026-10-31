@@ -16,7 +16,7 @@ const SHIELD=(()=>{const add=(c,op)=>new THREE.MeshBasicMaterial({color:c,transp
     forms.push({n:'玄鐵盾',g,col:0x9aa4b0,update(fr,crit,t,dt){arm.rotation.y+=dt*1.6;const e=fr>.5?0:fr>.2?.35:.6*(crit?.5+.5*Math.abs(Math.sin(t*14)):1);iron.emissive.copy(fr>.2?ORANGE:RED).multiplyScalar(e);cr.material.opacity=fr>.5?0:fr>.2?.4:.85;cr.material.color.copy(fr>.2?ORANGE:RED);ring.material.color.set(fr>.5?0x9aa4b0:fr>.2?0xff6a10:0xff3a2a)}})}
   // 1 金鐘（原本的）
   {const g=new THREE.Group();scene.remove(bellMesh);bellMesh.visible=true;bellMesh.position.set(0,0,0);g.add(bellMesh);
-    forms.push({n:'金鐘',g,col:0xffd65a,update(fr,crit,t,dt){bellMesh.rotation.y+=dt;bellMesh.material.color.copy(fr>.5?BELL_C[2]:fr>.2?BELL_C[1]:BELL_C[0]);
+    forms.push({n:'金鐘罩',g,col:0xffd65a,update(fr,crit,t,dt){bellMesh.rotation.y+=dt;bellMesh.material.color.copy(fr>.5?BELL_C[2]:fr>.2?BELL_C[1]:BELL_C[0]);
       bellMesh.material.opacity=(crit?.32+Math.abs(Math.sin(t*14))*.25:.28+Math.sin(t*4)*.06);bellCrack.material.opacity=fr>.5?0:fr>.2?.35:.75*(crit?.6+.4*Math.abs(Math.sin(t*14)):1);bellCrack.material.color.copy(bellMesh.material.color)}})}
   // 2 八卦玉璧罩
   {const g=new THREE.Group(),J=add(0x7fffd0,.22),dome=new THREE.Mesh(new THREE.SphereGeometry(1.15,28,14,0,Math.PI*2,0,Math.PI/2),J);g.add(dome);

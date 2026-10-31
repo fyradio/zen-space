@@ -1,6 +1,6 @@
 /* ================= 第 6～8 章：御劍天空篇（雲海、雷澤、天河）=================
-   主角御劍自由飛（跟地面一樣用搖桿），腳下是會流動的雲海、遠處有山尖；世界無邊界，雲、山跟著主角循環。
-   鏡頭預設「自動運鏡」：側面低角、背後追尾、斜前方、高空輪流，有預警時拉高；按「視」可切回固定視角。 */
+   主角御劍一直往前飛，搖桿轉向（人物轉向、鏡頭跟著轉），推越滿飛越快；腳下是會流動的雲海、遠處有山尖；世界無邊界，雲、山跟著主角循環。
+   鏡頭預設「追尾」，按「視」換側面／斜前／高空／自動運鏡（輪流換角度，有預警時拉高）。 */
 const cloudTexCache={};
 function cloudTex(key,base,hi,deep,spark){if(cloudTexCache[key])return cloudTexCache[key];const c=document.createElement('canvas');c.width=c.height=512;const x=c.getContext('2d');
   x.fillStyle=base;x.fillRect(0,0,512,512);
@@ -28,13 +28,21 @@ function stepSky(dt){const hx=HERO.pos.x,hz=HERO.pos.z,P=mapG.userData.puffs||[]
   if(mapG.userData.stars)mapG.userData.stars.position.set(hx,0,hz);
   fogs.forEach((m,i)=>{m.position.x=hx+fogP0[i].x;m.position.z=hz+fogP0[i].z});moon.position.set(hx+moonP0.x,moonP0.y,hz+moonP0.z);
   if(mapG.userData.stormy&&!simming&&Math.random()<dt*.6){const a=Math.random()*6.28,rr=14+Math.random()*30,x=hx+Math.sin(a)*rr,z=hz+Math.cos(a)*rr;boltAt(x,z,0,0,0xc8b8ff,.12,16);hemi.intensity=1.1;act(.12,null,()=>{hemi.intensity=.55})}}
-function leaveSky(){ground.position.set(0,0,0);if(ground.material.map!==groundTex){ground.material.map=groundTex;ground.material.needsUpdate=true}fogs.forEach((m,i)=>m.position.copy(fogP0[i]));moon.position.copy(moonP0);root.position.y=0}
+function leaveSky(){root.rotation.z=0;ground.position.set(0,0,0);if(ground.material.map!==groundTex){ground.material.map=groundTex;ground.material.needsUpdate=true}fogs.forEach((m,i)=>m.position.copy(fogP0[i]));moon.position.copy(moonP0);root.position.y=0}
 // 自動運鏡：每 8 秒換一個角度；有預警或魔王出招時拉高看清楚
 const SKYSHOTS=[{n:'側面',yaw:Math.PI/2,P:.26,D:7.2},{n:'追尾',yaw:Math.PI,P:.34,D:6.8},{n:'斜前',yaw:Math.PI*.22,P:.4,D:7.6},{n:'高空',yaw:null,P:.9,D:12},{n:'另側',yaw:-Math.PI/2,P:.3,D:7.4}];
 function skyShot(dt){const g=G;g.shotT=(g.shotT||0)+dt;if(g.shotT>8){g.shotT=0;g.shot=((g.shot||0)+1)%SKYSHOTS.length}
   const danger=warnPool.some(w=>w.on)||HZ.length>0;const S=danger?{yaw:null,P:.82,D:11.5}:SKYSHOTS[g.shot||0];
   return {P:S.P,D:S.D,yaw:S.yaw===null?null:root.rotation.y+S.yaw}}
-function cycleCam(){if(G&&G.sky){if(G.camAuto){G.camAuto=false;setCam(0)}else if(camIdx===CAMS.length-1){G.camAuto=true;if(!G.over)banner('自動運鏡','視角')}else setCam(camIdx+1)}else setCam(camIdx+1)}
+const SKYCAMS=[{n:'追尾',yaw:Math.PI,P:.4,D:7.2},{n:'側面',yaw:Math.PI/2,P:.24,D:7},{n:'斜前',yaw:Math.PI*.24,P:.36,D:7.4},{n:'高空',yaw:Math.PI,P:.9,D:12}];
+function skyFixed(){const S=SKYCAMS[G.skyCam||0];return {P:S.P,D:S.D,yaw:root.rotation.y+S.yaw}}
+function cycleCam(){if(G&&G.sky){if(G.camAuto){G.camAuto=false;G.skyCam=0}else if(G.skyCam===SKYCAMS.length-1)G.camAuto=true;else G.skyCam++;if(!G.over)banner(G.camAuto?'自動運鏡':SKYCAMS[G.skyCam].n,'視角')}else setCam(camIdx+1)}
+// 御劍操控：一直往前飛；搖桿的方向＝相對於目前航向要轉去的方向（往左推就一直左轉，往下推就迴轉）
+function skySteer(g,dt,inp,moving){let want=g.head;if(moving)want=g.auto?Math.atan2(inp.x,inp.y):g.head+Math.atan2(inp.x,-inp.y);
+  const prev=g.head;g.head=angLerp(g.head,want,1-Math.exp(-dt*2.2));const turn=(g.head-prev+Math.PI*3)%(Math.PI*2)-Math.PI;
+  const sp=g.s.move*(.85+.35*(moving?inp.l:0))*(g.slowT>0?.5:1)*(g.rootT>0?.35:1)*(g.medit>0?.3:1);g.vx=Math.sin(g.head)*sp;g.vz=Math.cos(g.head)*sp;
+  root.position.x+=g.vx*dt;root.position.z+=g.vz*dt;root.rotation.y=g.head;root.rotation.z=angLerp(root.rotation.z,Math.max(-.35,Math.min(.35,dt>0?-turn/dt*.12:0)),1-Math.exp(-dt*5));
+  g.walked+=sp*dt;if(g.walked>=2.4){g.walked=0;qiBurst()}if(moving){g.stand=0}else{g.stand+=dt;g.standQi=(g.standQi||0)+dt;if(g.standQi>=1.8){g.standQi=0;qiBurst()}}}
 // ---------- 新妖 ----------
 const wingBody=(B,W,E,s=1)=>[{g:S0,c:B,p:[0,.7,0],s:[.18*s,.16*s,.3*s]},{g:S0,c:B,p:[0,.78,.28*s],s:[.1*s,.1*s,.12*s]},{g:cone(.04*s,.005,.16*s,5),c:E,p:[0,.76,.42*s],r:[Math.PI/2,0,0]},
   {g:B0,c:W,p:[-.4*s,.78,0],s:[.6*s,.03,.3*s],r:[0,0,.25]},{g:B0,c:W,p:[.4*s,.78,0],s:[.6*s,.03,.3*s],r:[0,0,-.25]},{g:cone(.1*s,.005,.4*s,4),c:B,p:[0,.7,-.4*s],r:[-Math.PI/2,0,0]},{g:S0,c:'#ff2',p:[-.05*s,.82,.34*s],s:[.025,.025,.02]},{g:S0,c:'#ff2',p:[.05*s,.82,.34*s],s:[.025,.025,.02]}];
@@ -94,6 +102,10 @@ Object.assign(BOSSES,{
 CHC[6]={map:6,sky:1,fog:0x7a94b4,ground:0x9aa6b8,mobs:[['bird',2.4,0],['crow',1.6,.5],['ghost',.8,0],['cloud',1,3]],elite:'crow',boss:'nine'};
 CHC[7]={map:7,sky:1,fog:0x2a2840,ground:0x5a5272,mobs:[['crow',2.6,0],['cloud',1.8,.5],['bird',1.2,0],['tmq',.8,4]],elite:'cloud',boss:'kui'};
 CHC[8]={map:8,sky:1,fog:0x1a2a54,ground:0x55658f,mobs:[['jiaoling',2.4,0],['tmq',1.8,.5],['bird',1.2,0],['crow',1,3]],elite:'tmq',boss:'dragon'};
+['nine','kui','dragon'].forEach(k=>{BOSSES[k].skyAI=1});// 天空篇魔王自己會繞著主角盤旋
+// 第十章夜三：渡劫長征最後一段飛上劫雲，在天上跟老祖鬥法（章節還是 10，只是地圖和小妖換成天上的）
+MAPS[13]=()=>skyMap({key:13,base:'#4a2a3a',hi:'rgba(230,150,110,A)',deep:'rgba(30,8,20,A)',spark:'#ffd8a0',puff:0xc87a6a,rock:0x2a1622,snow:0xe0a080,stormy:1});
+CHC[13]={map:13,sky:1,fog:0x3a1a28,ground:0x9a6a70,rate:.3,noElite:1,mobs:[['crow',2,0],['cloud',1.2,0],['tmq',1,0]],elite:'tmq'};
 // ---------- 劍氣貫日（第七章大絕）：全畫面的巨大劍氣長虹 ----------
 function sunCast(A){const a0=Math.atan2(A.dir[0],A.dir[1]),hx=HERO.pos.x,hz=HERO.pos.z,L=18,W=5,dmg=swordDmg()*95,dx=Math.sin(a0),dz=Math.cos(a0);G.ultBoss=0;G.slow=.5;shake=Math.max(shake,.7);SFX.play('ult');buzz(70);
   const u=$('#ultFx');u.classList.remove('on');void u.offsetWidth;u.classList.add('on');banner('劍氣貫日','大絕',true);
