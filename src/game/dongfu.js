@@ -9,13 +9,18 @@ const RECIPES=[
   {k:'ningdan',n:'凝丹靈液',d:'突破結丹必備',need:{shen:2,yaodan:3},st:'ningdan'},
   {k:'huaying',n:'化嬰丹',d:'突破元嬰必備',need:{shen:3,yaodan:5},st:'huaying'}];
 const ULTS=[{k:'wan',n:'萬劍歸宗',ch:0,d:'金色劍陣，萬劍從天而降'},{k:'fire',n:'三昧真火',ch:1,d:'扇形火海，燒一陣子'},{k:'thunder9',n:'九天神雷',ch:3,d:'超大範圍，紫金天雷連劈'},
-  {k:'bagua',n:'八卦封妖陣',ch:5,d:'把妖吸進八卦陣定住再引爆'},{k:'sun',n:'劍氣貫日',ch:7,d:'全畫面的巨大劍氣長虹'},{k:'yuanying',n:'元嬰出竅',ch:9,d:'元嬰化身替你斬妖 10 秒'}];
+  {k:'bagua',n:'八卦封妖陣',ch:5,d:'把妖吸進八卦陣定住再引爆'},{k:'sun',n:'劍氣貫日',ch:7,d:'全畫面的巨大劍氣長虹'},{k:'yuanying',n:'元嬰出竅',ch:9,d:'頭頂飛出金色小元嬰替你斬妖，本體打坐無敵'},
+  {k:'bamboo',n:'萬竹穿心',ch:2,d:'地面竄出一大片竹刺，一圈一圈往外'},{k:'parade',n:'百鬼夜行',ch:4,d:'一列友善的鬼燈籠遊行，沿路燒妖'},{k:'swordform',n:'九霄御劍',ch:6,d:'化身飛劍在全場來回穿梭 4 秒'},
+  {k:'galaxy',n:'星河倒懸',ch:8,d:'天河的水從天倒灌，大範圍沖刷加緩速'},{k:'jieyin',n:'天劫引',ch:10,d:'引九重雷劫劈全場'},
+  {k:'lamps',n:'燈陣',ch:-1,price:3000,d:'七盞燈圍成陣：陣內妖持續燒、你回血'},{k:'timestop',n:'光陰凝',ch:-1,price:5000,d:'全場妖定住 3 秒'},
+  {k:'fashen',n:'百丈法相',ch:-2,d:'身後升起十倍高的金色法相，一巴掌按下全場',lockTxt:'化神後解鎖'}].sort((a,b)=>(a.ch<0?99:a.ch)-(b.ch<0?99:b.ch));
 const CH=[{n:'序章',p:'白石村',rec:0},{n:'第一章',p:'荒村夜',rec:0},{n:'第二章',p:'竹林小徑',rec:3},{n:'第三章',p:'古寺',rec:6},{n:'第四章',p:'鬼市',rec:10},{n:'第五章',p:'黃泉渡口',rec:11},
   {n:'第六章',p:'雲海',rec:12},{n:'第七章',p:'雷澤',rec:13},{n:'第八章',p:'天河',rec:14},{n:'第九章',p:'九霄魔域',rec:15},{n:'第十章',p:'渡劫長征',rec:17},{n:'無盡之夜',p:'無盡',rec:17}];
 const NIGHTS=['夜一・一般','夜二・快攻','夜三・圍城'];
 let CH_READY=12;// how many chapters are playable so far (the rest show 製作中)
 save.inv=Object.assign({stone:0,seed:{ning:3,chi:1,shen:0},herb:{ning:0,chi:0,shen:0},pill:{hui:1,juqi:0,zhuji:0,ningdan:0,huaying:0},yaodan:0,paper:0},save.inv||{});
-save.garden=save.garden||[null,null,null,null];save.won=save.won||{};if(save.won['10-2']&&!save.ending){save.ending=1;if((save.realm||0)<18)save.realm=18}// 舊存檔：打贏過老祖就補開結局、無盡之夜、化神
+save.garden=save.garden||[null,null,null,null];save.won=save.won||{};save.ults=save.ults||['wan'];if((save.realm||0)>=18&&!save.ults.includes('fashen'))save.ults.push('fashen');for(const u of ULTS)if(u.ch>0&&!save.ults.includes(u.k)&&[0,1,2].some(n=>save.won[`${u.ch}-${n}`]))save.ults.push(u.k);// 舊存檔補發已打贏章節的大絕
+if(save.won['10-2']&&!save.ending){save.ending=1;if((save.realm||0)<18)save.realm=18}// 舊存檔：打贏過老祖就補開結局、無盡之夜、化神
 save.ults=save.ults||['wan'];save.ult=save.ult||'wan';save.lastSeen=save.lastSeen||Date.now();
 const chUnlocked=i=>i===0||(i===11?!!save.ending:false)||i!==11&&[0,1,2].some(n=>save.won[`${i-1}-${n}`]);
 const DF=(()=>{let tab='go',libTab='sweep',tick=0,lookTab=0,lt=0,ld={g:0,x:0,b:0,h:0};
@@ -69,7 +74,7 @@ const DF=(()=>{let tab='go',libTab='sweep',tick=0,lookTab=0,lt=0,ld={g:0,x:0,b:0
     else if(tab==='lib'){grantSkills();const LT=[['sweep','近身'],['beam','方向'],['thunder','自動'],['ult','大絕']],TN=['煉氣','築基','結丹','元嬰'],TR=[0,9,12,15],tier=skillTier();
       let h=`<div class="libtabs">${LT.map(([k,n])=>`<button data-lt="${k}" aria-pressed="${libTab===k}">${n}</button>`).join('')}</div>`;
       if(libTab==='ult'){h+=ULTS.map(u=>{const has=save.ults.includes(u.k),buy=!has&&u.price&&(!u.need||u.need()),lock=!has&&!buy;
-          return `<div class="ultrow"><button class="ultpick${save.ult===u.k?' on':''}" data-ult="${u.k}" ${has?'':'disabled'}><b>${u.n}</b><span>${has?u.d:u.price?(u.need&&!u.need()?u.lockTxt:u.d):`打贏${CH[u.ch].n}解鎖`}</span></button>${buy?`<button class="btn${inv.stone>=u.price?' go':''}" data-ubuy="${u.k}" ${inv.stone>=u.price?'':'disabled'}>參悟 ${u.price}</button>`:''}</div>`}).join('')}
+          return `<div class="ultrow"><button class="ultpick${save.ult===u.k?' on':''}" data-ult="${u.k}" ${has?'':'disabled'}><b>${u.n}</b><span>${has?u.d:u.lockTxt?u.lockTxt+'：'+u.d:u.price?u.d:`打贏${CH[u.ch].n}解鎖：${u.d}`}</span></button>${buy?`<button class="btn${inv.stone>=u.price?' go':''}" data-ubuy="${u.k}" ${inv.stone>=u.price?'':'disabled'}>參悟 ${u.price}</button>`:''}</div>`}).join('')}
       else{h+=`<p class="tag">每格三種招，按一下換上；高一個大境界的招強 1.3 倍。到境界送預設招，其他用靈石參悟。</p>`;
         for(let t=0;t<4;t++){const list=SKILL_LIB[libTab].filter(S=>S.tier===t);h+=`<h3 class="libh">${TN[t]}${t>tier?`<small>（${REALMS[TR[t]]}開放）</small>`:''}</h3><div class="libgrid">`+list.map(S=>{const own=save.skOwn.includes(S.id),on=save.sk&&save.sk[libTab]===S.id,can=t<=tier,c='#'+S.col.toString(16).padStart(6,'0');
             const text=libTab==='beam'?[0,1,2].map(i=>beamText(S,i)).join(' → '):(S.lv?S.lv.join(' → '):'');

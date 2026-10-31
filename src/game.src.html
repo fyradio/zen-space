@@ -803,6 +803,7 @@ function updSkillUI(){for(const k in SK){const b=skBtn[k];let p,txt='';
 /*@include game/aux.js*/
 /*@include game/arena.js*/
 /*@include game/skilllib.js*/
+/*@include game/ults2.js*/
 
 /* ================= 狀態 ================= */
 const SAVE_KEY='zk-game-v1';
@@ -1096,7 +1097,7 @@ function resetWorld(){corpses.length=0;let guard=0;while(acts.length&&guard++<50
 function endNight(win,gaveUp=false){if(G.over)return;G.over=true;G.paused=true;cancelAim();showAim();
   // 修行進度: kills / boss / elite / dawn count toward the next breakthrough; a lost night counts half the kills
   const full=G.bossKilled&&boss.def&&boss.def.duel&&boss.fled&&boss.hp<=0;const stone=Math.round((G.kills/8+(G.bossKilled?30:0)+(G.eliteKilled?10:0)+(full?40:0))*(win||G.endless?1:.5)*(1+G.nt*.25));save.inv.stone+=stone;if(G.bossKilled)save.inv.yaodan+=full?2:1;G.reward=stone;
-  if(win&&G.ch===10&&G.nt===2&&(G.bossKilled||boss.fled)){save.ending=1;if(save.realm<18){save.realm=18;G.huashen=true}}if(G.ch===11){save.board=(save.board||[]).concat([{k:G.kills,b:G.bossN||0,t:Math.round(G.t),d:new Date(Date.now()-new Date().getTimezoneOffset()*60000).toISOString().slice(0,10)}]).sort((a,b)=>b.k-a.k).slice(0,5)}
+  if(win&&G.ch===10&&G.nt===2&&(G.bossKilled||boss.fled)){save.ending=1;if(save.realm<18){save.realm=18;G.huashen=true}if(!save.ults.includes('fashen'))save.ults.push('fashen')}if(G.ch===11){save.board=(save.board||[]).concat([{k:G.kills,b:G.bossN||0,t:Math.round(G.t),d:new Date(Date.now()-new Date().getTimezoneOffset()*60000).toISOString().slice(0,10)}]).sort((a,b)=>b.k-a.k).slice(0,5)}
   let newUlt=null;if(win){save.won[`${G.ch}-${G.nt}`]=1;const u=ULTS.find(u=>u.ch===G.ch&&!save.ults.includes(u.k)&&u.ch>0);if(u){save.ults.push(u.k);newUlt=u}}
   const st=save.st;st.kills+=Math.round(G.kills*(win||G.endless?1:.5));if(G.bossKilled)st.boss+=G.endless?(G.bossN||0):1;if(G.eliteKilled)st.elite++;if(win)st.wins++;st.best=Math.max(st.best,G.kills);
   save.nights++;if(win)save.wins++;save.best=Math.max(save.best,G.kills);writeSave();$('#breakBtn').hidden=true;
