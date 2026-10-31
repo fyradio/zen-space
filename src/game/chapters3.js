@@ -11,10 +11,10 @@ MAPS[8]=()=>{skyMap(0x8aa4d8,0,false);for(const p of mapG.userData.puffs)if(!p.u
 const fogP0=fogs.map(m=>m.position.clone()),moonP0=moon.position.clone(),GSNAP=160/22;
 function stepSky(dt){const hx=HERO.pos.x,hz=HERO.pos.z,P=mapG.userData.puffs||[];
   ground.position.set(Math.round(hx/GSNAP)*GSNAP,0,Math.round(hz/GSNAP)*GSNAP);
-  for(const p of P){if(p.position.z<hz-30)p.position.z+=70;else if(p.position.z>hz+40)p.position.z-=70;if(p.position.x<hx-35)p.position.x+=70;else if(p.position.x>hx+35)p.position.x-=70}
+  for(const p of P){if(p.position.z<hz-35)p.position.z+=70;else if(p.position.z>hz+35)p.position.z-=70;if(p.position.x<hx-35)p.position.x+=70;else if(p.position.x>hx+35)p.position.x-=70}
   if(mapG.userData.stars)mapG.userData.stars.position.set(hx,0,hz);
   fogs.forEach((m,i)=>{m.position.x=hx+fogP0[i].x;m.position.z=hz+fogP0[i].z});moon.position.set(hx+moonP0.x,moonP0.y,hz+moonP0.z);
-  if(mapG.userData.stormy&&!simming&&Math.random()<dt*.5){const x=hx+(Math.random()-.5)*50,z=hz+10+Math.random()*30;boltAt(x,z,0,0,0xc8b8ff,.12,14)}}
+  if(mapG.userData.stormy&&!simming&&Math.random()<dt*.5){const a=Math.random()*6.28,rr=10+Math.random()*25,x=hx+Math.sin(a)*rr,z=hz+Math.cos(a)*rr;boltAt(x,z,0,0,0xc8b8ff,.12,14)}}
 function leaveSky(){ground.position.set(0,0,0);fogs.forEach((m,i)=>m.position.copy(fogP0[i]));moon.position.copy(moonP0);root.position.y=0}
 // ---------- 新妖 ----------
 const wingBody=(B,W,E,s=1)=>[{g:S0,c:B,p:[0,.7,0],s:[.18*s,.16*s,.3*s]},{g:S0,c:B,p:[0,.78,.28*s],s:[.1*s,.1*s,.12*s]},{g:cone(.04*s,.005,.16*s,5),c:E,p:[0,.76,.42*s],r:[Math.PI/2,0,0]},
@@ -38,7 +38,7 @@ addFly('jiaoling',{n:'雲中蛟',geo:jiaoGeo,cap:80,hp:34,spd:2.6,r:.33,dmg:9,so
 addFly('tmq',{n:'天魔騎',geo:tmqGeo,cap:60,hp:48,spd:2,r:.36,dmg:11,soul:2,sc:.8,glow:.3,mat:{},
   ai:(e,dt,d,ux,uz)=>{e.y=.9;e.gt=(e.gt??Math.random())-dt;if(e.gt<=0){if(e.run){e.run=false;e.gt=.6}else{e.run=true;e.gt=1.1;e.gx=ux;e.gz=uz}}return e.run?{v:e.t.spd*(e.special||e.elite?2.8:2.2),x:e.gx,z:e.gz}:{v:.3,x:ux,z:uz}}});
 // ---------- 魔王 ----------
-const skyFollow=(b,dt,ahead,side)=>{const tx=HERO.pos.x+Math.sin(b.t*.5)*side,tz=HERO.pos.z+ahead+Math.cos(b.t*.4)*2,k=Math.min(1,dt*1.3);b.x+=(tx-b.x)*k;b.z+=(tz-b.z)*k};
+const skyFollow=(b,dt,dist,side)=>{const a=b.t*.22+(b.seed??(b.seed=Math.random()*6.28)),r=dist+Math.sin(b.t*.5)*side*.3,tx=HERO.pos.x+Math.sin(a)*r,tz=HERO.pos.z+Math.cos(a)*r,k=Math.min(1,dt*1.3);b.x+=(tx-b.x)*k;b.z+=(tz-b.z)*k};// 魔王繞著主角盤旋
 Object.assign(BOSSES,{
   nine:{name:'九頭鳥',line:'九頭鳥：「九張嘴，吃你一個夠不夠？」',rage:'九頭鳥：「九頭齊鳴！」',tip:'九頭鳥的火球會一排噴出來，俯衝前先畫紅色長條！',r:1.4,dmg:18,spd:1.7,bob:1.2,y:2.2,
     build(g){const P=toon(0x6a3a2a,{emissive:0x200a06}),Y=toon(0xd8a03a,{emissive:0x3a2208}),body=new THREE.Group();body.scale.setScalar(1.6);g.add(body);part(new THREE.SphereGeometry(.8,16,12),P,body,{s:[1,.8,1.3]});
@@ -68,7 +68,7 @@ Object.assign(BOSSES,{
       return {body,spin:b=>segs.forEach((m,i)=>{m.position.set(Math.sin(b.t*2.2-i*.7)*.8*Math.min(1,i*.5),Math.cos(b.t*1.6-i*.5)*.2,-i*1.2)})}},
     act(b,dt){if(b.dash>0){b.dash-=dt;b.x+=b.dx*12*dt;b.z+=b.dz*12*dt;return}skyFollow(b,dt,7,6);b.cd-=dt;
       if(b.cd<=0){b.k=(b.k||0)+1;
-        if(b.k%3===1){b.cd=b.rage?2.2:3;let px=HERO.pos.x,pz=HERO.pos.z+1;for(let i=0;i<(b.rage?6:4);i++){const x=px+(Math.random()-.5)*3,z=pz+i*1.8;warn(x,z,1.5,.9+i*.25,16,()=>{G.slowT=1.2},0x6ac8ff)}}
+        if(b.k%3===1){b.cd=b.rage?2.2:3;const ga=Math.atan2(HERO.pos.x-b.x,HERO.pos.z-b.z),gx=Math.sin(ga),gz=Math.cos(ga);for(let i=0;i<(b.rage?6:4);i++){const x=HERO.pos.x+gx*(i*1.8-1)+(Math.random()-.5)*2,z=HERO.pos.z+gz*(i*1.8-1)+(Math.random()-.5)*2;warn(x,z,1.5,.9+i*.25,16,()=>{G.slowT=1.2},0x6ac8ff)}}
         else if(b.k%3===2){b.cd=3;const a0=Math.atan2(HERO.pos.x-b.x,HERO.pos.z-b.z)+Math.PI;warnFan(b.x,b.z,a0,2.8,6,1,22)}
         else{b.cd=3.2;const a0=Math.atan2(HERO.pos.x-b.x,HERO.pos.z-b.z);b.dx=Math.sin(a0);b.dz=Math.cos(a0);warnLine(b.x,b.z,a0,15,2.2,1,22);act(1,null,()=>{b.dash=.85})}}
       b.sum-=dt;if(b.sum<=0){b.sum=7;for(let i=0;i<5;i++)spawn('jiaoling',b.x+(Math.random()-.5)*6,b.z+(Math.random()-.5)*3)}}}});

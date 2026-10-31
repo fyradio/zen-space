@@ -2067,10 +2067,10 @@ MAPS[8]=()=>{skyMap(0x8aa4d8,0,false);for(const p of mapG.userData.puffs)if(!p.u
 const fogP0=fogs.map(m=>m.position.clone()),moonP0=moon.position.clone(),GSNAP=160/22;
 function stepSky(dt){const hx=HERO.pos.x,hz=HERO.pos.z,P=mapG.userData.puffs||[];
   ground.position.set(Math.round(hx/GSNAP)*GSNAP,0,Math.round(hz/GSNAP)*GSNAP);
-  for(const p of P){if(p.position.z<hz-30)p.position.z+=70;else if(p.position.z>hz+40)p.position.z-=70;if(p.position.x<hx-35)p.position.x+=70;else if(p.position.x>hx+35)p.position.x-=70}
+  for(const p of P){if(p.position.z<hz-35)p.position.z+=70;else if(p.position.z>hz+35)p.position.z-=70;if(p.position.x<hx-35)p.position.x+=70;else if(p.position.x>hx+35)p.position.x-=70}
   if(mapG.userData.stars)mapG.userData.stars.position.set(hx,0,hz);
   fogs.forEach((m,i)=>{m.position.x=hx+fogP0[i].x;m.position.z=hz+fogP0[i].z});moon.position.set(hx+moonP0.x,moonP0.y,hz+moonP0.z);
-  if(mapG.userData.stormy&&!simming&&Math.random()<dt*.5){const x=hx+(Math.random()-.5)*50,z=hz+10+Math.random()*30;boltAt(x,z,0,0,0xc8b8ff,.12,14)}}
+  if(mapG.userData.stormy&&!simming&&Math.random()<dt*.5){const a=Math.random()*6.28,rr=10+Math.random()*25,x=hx+Math.sin(a)*rr,z=hz+Math.cos(a)*rr;boltAt(x,z,0,0,0xc8b8ff,.12,14)}}
 function leaveSky(){ground.position.set(0,0,0);fogs.forEach((m,i)=>m.position.copy(fogP0[i]));moon.position.copy(moonP0);root.position.y=0}
 // ---------- 新妖 ----------
 const wingBody=(B,W,E,s=1)=>[{g:S0,c:B,p:[0,.7,0],s:[.18*s,.16*s,.3*s]},{g:S0,c:B,p:[0,.78,.28*s],s:[.1*s,.1*s,.12*s]},{g:cone(.04*s,.005,.16*s,5),c:E,p:[0,.76,.42*s],r:[Math.PI/2,0,0]},
@@ -2094,7 +2094,7 @@ addFly('jiaoling',{n:'雲中蛟',geo:jiaoGeo,cap:80,hp:34,spd:2.6,r:.33,dmg:9,so
 addFly('tmq',{n:'天魔騎',geo:tmqGeo,cap:60,hp:48,spd:2,r:.36,dmg:11,soul:2,sc:.8,glow:.3,mat:{},
   ai:(e,dt,d,ux,uz)=>{e.y=.9;e.gt=(e.gt??Math.random())-dt;if(e.gt<=0){if(e.run){e.run=false;e.gt=.6}else{e.run=true;e.gt=1.1;e.gx=ux;e.gz=uz}}return e.run?{v:e.t.spd*(e.special||e.elite?2.8:2.2),x:e.gx,z:e.gz}:{v:.3,x:ux,z:uz}}});
 // ---------- 魔王 ----------
-const skyFollow=(b,dt,ahead,side)=>{const tx=HERO.pos.x+Math.sin(b.t*.5)*side,tz=HERO.pos.z+ahead+Math.cos(b.t*.4)*2,k=Math.min(1,dt*1.3);b.x+=(tx-b.x)*k;b.z+=(tz-b.z)*k};
+const skyFollow=(b,dt,dist,side)=>{const a=b.t*.22+(b.seed??(b.seed=Math.random()*6.28)),r=dist+Math.sin(b.t*.5)*side*.3,tx=HERO.pos.x+Math.sin(a)*r,tz=HERO.pos.z+Math.cos(a)*r,k=Math.min(1,dt*1.3);b.x+=(tx-b.x)*k;b.z+=(tz-b.z)*k};// 魔王繞著主角盤旋
 Object.assign(BOSSES,{
   nine:{name:'九頭鳥',line:'九頭鳥：「九張嘴，吃你一個夠不夠？」',rage:'九頭鳥：「九頭齊鳴！」',tip:'九頭鳥的火球會一排噴出來，俯衝前先畫紅色長條！',r:1.4,dmg:18,spd:1.7,bob:1.2,y:2.2,
     build(g){const P=toon(0x6a3a2a,{emissive:0x200a06}),Y=toon(0xd8a03a,{emissive:0x3a2208}),body=new THREE.Group();body.scale.setScalar(1.6);g.add(body);part(new THREE.SphereGeometry(.8,16,12),P,body,{s:[1,.8,1.3]});
@@ -2124,7 +2124,7 @@ Object.assign(BOSSES,{
       return {body,spin:b=>segs.forEach((m,i)=>{m.position.set(Math.sin(b.t*2.2-i*.7)*.8*Math.min(1,i*.5),Math.cos(b.t*1.6-i*.5)*.2,-i*1.2)})}},
     act(b,dt){if(b.dash>0){b.dash-=dt;b.x+=b.dx*12*dt;b.z+=b.dz*12*dt;return}skyFollow(b,dt,7,6);b.cd-=dt;
       if(b.cd<=0){b.k=(b.k||0)+1;
-        if(b.k%3===1){b.cd=b.rage?2.2:3;let px=HERO.pos.x,pz=HERO.pos.z+1;for(let i=0;i<(b.rage?6:4);i++){const x=px+(Math.random()-.5)*3,z=pz+i*1.8;warn(x,z,1.5,.9+i*.25,16,()=>{G.slowT=1.2},0x6ac8ff)}}
+        if(b.k%3===1){b.cd=b.rage?2.2:3;const ga=Math.atan2(HERO.pos.x-b.x,HERO.pos.z-b.z),gx=Math.sin(ga),gz=Math.cos(ga);for(let i=0;i<(b.rage?6:4);i++){const x=HERO.pos.x+gx*(i*1.8-1)+(Math.random()-.5)*2,z=HERO.pos.z+gz*(i*1.8-1)+(Math.random()-.5)*2;warn(x,z,1.5,.9+i*.25,16,()=>{G.slowT=1.2},0x6ac8ff)}}
         else if(b.k%3===2){b.cd=3;const a0=Math.atan2(HERO.pos.x-b.x,HERO.pos.z-b.z)+Math.PI;warnFan(b.x,b.z,a0,2.8,6,1,22)}
         else{b.cd=3.2;const a0=Math.atan2(HERO.pos.x-b.x,HERO.pos.z-b.z);b.dx=Math.sin(a0);b.dz=Math.cos(a0);warnLine(b.x,b.z,a0,15,2.2,1,22);act(1,null,()=>{b.dash=.85})}}
       b.sum-=dt;if(b.sum<=0){b.sum=7;for(let i=0;i<5;i++)spawn('jiaoling',b.x+(Math.random()-.5)*6,b.z+(Math.random()-.5)*3)}}}});
@@ -2279,18 +2279,23 @@ function shadowCast(){const lv=G.k.thLv,n=8+G.k.thN+(lv>=1?3:0)+(lv>=4?4:0),dur=
 SKILL_SETS.push({name:'元嬰',sweep:{n:'元神斬',ic:'神',col:0xffe9a0,shape:'self',range:()=>5*G.k.sweepR,cd:()=>7*G.k.sweepCd,lv:SOUL_LV,cast:soulCast},
   beam:{n:'劍氣貫虹',ic:'貫',col:0xfff0b0,shape:'line',w:1.8,range:()=>13,cd:()=>5.5*G.k.beamCd,spread:()=>HONG_SP[G.k.beamLv]>0?HONG_SP[G.k.beamLv]+.2:0,lv:HONG_LV,cast:hongCast},
   thunder:{n:'分神劍影',ic:'影',col:0xdfe8ff,shape:'auto',range:()=>9,cd:()=>10,lv:SHADOW_LV,cast:shadowCast}});
+// ---------- 元嬰（金色半透明的小主角；魔王出竅時用魔王的顏色）----------
+function soulFig(col,op=.55){const f=body.clone(true);f.position.set(0,0,0);f.rotation.set(0,0,0);
+  const M=new THREE.MeshBasicMaterial({color:col,transparent:true,opacity:op,blending:THREE.AdditiveBlending,depthWrite:false});f.traverse(o=>{if(o.isMesh||o.isLine||o.isPoints){o.material=M;o.castShadow=false}});f.userData.M=M;return f}
+let _sgt=null;function soulGlowTex(){if(_sgt)return _sgt;const c=document.createElement('canvas');c.width=c.height=128;const x=c.getContext('2d'),g=x.createRadialGradient(64,64,4,64,64,64);g.addColorStop(0,'rgba(255,255,255,1)');g.addColorStop(.35,'rgba(255,240,200,.45)');g.addColorStop(1,'rgba(255,220,150,0)');x.fillStyle=g;x.fillRect(0,0,128,128);return _sgt=new THREE.CanvasTexture(c)}
 // ---------- 大絕：元嬰出竅 ----------
 function yuanyingCast(A){const [px,pz]=A.pt,dmg=swordDmg()*5;G.ultBoss=0;G.slow=.4;shake=Math.max(shake,.5);SFX.play('ult');buzz(60);const u=$('#ultFx');u.classList.remove('on');void u.offsetWidth;u.classList.add('on');banner('元嬰出竅','元嬰化身替你斬妖',true);
-  const av=new THREE.Group(),M=new THREE.MeshBasicMaterial({color:0xffe9a0,transparent:true,opacity:.7,blending:THREE.AdditiveBlending,depthWrite:false});
-  const c=new THREE.Mesh(new THREE.ConeGeometry(1.1,3,10),M);c.position.y=1.5;av.add(c);const h=new THREE.Mesh(new THREE.SphereGeometry(.55,12,10),M);h.position.y=3.3;av.add(h);
-  const sw=new THREE.Mesh(new THREE.ConeGeometry(.18,4,4),M);sw.position.set(1.4,2.2,0);sw.rotation.z=-.4;av.add(sw);av.position.set(px,0,pz);scene.add(av);let tk=0;const DUR=9;
+  const av=new THREE.Group(),fig=soulFig(0xffe08a,.5),M=fig.userData.M;fig.scale.setScalar(2.1);av.add(fig);
+  const glow=new THREE.Sprite(new THREE.SpriteMaterial({map:soulGlowTex(),color:0xffd86a,transparent:true,opacity:.55,blending:THREE.AdditiveBlending,depthWrite:false}));glow.scale.set(5,6,1);glow.position.y=2;av.add(glow);
+  const sw=new THREE.Group();sw.position.set(.9,2.2,.3);av.add(sw);const blade=new THREE.Mesh(new THREE.BoxGeometry(.09,3.2,.02),new THREE.MeshBasicMaterial({color:0xfff4c0,transparent:true,opacity:.85,blending:THREE.AdditiveBlending,depthWrite:false}));blade.position.y=1.4;sw.add(blade);
+  const L=new THREE.PointLight(0xffd86a,2.5,9,1.5);L.position.y=2;av.add(L);av.position.set(px,0,pz);scene.add(av);let tk=0;const DUR=9;
   act(DUR,(t,dt)=>{G.iframe=Math.max(G.iframe,.3);let best=null,bd=1e9;for(const e of enemies){if(e.dead)continue;const d=Math.hypot(e.x-av.position.x,e.z-av.position.z);if(d<bd){bd=d;best=e}}
       const tg=boss.alive&&(!best||bd>8)?boss:best;if(tg){const dx=tg.x-av.position.x,dz=tg.z-av.position.z,d=Math.hypot(dx,dz)||1;if(d>2){const v=Math.min(d,9*dt);av.position.x+=dx/d*v;av.position.z+=dz/d*v}av.rotation.y=Math.atan2(dx,dz)}
-      av.position.y=Math.sin(t*5)*.3;M.opacity=.7*Math.min(1,(DUR-t)/.8);tk-=dt;
+      av.position.y=.3+Math.sin(t*3)*.2;M.opacity=.5*Math.min(1,(DUR-t)/.8,t/.4);glow.material.opacity=M.opacity*1.1;tk-=dt;
       if(tk<=0){tk=.3;sw.rotation.x=(sw.rotation.x||0)+1.2;fx({p:tmp.set(av.position.x,.8,av.position.z),col:0xffe9a0,add:true,life:.3,s0:1,s1:11,op:.8,vy:0});
         for(const e of enemies)if(!e.dead&&Math.hypot(e.x-av.position.x,e.z-av.position.z)<5.5)hurtEnemy(e,dmg,0,0,false,3);
         if(boss.alive&&Math.hypot(boss.x-av.position.x,boss.z-av.position.z)<5.5+boss.r){const room=boss.max*.22-G.ultBoss;if(room>0){const d=Math.min(dmg*2.5,room);G.ultBoss+=d;boss.allow+=d;hurtBoss(d,true)}}}},
-    ()=>{scene.remove(av);M.dispose()})}
+    ()=>{scene.remove(av);M.dispose();glow.material.dispose()})}
 ULT_DEF.yuanying={n:'元嬰出竅',ic:'嬰',col:0xffe9a0,shape:'circle',ult:1,r:()=>2,range:()=>8,cast:yuanyingCast};
 // ---------- 水墨過場 ----------
 Object.assign(INK.scenes,{
@@ -2500,7 +2505,7 @@ function spawnTick(dt){const m=minute(),rate=1.25*(1+1.1*m+.18*m*m)*G.mod.spawn*
     for(const [n,v] of w){x-=v;if(x<=0){k=n;break}}
     // 竹精 burst out of the ground close by (a moment to react: they are stunned while climbing out)
     if(ET[k].popNear){const a=Math.random()*Math.PI*2,r=2.6+Math.random()*2;const e=spawn(k,HERO.pos.x+Math.sin(a)*r,HERO.pos.z+Math.cos(a)*r);if(e){e.stun=.7;e.y=-.5;e.rise=.7;if(!simming)fx({p:tmp.set(e.x,.2,e.z),col:0x3a2a1a,life:.6,s0:.4,s1:1.6,op:.8,vy:.6})}continue}
-    const a=G.sky?(Math.random()-.5)*Math.PI*1.3:Math.random()*Math.PI*2,r=G.sky?13+Math.random()*3:11+Math.random()*3;spawn(k,HERO.pos.x+Math.sin(a)*r,HERO.pos.z+Math.cos(a)*r)}
+    const a=Math.random()*Math.PI*2,r=G.sky?12+Math.random()*3:11+Math.random()*3;spawn(k,HERO.pos.x+Math.sin(a)*r,HERO.pos.z+Math.cos(a)*r)}
   if(G.t>=G.waveAt*G.len/480&&!G.over){G.waveAt+=60;const rt=C.mobs[m>3&&C.mobs[1]?1:0][0];spawnRing(ET[rt].popNear?C.mobs[2][0]:rt,16+Math.floor(m*3),10.5)}}
 
 /* ================= 戰鬥 ================= */
@@ -2526,7 +2531,7 @@ function bossDown(){boss.alive=false;G.bossKilled=true;G.bossN=(G.bossN||0)+1;G.
   G.slow=.9;SFX.play('bossDie');buzz(120);for(const e of enemies)if(!e.dead&&onScreen(e.x,.4,e.z))killEnemy(e);if(!boss.def.duel)setTimeout(()=>openCards(true),1300);
   for(let i=0;i<10;i++)fx({p:tmp.set(boss.x+(Math.random()-.5)*2,1+Math.random()*2,boss.z+(Math.random()-.5)*2),col:0x0a0d0e,life:1.2,s0:1,s1:3,op:.8,vy:1});
   for(let i=0;i<30;i++)dropSoul(boss.x+(Math.random()-.5)*3,boss.z+(Math.random()-.5)*3,2);boss.g.visible=false;$('#bossBox').classList.remove('on');banner(`${boss.def.name}伏誅！`,boss.fled?'元嬰也斬了・全勝':'群妖潰散・殺氣 +5%');shake=.9}
-function beginFlee(){boss.fled=true;boss.fleeT=0;boss.hp=boss.max*.12;boss.allow=boss.max;boss.stun=0;boss.dash=0;boss.m.g.scale.setScalar(.38);clearHZ();G.clash=null;banner('元嬰出竅','肉身毀了！追上去，斬了牠的元嬰！');SFX.play('boss');shake=.8;
+function beginFlee(){boss.fled=true;boss.fleeT=0;boss.hp=boss.max*.12;boss.allow=boss.max;boss.stun=0;boss.dash=0;boss.m.g.visible=false;if(!boss.soul){boss.soul=soulFig(0xffe9a0,.6);boss.g.add(boss.soul);const gl=new THREE.Sprite(new THREE.SpriteMaterial({map:soulGlowTex(),color:0xffe0a0,transparent:true,opacity:.6,blending:THREE.AdditiveBlending,depthWrite:false}));gl.scale.set(2.2,2.6,1);gl.position.y=.9;boss.soul.add(gl)}boss.soul.visible=true;boss.soul.scale.setScalar(.85);boss.soul.userData.M.color.set(boss.def.col||0xffe9a0);clearHZ();G.clash=null;banner('元嬰出竅','肉身毀了！追上去，斬了牠的元嬰！');SFX.play('boss');shake=.8;
   for(let i=0;i<16;i++)fx({p:tmp.set(boss.x+(Math.random()-.5),1+Math.random()*2,boss.z+(Math.random()-.5)),col:0xffe9a0,add:true,life:.7,s0:.8,s1:2,op:.9,vy:1})}
 function hurtBoss(dmg,crit=false){if(!boss.alive)return;const d0=Math.min(dmg,boss.allow);if(d0<=0)return;if(boss.def.noHit){showNum(boss.x,3.2,boss.z,0,'b');return}boss.allow-=d0;let d=d0;boss.flash=.08;
   if(boss.shield>0){const sh=Math.min(boss.shield,d);boss.shield-=sh;d-=sh;showNum(boss.x,3.2,boss.z,sh,'c');if(boss.shield<=0)banner('護體靈光破了！','');if(d<=0)return}
@@ -2581,11 +2586,11 @@ function startElite(){G.eliteDone=true;const a=Math.random()*Math.PI*2,k=(CHC[G.
 function startBoss(){const key=bossKey(G),D=BOSSES[key];boss.def=D;
   for(const k in boss.models)boss.models[k].g.visible=false;
   if(!boss.models[key]){const g=new THREE.Group();boss.g.add(g);boss.models[key]=Object.assign({g},D.build(g))}
-  const M=boss.m=boss.models[key];M.g.visible=true;M.g.scale.setScalar(1);
+  const M=boss.m=boss.models[key];M.g.visible=true;if(boss.soul)boss.soul.visible=false;M.g.scale.setScalar(1);
   BGM.play('boss');G.bossDone=true;boss.alive=true;const a=Math.random()*Math.PI*2;boss.x=HERO.pos.x+Math.sin(a)*8;boss.z=HERO.pos.z+Math.cos(a)*8;
   // fixed HP (a stronger build kills it faster), scaled by chapter and by night (圍城 ×1.5)
   boss.max=boss.hp=BOSS_HP*G.mod.boss*chBoss(G.ch)*(D.duel?.3:1);boss.allow=boss.max/30;boss.r=D.r;boss.dmg=D.dmg*(1+.1*G.ch)*chDmg(G.ch);SFX.play('boss');buzz(80);
-  Object.assign(boss,{cd:3,sum:5,t:0,rage:false,ring:4,k:0,swing:0,stun:0,cl:16,dm:14,rd:0,done:false,tele:2,dash:0,fled:false,fleeT:0,shield:D.duel?boss.max*.3:0});if(D.noHit)boss.allow=boss.max;boss.g.visible=true;boss.g.position.set(boss.x,0,boss.z);
+  Object.assign(boss,{seed:Math.random()*6.28,cd:3,sum:5,t:0,rage:false,ring:4,k:0,swing:0,stun:0,cl:16,dm:14,rd:0,done:false,tele:2,dash:0,fled:false,fleeT:0,shield:D.duel?boss.max*.3:0});if(D.noHit)boss.allow=boss.max;boss.g.visible=true;boss.g.position.set(boss.x,0,boss.z);
   $('#bossName').textContent=D.name;G.clash=null;$('#bossBox').classList.add('on');banner(D.line,'頭目');shake=.8;act(3.8,null,()=>{if(G&&!G.over)say(D.tip,5)})}
 function stepBoss(dt){if(!boss.alive)return;const D=boss.def,M=boss.m;boss.t+=dt;boss.allow=Math.min(boss.max/30*1.5,boss.allow+boss.max/30*dt);
   const dx=HERO.pos.x-boss.x,dz=HERO.pos.z-boss.z,d=Math.hypot(dx,dz)||1;let sp=d>4?D.spd:.6;if(D.keep&&d<D.keep)sp=-D.spd*.7;if(G.sky)sp=0;
@@ -2728,10 +2733,10 @@ let camIdx=0,camYaw=0,camP=CAMS[0].P,camD=CAMS[0].D;try{camIdx=+localStorage.get
 function setCam(i){camIdx=i%CAMS.length;try{localStorage.setItem('zk-cam',String(camIdx))}catch(e){}if(G&&!G.over)banner(CAMS[camIdx].n,'視角')}
 let camOverride=0,lookCam=null;// lookCam: 'face' | 'body' while the 洞府 造型 tab is open (close-up, figure held still)
 function updateCamera(dt,snap){const C=CAMS[camIdx],zoom=G?1:.45;let D=(camOverride||C.D*(isTouch?1:.96))*zoom,P=camOverride?.35:G?C.P:.42;
-  if(G&&G.sky){P=.5;D=7.6*(isTouch?1:.96)}
+  if(G&&G.sky)D*=1.08;
   let lookTy=null;if(!G&&lookCam){const tot=(bodyY(HY)+.15)*F.height;if(lookCam==='body'){D=tot*2.9;lookTy=tot*.54}else{D=1.2*F.height;lookTy=1.43+bodyY(HY)*F.height-HY}P=.08}
   const k=snap?1:1-Math.exp(-dt*4);camP=lerp(camP,P,k);camD=lerp(camD,D,k);
-  const wantYaw=G&&G.sky?Math.PI:C.follow&&G?root.rotation.y+Math.PI:0;camYaw=angLerp(camYaw,wantYaw,snap?1:1-Math.exp(-dt*(C.follow?1.8:5)));
+  const wantYaw=C.follow&&G?root.rotation.y+Math.PI:0;camYaw=angLerp(camYaw,wantYaw,snap?1:1-Math.exp(-dt*(C.follow?1.8:5)));
   if(camOverride)tmp.set(0,.5,0);else tmp.set(HERO.pos.x,HERO.pos.y+(lookTy!==null?lookTy:G?.4+(.92-camP)*.8:1),HERO.pos.z);if(snap)camT.copy(tmp);else camT.lerp(tmp,1-Math.exp(-dt*6));
   const sx=shake>0?(Math.random()-.5)*shake*.5:0,sz=shake>0?(Math.random()-.5)*shake*.5:0;shake=Math.max(0,shake-dt*1.6);
   camera.position.set(camT.x+Math.sin(camYaw)*Math.cos(camP)*camD+sx,camT.y+Math.sin(camP)*camD,camT.z+Math.cos(camYaw)*Math.cos(camP)*camD+sz);camera.lookAt(camT);camera.updateMatrixWorld();sky.position.copy(camera.position)}
@@ -2740,9 +2745,9 @@ function stepGame(dt){const g=G;
   for(const k of ['rootT','slowT','charm'])if(g[k]>0)g[k]-=dt;
   if((g.rootT>0||g.slowT>0||g.charm>0)&&!simming&&(g.stT=(g.stT||0)-dt)<=0){g.stT=.22;fx({p:tmp.set(HERO.pos.x+(Math.random()-.5)*.8,.3+Math.random()*.9,HERO.pos.z+(Math.random()-.5)*.8),col:g.rootT>0?0xffc860:g.charm>0?0xc07cff:0x5aff6a,add:true,life:.5,s0:.5,s1:.1,op:.9,vy:1})}
   const inp=inputDir();const moving=inp.l>.12&&!(g.rootT>0);g.moving=moving;
-  if(moving){const sp=g.s.move*inp.l*(g.slowT>0?.5:1);g.walked+=sp*dt;if(g.walked>=2.4){g.walked=0;qiBurst()}root.position.x+=inp.x*sp*dt;root.position.z+=inp.y*sp*dt;if(!g.sky)root.rotation.y=angLerp(root.rotation.y,Math.atan2(inp.x,inp.y),1-Math.exp(-dt*12));
+  if(moving){const sp=g.s.move*inp.l*(g.slowT>0?.5:1);g.walked+=sp*dt;if(g.walked>=2.4){g.walked=0;qiBurst()}root.position.x+=inp.x*sp*dt;root.position.z+=inp.y*sp*dt;root.rotation.y=angLerp(root.rotation.y,Math.atan2(inp.x,inp.y),1-Math.exp(-dt*(g.sky?6:12)));
     walkPh+=dt*(4+3*inp.l);mode='walk';g.stand=0}else{mode='cast';g.stand+=dt;g.standQi=(g.standQi||0)+dt;if(g.standQi>=1.8){g.standQi=0;qiBurst()}}
-  if(g.sky){root.position.z+=SKY_SPEED*dt*(g.rootT>0?.4:1);root.position.y=1.15;root.rotation.y=angLerp(root.rotation.y,0,1-Math.exp(-dt*6));mode='fly';stepSky(dt)}
+  if(g.sky){root.position.y=1.15;mode='fly';stepSky(dt)}// 御劍：自由方向飛，雲海跟著主角無限延伸
   else{const rr=Math.hypot(root.position.x,root.position.z);if(rr>ARENA){root.position.x*=ARENA/rr;root.position.z*=ARENA/rr}}
   for(const h of HOUSES){const dx=root.position.x-h.x,dz=root.position.z-h.z,d=Math.hypot(dx,dz),r=h.r+.3;if(d<r&&d>1e-4){root.position.x=h.x+dx/d*r;root.position.z=h.z+dz/d*r}}
   // timeline
@@ -2788,7 +2793,7 @@ const GRID=1.1,grid=new Map();
 function stepEnemies(dt){grid.clear();for(const e of enemies){if(e.dead)continue;const k=Math.floor(e.x/GRID)+','+Math.floor(e.z/GRID);let c=grid.get(k);if(!c)grid.set(k,c=[]);c.push(e)}
   for(const e of enemies){if(e.dead)continue;const t=e.t;e.ph+=dt;
     const dx=HERO.pos.x-e.x,dz=HERO.pos.z-e.z,d=Math.hypot(dx,dz)||1;
-    if(G.sky&&(d>24||(dz<-14&&!e.elite))){e.dead=true;continue}
+    if(G.sky&&d>26&&!e.elite){e.dead=true;continue}
     let mv=e.spd,mx=dx/d,mz=dz/d;e.cd-=dt;e.squash=Math.max(0,(e.squash||0)-dt*4);
     if(e.burn>0){e.burn-=dt;e.burnT=(e.burnT||0)-dt;if(e.burnT<=0){e.burnT=.5;hurtEnemy(e,e.burnD,0,0,false,3);if(!simming)fx({p:tmp.set(e.x,.6,e.z),col:0xff7a2a,add:true,life:.35,s0:.6,s1:.2,op:.9,vy:1.5});if(e.dead)continue}}
     if(e.rise>0){e.rise-=dt;e.y=-.5*Math.max(0,e.rise/.7)}else if(e.down>0)e.down-=dt;

@@ -124,18 +124,23 @@ function shadowCast(){const lv=G.k.thLv,n=8+G.k.thN+(lv>=1?3:0)+(lv>=4?4:0),dur=
 SKILL_SETS.push({name:'元嬰',sweep:{n:'元神斬',ic:'神',col:0xffe9a0,shape:'self',range:()=>5*G.k.sweepR,cd:()=>7*G.k.sweepCd,lv:SOUL_LV,cast:soulCast},
   beam:{n:'劍氣貫虹',ic:'貫',col:0xfff0b0,shape:'line',w:1.8,range:()=>13,cd:()=>5.5*G.k.beamCd,spread:()=>HONG_SP[G.k.beamLv]>0?HONG_SP[G.k.beamLv]+.2:0,lv:HONG_LV,cast:hongCast},
   thunder:{n:'分神劍影',ic:'影',col:0xdfe8ff,shape:'auto',range:()=>9,cd:()=>10,lv:SHADOW_LV,cast:shadowCast}});
+// ---------- 元嬰（金色半透明的小主角；魔王出竅時用魔王的顏色）----------
+function soulFig(col,op=.55){const f=body.clone(true);f.position.set(0,0,0);f.rotation.set(0,0,0);
+  const M=new THREE.MeshBasicMaterial({color:col,transparent:true,opacity:op,blending:THREE.AdditiveBlending,depthWrite:false});f.traverse(o=>{if(o.isMesh||o.isLine||o.isPoints){o.material=M;o.castShadow=false}});f.userData.M=M;return f}
+let _sgt=null;function soulGlowTex(){if(_sgt)return _sgt;const c=document.createElement('canvas');c.width=c.height=128;const x=c.getContext('2d'),g=x.createRadialGradient(64,64,4,64,64,64);g.addColorStop(0,'rgba(255,255,255,1)');g.addColorStop(.35,'rgba(255,240,200,.45)');g.addColorStop(1,'rgba(255,220,150,0)');x.fillStyle=g;x.fillRect(0,0,128,128);return _sgt=new THREE.CanvasTexture(c)}
 // ---------- 大絕：元嬰出竅 ----------
 function yuanyingCast(A){const [px,pz]=A.pt,dmg=swordDmg()*5;G.ultBoss=0;G.slow=.4;shake=Math.max(shake,.5);SFX.play('ult');buzz(60);const u=$('#ultFx');u.classList.remove('on');void u.offsetWidth;u.classList.add('on');banner('元嬰出竅','元嬰化身替你斬妖',true);
-  const av=new THREE.Group(),M=new THREE.MeshBasicMaterial({color:0xffe9a0,transparent:true,opacity:.7,blending:THREE.AdditiveBlending,depthWrite:false});
-  const c=new THREE.Mesh(new THREE.ConeGeometry(1.1,3,10),M);c.position.y=1.5;av.add(c);const h=new THREE.Mesh(new THREE.SphereGeometry(.55,12,10),M);h.position.y=3.3;av.add(h);
-  const sw=new THREE.Mesh(new THREE.ConeGeometry(.18,4,4),M);sw.position.set(1.4,2.2,0);sw.rotation.z=-.4;av.add(sw);av.position.set(px,0,pz);scene.add(av);let tk=0;const DUR=9;
+  const av=new THREE.Group(),fig=soulFig(0xffe08a,.5),M=fig.userData.M;fig.scale.setScalar(2.1);av.add(fig);
+  const glow=new THREE.Sprite(new THREE.SpriteMaterial({map:soulGlowTex(),color:0xffd86a,transparent:true,opacity:.55,blending:THREE.AdditiveBlending,depthWrite:false}));glow.scale.set(5,6,1);glow.position.y=2;av.add(glow);
+  const sw=new THREE.Group();sw.position.set(.9,2.2,.3);av.add(sw);const blade=new THREE.Mesh(new THREE.BoxGeometry(.09,3.2,.02),new THREE.MeshBasicMaterial({color:0xfff4c0,transparent:true,opacity:.85,blending:THREE.AdditiveBlending,depthWrite:false}));blade.position.y=1.4;sw.add(blade);
+  const L=new THREE.PointLight(0xffd86a,2.5,9,1.5);L.position.y=2;av.add(L);av.position.set(px,0,pz);scene.add(av);let tk=0;const DUR=9;
   act(DUR,(t,dt)=>{G.iframe=Math.max(G.iframe,.3);let best=null,bd=1e9;for(const e of enemies){if(e.dead)continue;const d=Math.hypot(e.x-av.position.x,e.z-av.position.z);if(d<bd){bd=d;best=e}}
       const tg=boss.alive&&(!best||bd>8)?boss:best;if(tg){const dx=tg.x-av.position.x,dz=tg.z-av.position.z,d=Math.hypot(dx,dz)||1;if(d>2){const v=Math.min(d,9*dt);av.position.x+=dx/d*v;av.position.z+=dz/d*v}av.rotation.y=Math.atan2(dx,dz)}
-      av.position.y=Math.sin(t*5)*.3;M.opacity=.7*Math.min(1,(DUR-t)/.8);tk-=dt;
+      av.position.y=.3+Math.sin(t*3)*.2;M.opacity=.5*Math.min(1,(DUR-t)/.8,t/.4);glow.material.opacity=M.opacity*1.1;tk-=dt;
       if(tk<=0){tk=.3;sw.rotation.x=(sw.rotation.x||0)+1.2;fx({p:tmp.set(av.position.x,.8,av.position.z),col:0xffe9a0,add:true,life:.3,s0:1,s1:11,op:.8,vy:0});
         for(const e of enemies)if(!e.dead&&Math.hypot(e.x-av.position.x,e.z-av.position.z)<5.5)hurtEnemy(e,dmg,0,0,false,3);
         if(boss.alive&&Math.hypot(boss.x-av.position.x,boss.z-av.position.z)<5.5+boss.r){const room=boss.max*.22-G.ultBoss;if(room>0){const d=Math.min(dmg*2.5,room);G.ultBoss+=d;boss.allow+=d;hurtBoss(d,true)}}}},
-    ()=>{scene.remove(av);M.dispose()})}
+    ()=>{scene.remove(av);M.dispose();glow.material.dispose()})}
 ULT_DEF.yuanying={n:'元嬰出竅',ic:'嬰',col:0xffe9a0,shape:'circle',ult:1,r:()=>2,range:()=>8,cast:yuanyingCast};
 // ---------- 水墨過場 ----------
 Object.assign(INK.scenes,{

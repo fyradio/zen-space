@@ -898,7 +898,7 @@ function spawnTick(dt){const m=minute(),rate=1.25*(1+1.1*m+.18*m*m)*G.mod.spawn*
     for(const [n,v] of w){x-=v;if(x<=0){k=n;break}}
     // 竹精 burst out of the ground close by (a moment to react: they are stunned while climbing out)
     if(ET[k].popNear){const a=Math.random()*Math.PI*2,r=2.6+Math.random()*2;const e=spawn(k,HERO.pos.x+Math.sin(a)*r,HERO.pos.z+Math.cos(a)*r);if(e){e.stun=.7;e.y=-.5;e.rise=.7;if(!simming)fx({p:tmp.set(e.x,.2,e.z),col:0x3a2a1a,life:.6,s0:.4,s1:1.6,op:.8,vy:.6})}continue}
-    const a=G.sky?(Math.random()-.5)*Math.PI*1.3:Math.random()*Math.PI*2,r=G.sky?13+Math.random()*3:11+Math.random()*3;spawn(k,HERO.pos.x+Math.sin(a)*r,HERO.pos.z+Math.cos(a)*r)}
+    const a=Math.random()*Math.PI*2,r=G.sky?12+Math.random()*3:11+Math.random()*3;spawn(k,HERO.pos.x+Math.sin(a)*r,HERO.pos.z+Math.cos(a)*r)}
   if(G.t>=G.waveAt*G.len/480&&!G.over){G.waveAt+=60;const rt=C.mobs[m>3&&C.mobs[1]?1:0][0];spawnRing(ET[rt].popNear?C.mobs[2][0]:rt,16+Math.floor(m*3),10.5)}}
 
 /* ================= 戰鬥 ================= */
@@ -924,7 +924,7 @@ function bossDown(){boss.alive=false;G.bossKilled=true;G.bossN=(G.bossN||0)+1;G.
   G.slow=.9;SFX.play('bossDie');buzz(120);for(const e of enemies)if(!e.dead&&onScreen(e.x,.4,e.z))killEnemy(e);if(!boss.def.duel)setTimeout(()=>openCards(true),1300);
   for(let i=0;i<10;i++)fx({p:tmp.set(boss.x+(Math.random()-.5)*2,1+Math.random()*2,boss.z+(Math.random()-.5)*2),col:0x0a0d0e,life:1.2,s0:1,s1:3,op:.8,vy:1});
   for(let i=0;i<30;i++)dropSoul(boss.x+(Math.random()-.5)*3,boss.z+(Math.random()-.5)*3,2);boss.g.visible=false;$('#bossBox').classList.remove('on');banner(`${boss.def.name}伏誅！`,boss.fled?'元嬰也斬了・全勝':'群妖潰散・殺氣 +5%');shake=.9}
-function beginFlee(){boss.fled=true;boss.fleeT=0;boss.hp=boss.max*.12;boss.allow=boss.max;boss.stun=0;boss.dash=0;boss.m.g.scale.setScalar(.38);clearHZ();G.clash=null;banner('元嬰出竅','肉身毀了！追上去，斬了牠的元嬰！');SFX.play('boss');shake=.8;
+function beginFlee(){boss.fled=true;boss.fleeT=0;boss.hp=boss.max*.12;boss.allow=boss.max;boss.stun=0;boss.dash=0;boss.m.g.visible=false;if(!boss.soul){boss.soul=soulFig(0xffe9a0,.6);boss.g.add(boss.soul);const gl=new THREE.Sprite(new THREE.SpriteMaterial({map:soulGlowTex(),color:0xffe0a0,transparent:true,opacity:.6,blending:THREE.AdditiveBlending,depthWrite:false}));gl.scale.set(2.2,2.6,1);gl.position.y=.9;boss.soul.add(gl)}boss.soul.visible=true;boss.soul.scale.setScalar(.85);boss.soul.userData.M.color.set(boss.def.col||0xffe9a0);clearHZ();G.clash=null;banner('元嬰出竅','肉身毀了！追上去，斬了牠的元嬰！');SFX.play('boss');shake=.8;
   for(let i=0;i<16;i++)fx({p:tmp.set(boss.x+(Math.random()-.5),1+Math.random()*2,boss.z+(Math.random()-.5)),col:0xffe9a0,add:true,life:.7,s0:.8,s1:2,op:.9,vy:1})}
 function hurtBoss(dmg,crit=false){if(!boss.alive)return;const d0=Math.min(dmg,boss.allow);if(d0<=0)return;if(boss.def.noHit){showNum(boss.x,3.2,boss.z,0,'b');return}boss.allow-=d0;let d=d0;boss.flash=.08;
   if(boss.shield>0){const sh=Math.min(boss.shield,d);boss.shield-=sh;d-=sh;showNum(boss.x,3.2,boss.z,sh,'c');if(boss.shield<=0)banner('護體靈光破了！','');if(d<=0)return}
@@ -979,11 +979,11 @@ function startElite(){G.eliteDone=true;const a=Math.random()*Math.PI*2,k=(CHC[G.
 function startBoss(){const key=bossKey(G),D=BOSSES[key];boss.def=D;
   for(const k in boss.models)boss.models[k].g.visible=false;
   if(!boss.models[key]){const g=new THREE.Group();boss.g.add(g);boss.models[key]=Object.assign({g},D.build(g))}
-  const M=boss.m=boss.models[key];M.g.visible=true;M.g.scale.setScalar(1);
+  const M=boss.m=boss.models[key];M.g.visible=true;if(boss.soul)boss.soul.visible=false;M.g.scale.setScalar(1);
   BGM.play('boss');G.bossDone=true;boss.alive=true;const a=Math.random()*Math.PI*2;boss.x=HERO.pos.x+Math.sin(a)*8;boss.z=HERO.pos.z+Math.cos(a)*8;
   // fixed HP (a stronger build kills it faster), scaled by chapter and by night (圍城 ×1.5)
   boss.max=boss.hp=BOSS_HP*G.mod.boss*chBoss(G.ch)*(D.duel?.3:1);boss.allow=boss.max/30;boss.r=D.r;boss.dmg=D.dmg*(1+.1*G.ch)*chDmg(G.ch);SFX.play('boss');buzz(80);
-  Object.assign(boss,{cd:3,sum:5,t:0,rage:false,ring:4,k:0,swing:0,stun:0,cl:16,dm:14,rd:0,done:false,tele:2,dash:0,fled:false,fleeT:0,shield:D.duel?boss.max*.3:0});if(D.noHit)boss.allow=boss.max;boss.g.visible=true;boss.g.position.set(boss.x,0,boss.z);
+  Object.assign(boss,{seed:Math.random()*6.28,cd:3,sum:5,t:0,rage:false,ring:4,k:0,swing:0,stun:0,cl:16,dm:14,rd:0,done:false,tele:2,dash:0,fled:false,fleeT:0,shield:D.duel?boss.max*.3:0});if(D.noHit)boss.allow=boss.max;boss.g.visible=true;boss.g.position.set(boss.x,0,boss.z);
   $('#bossName').textContent=D.name;G.clash=null;$('#bossBox').classList.add('on');banner(D.line,'頭目');shake=.8;act(3.8,null,()=>{if(G&&!G.over)say(D.tip,5)})}
 function stepBoss(dt){if(!boss.alive)return;const D=boss.def,M=boss.m;boss.t+=dt;boss.allow=Math.min(boss.max/30*1.5,boss.allow+boss.max/30*dt);
   const dx=HERO.pos.x-boss.x,dz=HERO.pos.z-boss.z,d=Math.hypot(dx,dz)||1;let sp=d>4?D.spd:.6;if(D.keep&&d<D.keep)sp=-D.spd*.7;if(G.sky)sp=0;
@@ -1126,10 +1126,10 @@ let camIdx=0,camYaw=0,camP=CAMS[0].P,camD=CAMS[0].D;try{camIdx=+localStorage.get
 function setCam(i){camIdx=i%CAMS.length;try{localStorage.setItem('zk-cam',String(camIdx))}catch(e){}if(G&&!G.over)banner(CAMS[camIdx].n,'視角')}
 let camOverride=0,lookCam=null;// lookCam: 'face' | 'body' while the 洞府 造型 tab is open (close-up, figure held still)
 function updateCamera(dt,snap){const C=CAMS[camIdx],zoom=G?1:.45;let D=(camOverride||C.D*(isTouch?1:.96))*zoom,P=camOverride?.35:G?C.P:.42;
-  if(G&&G.sky){P=.5;D=7.6*(isTouch?1:.96)}
+  if(G&&G.sky)D*=1.08;
   let lookTy=null;if(!G&&lookCam){const tot=(bodyY(HY)+.15)*F.height;if(lookCam==='body'){D=tot*2.9;lookTy=tot*.54}else{D=1.2*F.height;lookTy=1.43+bodyY(HY)*F.height-HY}P=.08}
   const k=snap?1:1-Math.exp(-dt*4);camP=lerp(camP,P,k);camD=lerp(camD,D,k);
-  const wantYaw=G&&G.sky?Math.PI:C.follow&&G?root.rotation.y+Math.PI:0;camYaw=angLerp(camYaw,wantYaw,snap?1:1-Math.exp(-dt*(C.follow?1.8:5)));
+  const wantYaw=C.follow&&G?root.rotation.y+Math.PI:0;camYaw=angLerp(camYaw,wantYaw,snap?1:1-Math.exp(-dt*(C.follow?1.8:5)));
   if(camOverride)tmp.set(0,.5,0);else tmp.set(HERO.pos.x,HERO.pos.y+(lookTy!==null?lookTy:G?.4+(.92-camP)*.8:1),HERO.pos.z);if(snap)camT.copy(tmp);else camT.lerp(tmp,1-Math.exp(-dt*6));
   const sx=shake>0?(Math.random()-.5)*shake*.5:0,sz=shake>0?(Math.random()-.5)*shake*.5:0;shake=Math.max(0,shake-dt*1.6);
   camera.position.set(camT.x+Math.sin(camYaw)*Math.cos(camP)*camD+sx,camT.y+Math.sin(camP)*camD,camT.z+Math.cos(camYaw)*Math.cos(camP)*camD+sz);camera.lookAt(camT);camera.updateMatrixWorld();sky.position.copy(camera.position)}
@@ -1138,9 +1138,9 @@ function stepGame(dt){const g=G;
   for(const k of ['rootT','slowT','charm'])if(g[k]>0)g[k]-=dt;
   if((g.rootT>0||g.slowT>0||g.charm>0)&&!simming&&(g.stT=(g.stT||0)-dt)<=0){g.stT=.22;fx({p:tmp.set(HERO.pos.x+(Math.random()-.5)*.8,.3+Math.random()*.9,HERO.pos.z+(Math.random()-.5)*.8),col:g.rootT>0?0xffc860:g.charm>0?0xc07cff:0x5aff6a,add:true,life:.5,s0:.5,s1:.1,op:.9,vy:1})}
   const inp=inputDir();const moving=inp.l>.12&&!(g.rootT>0);g.moving=moving;
-  if(moving){const sp=g.s.move*inp.l*(g.slowT>0?.5:1);g.walked+=sp*dt;if(g.walked>=2.4){g.walked=0;qiBurst()}root.position.x+=inp.x*sp*dt;root.position.z+=inp.y*sp*dt;if(!g.sky)root.rotation.y=angLerp(root.rotation.y,Math.atan2(inp.x,inp.y),1-Math.exp(-dt*12));
+  if(moving){const sp=g.s.move*inp.l*(g.slowT>0?.5:1);g.walked+=sp*dt;if(g.walked>=2.4){g.walked=0;qiBurst()}root.position.x+=inp.x*sp*dt;root.position.z+=inp.y*sp*dt;root.rotation.y=angLerp(root.rotation.y,Math.atan2(inp.x,inp.y),1-Math.exp(-dt*(g.sky?6:12)));
     walkPh+=dt*(4+3*inp.l);mode='walk';g.stand=0}else{mode='cast';g.stand+=dt;g.standQi=(g.standQi||0)+dt;if(g.standQi>=1.8){g.standQi=0;qiBurst()}}
-  if(g.sky){root.position.z+=SKY_SPEED*dt*(g.rootT>0?.4:1);root.position.y=1.15;root.rotation.y=angLerp(root.rotation.y,0,1-Math.exp(-dt*6));mode='fly';stepSky(dt)}
+  if(g.sky){root.position.y=1.15;mode='fly';stepSky(dt)}// 御劍：自由方向飛，雲海跟著主角無限延伸
   else{const rr=Math.hypot(root.position.x,root.position.z);if(rr>ARENA){root.position.x*=ARENA/rr;root.position.z*=ARENA/rr}}
   for(const h of HOUSES){const dx=root.position.x-h.x,dz=root.position.z-h.z,d=Math.hypot(dx,dz),r=h.r+.3;if(d<r&&d>1e-4){root.position.x=h.x+dx/d*r;root.position.z=h.z+dz/d*r}}
   // timeline
@@ -1186,7 +1186,7 @@ const GRID=1.1,grid=new Map();
 function stepEnemies(dt){grid.clear();for(const e of enemies){if(e.dead)continue;const k=Math.floor(e.x/GRID)+','+Math.floor(e.z/GRID);let c=grid.get(k);if(!c)grid.set(k,c=[]);c.push(e)}
   for(const e of enemies){if(e.dead)continue;const t=e.t;e.ph+=dt;
     const dx=HERO.pos.x-e.x,dz=HERO.pos.z-e.z,d=Math.hypot(dx,dz)||1;
-    if(G.sky&&(d>24||(dz<-14&&!e.elite))){e.dead=true;continue}
+    if(G.sky&&d>26&&!e.elite){e.dead=true;continue}
     let mv=e.spd,mx=dx/d,mz=dz/d;e.cd-=dt;e.squash=Math.max(0,(e.squash||0)-dt*4);
     if(e.burn>0){e.burn-=dt;e.burnT=(e.burnT||0)-dt;if(e.burnT<=0){e.burnT=.5;hurtEnemy(e,e.burnD,0,0,false,3);if(!simming)fx({p:tmp.set(e.x,.6,e.z),col:0xff7a2a,add:true,life:.35,s0:.6,s1:.2,op:.9,vy:1.5});if(e.dead)continue}}
     if(e.rise>0){e.rise-=dt;e.y=-.5*Math.max(0,e.rise/.7)}else if(e.down>0)e.down-=dt;
