@@ -2136,7 +2136,7 @@ Object.assign(BOSSES,{
       if(b.cd<=0){b.cd=b.rage?2.4:3.4;const pts=b.rage?4:2;for(let i=0;i<pts;i++){const a=Math.random()*6.28,r=i?2+Math.random()*3:0;warn(HERO.pos.x+Math.sin(a)*r,HERO.pos.z+Math.cos(a)*r,2.2,1.2,8,()=>{G.slowT=2.2;say('黑霧纏身，變慢了！',1.5)},0x5a2a7a)}}
       b.eat=(b.eat??4)-dt;if(b.eat<=0){b.eat=b.rage?3.5:5;let n=0;for(const e of enemies){if(e.dead||e.elite||(e.x-b.x)**2+(e.z-b.z)**2>64)continue;e.dead=true;n++;if(n>=(b.rage?10:6))break;
           if(!simming)fx({p:tmp.set(e.x,.8,e.z),col:0xe22,add:true,life:.4,s0:.8,s1:.2,op:.8,vy:0})}
-        if(n){b.hp=Math.min(b.max,b.hp+b.max*.012*n);b.ate=.5;banner('餓鬼王吞食小妖','回血中，先清小妖！','');shake=.3}}
+        if(n){b.hp=Math.min(b.max,b.hp+b.max*.003*n);/* 每吞一隻回 0.3%（原本 1.2%，玩家反映打不死）*/b.ate=.5;banner('餓鬼王吞食小妖','回血中，先清小妖！','');shake=.3}}
       b.sum-=dt;if(b.sum<=0){b.sum=b.rage?4:6;for(let i=0;i<8;i++){const a=i/8*6.28;spawn(i%2?'ghost':'umb',b.x+Math.sin(a)*2,b.z+Math.cos(a)*2)}}}},
   ferry:{name:'黃泉擺渡人',line:'黃泉擺渡人：「船票呢？沒有的，都得上船。」',rage:'黃泉擺渡人：「開船了——！」',tip:'船槳會先畫出紅色長條，橫著跑出去！水面的綠燈會爆炸。',r:1.1,dmg:20,spd:1.4,bob:.8,
     build(g){const R=toon(0x181a22,{emissive:0x080a10}),H=toon(0x6a5a3a),W=toon(0x8a8a82,{emissive:0x181818}),body=new THREE.Group();body.scale.setScalar(1.9);g.add(body);
