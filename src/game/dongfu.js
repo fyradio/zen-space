@@ -18,7 +18,7 @@ save.inv=Object.assign({stone:0,seed:{ning:3,chi:1,shen:0},herb:{ning:0,chi:0,sh
 save.garden=save.garden||[null,null,null,null];save.won=save.won||{};if(save.won['10-2']&&!save.ending){save.ending=1;if((save.realm||0)<18)save.realm=18}// 舊存檔：打贏過老祖就補開結局、無盡之夜、化神
 save.ults=save.ults||['wan'];save.ult=save.ult||'wan';save.lastSeen=save.lastSeen||Date.now();
 const chUnlocked=i=>i===0||(i===11?!!save.ending:false)||i!==11&&[0,1,2].some(n=>save.won[`${i-1}-${n}`]);
-const DF=(()=>{let tab='go',tick=0,lookTab=0,lt=0,ld={g:0,x:0,b:0,h:0};
+const DF=(()=>{let tab='go',libTab='sweep',tick=0,lookTab=0,lt=0,ld={g:0,x:0,b:0,h:0};
   const TABS=[['go','出戰'],['med','靜室'],['garden','藥園'],['alch','丹房'],['look','造型'],['lib','藏經閣'],['shop','坊市'],['duel','鬥法台']];
   const el=$('#dfBody');
   function head(){$('#dfRealm').textContent=REALMS[save.realm];$('#dfStone').textContent=`靈石 ${fmt(save.inv.stone)}・妖丹 ${save.inv.yaodan}`}
@@ -66,9 +66,20 @@ const DF=(()=>{let tab='go',tick=0,lookTab=0,lt=0,ld={g:0,x:0,b:0,h:0};
             b.onclick=()=>{F[it.k]=i;look(it);[...seg.children].forEach((c,j)=>c.classList.toggle('won',j===i))};seg.appendChild(b)});row.appendChild(seg)}
         else{const inp=document.createElement('input');inp.type='range';inp.min=it.min;inp.max=it.max;inp.step=it.step;inp.value=F[it.k];inp.style.width='100%';inp.oninput=()=>{F[it.k]=+inp.value;look(it)};row.appendChild(inp)}
         box.appendChild(row)})}
-    else if(tab==='lib'){el.innerHTML=ULTS.map(u=>{const has=save.ults.includes(u.k);
-        return `<button class="ultpick${save.ult===u.k?' on':''}" data-ult="${u.k}" ${has?'':'disabled'}><b>${u.n}</b><span>${has?u.d:`打贏${CH[u.ch].n}解鎖`}</span></button>`}).join('');
-      $$('#dfBody [data-ult]').forEach(b=>b.onclick=()=>{save.ult=b.dataset.ult;writeSave();SFX.play('ready');render()})}
+    else if(tab==='lib'){grantSkills();const LT=[['sweep','近身'],['beam','方向'],['thunder','自動'],['ult','大絕']],TN=['煉氣','築基','結丹','元嬰'],TR=[0,9,12,15],tier=skillTier();
+      let h=`<div class="libtabs">${LT.map(([k,n])=>`<button data-lt="${k}" aria-pressed="${libTab===k}">${n}</button>`).join('')}</div>`;
+      if(libTab==='ult'){h+=ULTS.map(u=>{const has=save.ults.includes(u.k),buy=!has&&u.price&&(!u.need||u.need()),lock=!has&&!buy;
+          return `<div class="ultrow"><button class="ultpick${save.ult===u.k?' on':''}" data-ult="${u.k}" ${has?'':'disabled'}><b>${u.n}</b><span>${has?u.d:u.price?(u.need&&!u.need()?u.lockTxt:u.d):`打贏${CH[u.ch].n}解鎖`}</span></button>${buy?`<button class="btn${inv.stone>=u.price?' go':''}" data-ubuy="${u.k}" ${inv.stone>=u.price?'':'disabled'}>參悟 ${u.price}</button>`:''}</div>`}).join('')}
+      else{h+=`<p class="tag">每格三種招，按一下換上；高一個大境界的招強 1.3 倍。到境界送預設招，其他用靈石參悟。</p>`;
+        for(let t=0;t<4;t++){const list=SKILL_LIB[libTab].filter(S=>S.tier===t);h+=`<h3 class="libh">${TN[t]}${t>tier?`<small>（${REALMS[TR[t]]}開放）</small>`:''}</h3><div class="libgrid">`+list.map(S=>{const own=save.skOwn.includes(S.id),on=save.sk&&save.sk[libTab]===S.id,can=t<=tier,c='#'+S.col.toString(16).padStart(6,'0');
+            const text=libTab==='beam'?[0,1,2].map(i=>beamText(S,i)).join(' → '):(S.lv?S.lv.join(' → '):'');
+            return `<div class="skcard${on?' on':''}${can?'':' lock'}"><span class="skic" style="border-color:${c};text-shadow:0 0 8px ${c}">${S.ic}</span><div><b>${S.n}${S.dflt?'<em>預設</em>':''}</b><span>${S.d||''}</span><small>進化：${text}</small></div>${own?`<button class="btn${on?'':' go'}" data-skeq="${S.id}" ${on?'disabled':''}>${on?'使用中':'換上'}</button>`:can?`<button class="btn${inv.stone>=SKILL_PRICE[t]?' go':''}" data-skbuy="${S.id}" ${inv.stone>=SKILL_PRICE[t]?'':'disabled'}>參悟 ${SKILL_PRICE[t]}</button>`:'<button class="btn" disabled>未開放</button>'}</div>`}).join('')+'</div>'}}
+      el.innerHTML=h;
+      $$('#dfBody [data-lt]').forEach(b=>b.onclick=()=>{libTab=b.dataset.lt;SFX.play('soul');render()});
+      $$('#dfBody [data-ult]').forEach(b=>b.onclick=()=>{save.ult=b.dataset.ult;writeSave();SFX.play('ready');render()});
+      $$('#dfBody [data-ubuy]').forEach(b=>b.onclick=()=>{const u=ULTS.find(u=>u.k===b.dataset.ubuy);if(inv.stone<u.price)return;inv.stone-=u.price;save.ults.push(u.k);save.ult=u.k;writeSave();SFX.play('gold');banner('參悟大絕',u.n);render()});
+      $$('#dfBody [data-skeq]').forEach(b=>b.onclick=()=>{const S=skById(b.dataset.skeq);save.sk[S.slot]=S.id;writeSave();SFX.play('ready');render()});
+      $$('#dfBody [data-skbuy]').forEach(b=>b.onclick=()=>{const S=skById(b.dataset.skbuy),p=SKILL_PRICE[S.tier];if(inv.stone<p)return;inv.stone-=p;save.skOwn.push(S.id);save.sk[S.slot]=S.id;writeSave();SFX.play('gold');banner('參悟新招',S.n);render()})}
     else if(tab==='duel'){const ok=save.realm>=15;el.innerHTML=`<div class="dfsec"><h3>鬥法台</h3><p class="tag">${ok?'三局兩勝，公平鬥法（兩邊一樣強）：護體靈光 → 肉身 → 元嬰。飛劍自動瞄準，閃身瞬間無敵。':'成嬰（元嬰初期）之後開放。'}</p>
         <button class="btn gold" id="duelAI" ${ok?'':'disabled'}>對電腦（贏下來算修行勝場：${save.st.duel} 場）</button>
         <button class="btn" id="duel2P" ${ok?'':'disabled'}>雙人同機（左右各一人）</button></div>`;

@@ -85,10 +85,7 @@ const SKILL_SETS=[
     beam:{n:'赤焰火龍',ic:'龍',col:0xff8a2a,shape:'line',w:1.4,range:()=>10,cd:()=>5.5*G.k.beamCd,spread:()=>G.k.beamLv>0?Math.min(Math.PI*2,DRAGON_SPREAD[G.k.beamLv]+.12):0,lv:DRAGON_LV,cast:dragonCast},
     thunder:{n:'太極氣旋',ic:'極',col:0xe8e4d8,shape:'auto',range:()=>8,cd:()=>10,lv:TAIJI_LV,cast:taijiCast}}];
 const skillTier=()=>Math.min(SKILL_SETS.length-1,save.realm>=15?3:save.realm>=12?2:save.realm>=9?1:0);
-function setSkills(t){const S=SKILL_SETS[t];
-  for(const k of ['sweep','beam','thunder']){SK[k]=S[k];const b=skBtn[k],c='#'+S[k].col.toString(16).padStart(6,'0');b.querySelector('.ic').textContent=S[k].ic;b.querySelector('em').textContent=S[k].n;b.setAttribute('aria-label',S[k].n);
-    b.style.borderColor=c;b.style.boxShadow=`0 0 12px ${c}66`;b.querySelector('.ic').style.textShadow=`0 0 8px ${c}`}}
-setSkills(0);
+// 裝備哪三招改由 skilllib.js 的 equipSkills()（藏經閣自選）
 
 // ---------- 閃現／風雷翼 ----------
 function setBlink(){const b=skBtn.blink,on=save.realm>=12,wing=save.realm>=15;b.hidden=!on;SK.blink.n=wing?'風雷翼':'閃現';SK.blink.ic=wing?'翼':'閃';b.querySelector('.ic').textContent=SK.blink.ic;b.querySelector('em').textContent=SK.blink.n;G.blink2=false}
@@ -101,7 +98,7 @@ function blinkSpot(){const hx=HERO.pos.x,hz=HERO.pos.z;let best=null,bs=1e9;
 function blinkCast(A){const [tx0,tz0]=A.pt,hx=HERO.pos.x,hz=HERO.pos.z;let dx=tx0-hx,dz=tz0-hz,d=Math.hypot(dx,dz)||1;const R=SK.blink.range();if(d>R){dx*=R/d;dz*=R/d;d=R}
   const tx=hx+dx,tz=hz+dz;SFX.play('soul');buzz(15);G.iframe=Math.max(G.iframe,.2);root.position.x=tx;root.position.z=tz;root.rotation.y=Math.atan2(dx,dz);
   if(save.realm>=15)G.blink2=!G.blink2;
-  const m=new THREE.Mesh(beamGeo,new THREE.MeshBasicMaterial({map:beamTex,color:0x7a3aff,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide}));m.position.set(hx,.9,hz);m.rotation.y=Math.atan2(dx,dz);m.scale.set(.9,1,d);scene.add(m);
+  const m=new THREE.Mesh(beamGeo,new THREE.MeshBasicMaterial({map:wBeamTex,color:0x9a5aff,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide}));m.position.set(hx,.9,hz);m.rotation.y=Math.atan2(dx,dz);m.scale.set(.9,1,d);scene.add(m);
   act(.35,t=>{m.material.opacity=1-t/.35;m.scale.x=.9*(1-t/.35)+.1},()=>{scene.remove(m);m.material.dispose()});
   for(let i=0;i<6;i++){const k=i/5;fx({p:tmp.set(hx+dx*k,.6+Math.random()*.8,hz+dz*k),col:i%2?0xd8b0ff:0x9a5aff,add:true,life:.45,s0:1.1,s1:.2,op:.9,vy:.4})}
   fx({p:tmp.set(tx,.4,tz),col:0xc89aff,add:true,life:.35,s0:.6,s1:2.6,op:.9,vy:0});if(save.realm>=15)boltAt(tx,tz,0,0,0xd8c8ff,.06,6)}
