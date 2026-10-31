@@ -34,7 +34,7 @@ const DF=(()=>{let tab='go',libTab='sweep',tick=0,lookTab=0,lt=0,ld={g:0,x:0,b:0
   const offline=()=>{const h=Math.min(8,(Date.now()-save.lastSeen)/3600000);return Math.floor(h*(6+4*save.realm))};
   function body(){const inv=save.inv;lookCam=tab==='look'?(FACE_SPEC[lookTab].cam==='body'?'body':'face'):null;
     if(tab==='go'){el.innerHTML=CH.map((c,i)=>{const open=chUnlocked(i),ready=i<CH_READY;
-        return `<div class="chrow${open&&ready?'':' lock'}"><div class="chn"><b>${c.n}</b><span>${c.p}</span><small>推薦 ${REALMS[c.rec]}</small></div><div class="chnights">${NIGHTS.map((n,j)=>
+        return `<div class="chrow${open&&ready?'':' lock'}"><div class="chn"><b>${c.n}</b><span>${c.p}</span><small>推薦 ${REALMS[c.rec]}</small></div><div class="chnights">${i===11?`<button class="nb" data-ch="11" data-n="0" ${open?'':'disabled'}>挑戰${save.board&&save.board.length?`<small>最佳 ${save.board[0].k}</small>`:''}</button><small class="endnote">沒有終點，撐越久越強，看能斬多少</small>`:NIGHTS.map((n,j)=>
           `<button class="nb${save.won[`${i}-${j}`]?' won':''}" data-ch="${i}" data-n="${j}" ${open&&ready?'':'disabled'}>${n}${save.won[`${i}-${j}`]?' ✓':''}</button>`).join('')}</div>${!ready?'<em>製作中</em>':!open?'<em>打贏上一章任一夜開放</em>':''}</div>`}).join('');
       if(save.ending&&save.board&&save.board.length)el.innerHTML+=`<div class="dfsec"><h3>無盡之夜排行（本機前 5）</h3><ul class="reqs">${save.board.map((r,i)=>`<li><span>${i+1}. ${r.d}</span><b>斬妖 ${r.k}・魔王 ${r.b===true?1:r.b||0}・${Math.floor((r.t||0)/60)}分</b></li>`).join('')}</ul></div>`;
       $$('#dfBody [data-ch]').forEach(b=>b.onclick=()=>go(+b.dataset.ch,+b.dataset.n))}
