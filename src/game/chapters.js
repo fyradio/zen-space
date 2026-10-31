@@ -17,7 +17,12 @@ const MAPS={
     [-1,1].forEach(s=>part(new THREE.BoxGeometry(.08,1.3,.08),poleM,g,{p:[s*.62,.9,0]}));part(new THREE.BoxGeometry(1.4,.08,.08),poleM,g,{p:[0,1.52,0]});HOUSES.push({x:3.2,z:-2.4,r:.8})},
   1:()=>{pave.visible=false;// 荒村夜: dry fields in rows, scarecrows, broken walls, a few ruined houses, dead trees
     const soil=toon(0x0e0b07,{roughness:1}),straw=toon(0x8a7440),wood=toon(0x3a2a1e),cloth=toon(0x5a4a3a);
-    for(let r=-4;r<=4;r++){const m=new THREE.Mesh(new THREE.BoxGeometry(40,.05,.32),soil);m.position.set(0,.025,r*2.2+1);mapG.add(m)}
+    // 荒田：幾塊小田（深色田土＋幾條田壟＋枯稈），不再橫貫整張地圖（從上往下看像破圖）
+    const dirt=toon(0x2a2118,{roughness:1}),ridge=toon(0x45352a,{roughness:1}),stalk=toon(0x6a5a34);
+    [[-11,-8],[10,-10],[-12,9],[11,8],[0,-15],[1,15]].forEach(([fx,fz])=>{const g=new THREE.Group(),w=6+rnd()*3,d=4+rnd()*2;g.position.set(fx+(rnd()-.5)*2,0,fz+(rnd()-.5)*2);g.rotation.y=(rnd()-.5)*.8;mapG.add(g);
+      part(new THREE.PlaneGeometry(w,d).rotateX(-Math.PI/2),dirt,g,{p:[0,.012,0],ol:false});
+      const n=Math.round(d/.75);for(let r=0;r<n;r++){const z=-d/2+.4+r*(d-.8)/(n-1);part(new THREE.BoxGeometry(w-.6,.08,.22),ridge,g,{p:[0,.04,z],ol:false});
+        for(let k=0;k<4;k++)if(rnd()<.6)part(new THREE.ConeGeometry(.04,.32+rnd()*.2,4),stalk,g,{p:[-w/2+.6+rnd()*(w-1.2),.18,z],r:[(rnd()-.5)*.6,0,(rnd()-.5)*.6],ol:false})}});
     for(let i=0;i<22;i++){const x=(rnd()-.5)*36,z=(rnd()-.5)*36;if(Math.hypot(x,z)<5)continue;const g=new THREE.Group();g.position.set(x,0,z);g.rotation.y=rnd()*6;mapG.add(g);
       part(new THREE.CylinderGeometry(.04,.05,1.8,5),wood,g,{p:[0,.9,0]});part(new THREE.CylinderGeometry(.03,.03,1.2,5),wood,g,{p:[0,1.35,0],r:[0,0,Math.PI/2]});
       part(new THREE.SphereGeometry(.17,8,6),straw,g,{p:[0,1.75,0]});part(new THREE.ConeGeometry(.32,.18,10),straw,g,{p:[0,1.92,0]});part(new THREE.BoxGeometry(.5,.55,.08),cloth,g,{p:[0,1.25,0]});HOUSES.push({x,z,r:.35})}
