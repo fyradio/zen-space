@@ -74,7 +74,7 @@ Object.assign(BOSSES,{
     build(g){const D=toon(0x2a2838,{emissive:0x0a0814}),P=new THREE.MeshBasicMaterial({color:0xb784ff}),body=new THREE.Group();body.scale.setScalar(1.7);g.add(body);part(new THREE.SphereGeometry(.7,14,10),D,body,{p:[0,.9,0],s:[1,.9,1.5]});part(new THREE.SphereGeometry(.4,12,10),D,body,{p:[0,1.2,1.1]});
       [-1,1].forEach(d=>{[.7,-.7].forEach(z=>part(C0,D,body,{p:[d*.4,.35,z],s:[.12,.7,.12]}));part(new THREE.ConeGeometry(.06,.5,5),P,body,{p:[d*.2,1.7,1.15],r:[0,0,-d*.3]});part(new THREE.SphereGeometry(.05,6,5),P,body,{p:[d*.15,1.3,1.45]})});
       for(let i=0;i<5;i++)part(new THREE.ConeGeometry(.1,.45,5),P,body,{p:[0,1.6-i*.1,.6-i*.35],r:[-.2,0,0]});
-      const L=new THREE.PointLight(0xb784ff,2,10,1.4);L.position.y=1.5;body.add(L);return {body,L,Li:2,spin:b=>{}}},
+      const L=new FxLight(0xb784ff,2,10,1.4);L.position.y=1.5;body.add(L);return {body,L,Li:2,spin:b=>{}}},
     act(b,dt){if(b.dash>0){b.dash-=dt;b.x+=b.dx*13*dt;b.z+=b.dz*13*dt;return}skyFollow(b,dt,6,4);b.cd-=dt;
       if(b.cd<=0){b.k=(b.k||0)+1;
         if(b.k%3===1){b.cd=b.rage?2.6:3.4;const rows=b.rage?4:3;for(let r=0;r<rows;r++)for(let i=-3;i<=3;i++){if(i===(r%2?-1:1)*2&&r%2===0)continue;const x=HERO.pos.x+i*2.1,z=HERO.pos.z+2+r*2.4;warn(x,z,1.1,1+r*.3,16,null,0xb784ff);act(1+r*.3,null,()=>{if(G&&!G.over)boltAt(x,z,0,0,0xd8c8ff,.1,14)})}}

@@ -56,7 +56,7 @@ function robed(o){return g=>{const R=toon(o.robe,{emissive:o.em||0x080810}),A=to
   part(new THREE.ConeGeometry(.75,1.9,10),R,body,{p:[0,.95,0]});part(new THREE.SphereGeometry(.26,12,10),F,body,{p:[0,2.1,0]});part(new THREE.ConeGeometry(.3,.5,8),A,body,{p:[0,2.5,0]});
   [-1,1].forEach(d=>{part(new THREE.CylinderGeometry(.09,.12,.9,6),R,body,{p:[d*.6,1.3,.2],r:[.9,0,d*.5]});part(new THREE.SphereGeometry(.05,6,5),new THREE.MeshBasicMaterial({color:o.eye||0xff3a3a}),body,{p:[d*.1,2.15,.22]})});
   const orb=[];for(let i=0;i<(o.n||4);i++){const m=new THREE.Mesh(o.orb||new THREE.OctahedronGeometry(.28),new THREE.MeshBasicMaterial({color:o.glow||0xb784ff}));body.add(m);orb.push(m)}
-  const L=new THREE.PointLight(o.glow||0xb784ff,2,11,1.4);L.position.y=1.8;body.add(L);if(o.extra)o.extra(body,A,R);
+  const L=new FxLight(o.glow||0xb784ff,2,11,1.4);L.position.y=1.8;body.add(L);if(o.extra)o.extra(body,A,R);
   return {body,L,Li:2.2,spin:b=>orb.forEach((m,i)=>{const a=b.t*1.6+i/orb.length*6.28;m.position.set(Math.sin(a)*1.5,1.6+Math.sin(b.t*2+i)*.3,Math.cos(a)*1.5);m.rotation.y=a})}}}
 // ---------- 魔王 ----------
 Object.assign(BOSSES,{
@@ -76,7 +76,7 @@ Object.assign(BOSSES,{
     build:robed({robe:0x3a0e14,acc:0xc02a2a,glow:0xff5a4a,eye:0xff2a2a,skin:0xb8a8a0,em:0x300808,n:8,s:1.2,orb:new THREE.SphereGeometry(.26,8,6),extra:(b,A,R)=>{part(new THREE.TorusGeometry(.62,.06,8,40),new THREE.MeshBasicMaterial({color:0xff4a3a}),b,{p:[0,2.2,-.35]});[-1,1].forEach(d=>part(new THREE.ConeGeometry(.42,1.3,8),R,b,{p:[d*.75,1.15,.15],r:[0,0,d*1.1]}));part(new THREE.TorusGeometry(1.25,.12,6,48),new THREE.MeshBasicMaterial({color:0x8a1a1a,transparent:true,opacity:.75}),b,{p:[0,.06,0],r:[Math.PI/2,0,0]});for(let i=0;i<5;i++)part(new THREE.ConeGeometry(.05,.35,4),A,b,{p:[(i-2)*.12,2.48,0],r:[0,0,(i-2)*-.2]})}}),
     act:duelAct([b=>AT.ring(b),AT.blink,b=>AT.lines(b,5),b=>AT.rain(b,10),b=>AT.fan(b,3),b=>AT.homing(b,4),AT.dash],2.1,['lamp',3,11])},
   jie:{duel:1,noHit:1,col:0xd8c8ff,name:'九重雷劫',winText:'你渡過了九重雷劫，元嬰更凝實了！',line:'天空黑了——九重雷劫，降下！',rage:'',tip:'撐過九重雷劫！看紫色圈圈，一道一道閃開。',r:.1,dmg:14,spd:0,y:9,
-    build(g){const L=new THREE.PointLight(0xb784ff,3,30,1.2);L.position.y=0;g.add(L);const body=new THREE.Group();g.add(body);return {body,L,Li:3,spin:()=>{}}},
+    build(g){const L=new FxLight(0xb784ff,3,30,1.2);L.position.y=0;g.add(L);const body=new THREE.Group();g.add(body);return {body,L,Li:3,spin:()=>{}}},
     act(b,dt){b.x=HERO.pos.x;b.z=HERO.pos.z;if(G.clash)return;b.rd=b.rd??0;b.cd-=dt;
       if(b.cd<=0&&b.rd<9){b.rd++;const r=b.rd;b.cd=4.4;banner(`第 ${r} 道雷劫`,r===9?'最後一道！':'',false);const n=3+r*1.3|0,dl=Math.max(.7,1.4-r*.08);
         for(let i=0;i<n;i++)act(i*.18,null,()=>{if(!G||G.over)return;const lead=i%2===0,a=Math.random()*6.28,d=lead?Math.random()*1.2:1.5+Math.random()*(r>5?5:3.5),x=HERO.pos.x+(lead?HERO.vel.x*dl:0)+Math.sin(a)*d,z=HERO.pos.z+(lead?HERO.vel.z*dl:0)+Math.cos(a)*d;warn(x,z,1.35,dl,b.dmg*(.5+r*.08),null,0xb784ff);act(dl,null,()=>{if(G&&!G.over)boltAt(x,z,0,0,0xe0d0ff,.1+r*.01,16)})});
@@ -145,7 +145,7 @@ function yuanyingCast(){const dmg=swordDmg()*6,DUR=8;G.ultBoss=0;G.slow=.4;G.med
   const av=new THREE.Group(),fig=soulFig(0xd89420,.8),M=fig.userData.M;fig.scale.setScalar(.95);av.add(fig);
   const glow=new THREE.Sprite(new THREE.SpriteMaterial({map:soulGlowTex(),color:0xffd86a,transparent:true,opacity:.7,blending:THREE.AdditiveBlending,depthWrite:false}));glow.scale.set(3,3.6,1);glow.position.y=.9;av.add(glow);
   const sw=new THREE.Group();av.add(sw);const blade=new THREE.Mesh(new THREE.ConeGeometry(.06,1,4),new THREE.MeshBasicMaterial({color:0xfff4c0,transparent:true,opacity:.95,blending:THREE.AdditiveBlending,depthWrite:false}));blade.rotation.x=Math.PI/2;blade.position.set(.55,.8,0);sw.add(blade);
-  const L=new THREE.PointLight(0xffd86a,2,6,1.5);L.position.y=.8;av.add(L);av.position.set(HERO.pos.x,HERO.pos.y+1.6,HERO.pos.z);scene.add(av);
+  const L=new FxLight(0xffd86a,2,6,1.5);L.position.y=.8;av.add(L);av.position.set(HERO.pos.x,HERO.pos.y+1.6,HERO.pos.z);scene.add(av);
   const st={tg:null,cd:0,hitT:0};const pickTg=()=>{const near=enemies.filter(e=>!e.dead&&onScreen(e.x,.4,e.z)).sort((a,b)=>Math.hypot(a.x-av.position.x,a.z-av.position.z)-Math.hypot(b.x-av.position.x,b.z-av.position.z)).slice(0,5);
     if(boss.alive&&bossOnScreen()&&(Math.random()<.35||!near.length))return boss;return near[Math.floor(Math.random()*near.length)]||null};
   act(DUR,(t,dt)=>{G.iframe=Math.max(G.iframe,.3);const back=t>DUR-.6;let tx,tz,ty=1.1;

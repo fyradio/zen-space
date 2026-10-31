@@ -109,7 +109,7 @@ const BOSSES={
       const body=part(new THREE.LatheGeometry(lanternPts,28),new THREE.MeshStandardMaterial({map:faceT,emissive:LC(0x9a3a0a),emissiveIntensity:.8,roughness:.6}),g,{s:[3.4,3.4,3.4],p:[0,2.1,0]});body.rotation.y=-Math.PI/2;
       part(new THREE.CylinderGeometry(.44,.5,.22,16),toon(0x24160f),g,{p:[0,3.25,0]});part(new THREE.CylinderGeometry(.5,.44,.22,16),toon(0x24160f),g,{p:[0,.95,0]});
       [-1,1].forEach(d=>part(new THREE.ConeGeometry(.16,.7,8),toon(0x24160f),g,{p:[d*.45,3.6,0],r:[0,0,-d*.4]}));
-      const L=new THREE.PointLight(0xff8a3a,2.4,12,1.4);L.position.y=2.1;g.add(L);const gl=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex,color:0xff9a4a,opacity:.6,blending:THREE.AdditiveBlending,depthWrite:false}));gl.scale.set(6,6,1);gl.position.y=2.1;g.add(gl);
+      const L=new FxLight(0xff8a3a,2.4,12,1.4);L.position.y=2.1;g.add(L);const gl=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex,color:0xff9a4a,opacity:.6,blending:THREE.AdditiveBlending,depthWrite:false}));gl.scale.set(6,6,1);gl.position.y=2.1;g.add(gl);
       return {body,L,spin:b=>{body.rotation.y=-Math.PI/2+Math.sin(b.t*2)*.1;if(b.rage)body.scale.setScalar(3.4*(1+Math.sin(b.t*10)*.03))}}},
     act(b,dt){b.cd-=dt;if(b.cd<=0){b.cd=Math.max(b.rage?1.2:1.8,(b.rage?2.2:3.2)-minute()*.12);const n=3+Math.floor(Math.random()*3);
         for(let i=0;i<n;i++){const a=Math.random()*Math.PI*2,r=i===0?0:1.2+Math.random()*2.8;warn(HERO.pos.x+Math.sin(a)*r+HERO.vel.x*.5,HERO.pos.z+Math.cos(a)*r+HERO.vel.z*.5,1.1,1.25,14)}}
@@ -147,7 +147,7 @@ const BOSSES={
       const faceT=ctex(256,128,(x,w,h)=>{x.fillStyle='#8a6a2a';x.fillRect(0,0,w,h);x.fillStyle='#1a0e04';const cx=w*.25;[-1,1].forEach(d=>{x.beginPath();x.ellipse(cx+d*22,52,12,8,0,0,7);x.fill()});x.beginPath();x.ellipse(cx,88,26,10,0,0,7);x.fill();
         x.strokeStyle='#c8a050';x.lineWidth=3;for(let i=0;i<6;i++){x.beginPath();x.arc(w*.75,64,10+i*8,0,7);x.stroke()}});
       const body=part(new THREE.LatheGeometry(V2([[0,0],[1.15,0],[1.05,.3],[.85,1.3],[.7,2],[.5,2.3],[0,2.4]]),28),new THREE.MeshStandardMaterial({map:faceT,roughness:.4,metalness:.5,emissive:LC(0x2a1a06)}),g,{p:[0,.6,0]});body.rotation.y=-Math.PI/2;
-      part(new THREE.TorusGeometry(.25,.07,8,16),K,g,{p:[0,3.1,0]});const L=new THREE.PointLight(0xffc860,1.6,10,1.4);L.position.y=1.6;g.add(L);
+      part(new THREE.TorusGeometry(.25,.07,8,16),K,g,{p:[0,3.1,0]});const L=new FxLight(0xffc860,1.6,10,1.4);L.position.y=1.6;g.add(L);
       return {body,L,spin:b=>{body.rotation.z=Math.sin(b.t*3)*(b.ring>0?.12:.04)}}},
     act(b,dt){b.ring=Math.max(0,(b.ring||0)-dt);b.cd-=dt;if(b.cd<=0){b.k=(b.k||0)+1;
         if(b.k%3!==0){b.cd=b.rage?1.9:2.8;b.ring=.8;SFX.play('bell');const gap=Math.atan2(HERO.pos.x-b.x,HERO.pos.z-b.z)+(Math.random()-.5)*2.6;wave(b.x,b.z,5,13,gap,.9,15,0xffc860,()=>{G.slowT=1})}

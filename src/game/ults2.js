@@ -48,7 +48,7 @@ function timeStopUlt(){ultStart('光陰凝');const T=3;for(const e of enemies)if
   act(T,null,()=>{cv.style.filter=''})}
 // 百丈法相（化神）：身後升起十倍高的金色法相，一巴掌按下全場
 function fashenUlt(){ultStart('百丈法相');const g=new THREE.Group(),fig=soulFig(0xd89420,.0),M=fig.userData.M;fig.scale.setScalar(.1);g.add(fig);g.position.set(HERO.pos.x,0,HERO.pos.z-4);g.rotation.y=0;scene.add(g);
-  const palm=new THREE.Mesh(new THREE.CircleGeometry(1,40).rotateX(-Math.PI/2),new THREE.MeshBasicMaterial({color:0xffd86a,transparent:true,opacity:0,blending:THREE.AdditiveBlending,depthWrite:false}));scene.add(palm);const L=new THREE.PointLight(0xffd86a,0,40,1.2);L.position.y=12;g.add(L);
+  const palm=new THREE.Mesh(new THREE.CircleGeometry(1,40).rotateX(-Math.PI/2),new THREE.MeshBasicMaterial({color:0xffd86a,transparent:true,opacity:0,blending:THREE.AdditiveBlending,depthWrite:false}));scene.add(palm);const L=new FxLight(0xffd86a,0,40,1.2);L.position.y=12;g.add(L);
   let slam=false;G.iframe=Math.max(G.iframe,3);
   act(3,(t)=>{const k=Math.min(1,t/.9);fig.scale.setScalar(.1+9.4*k*k*(3-2*k)/1);M.opacity=.55*Math.min(1,t/.4,(3-t)/.5);L.intensity=3*M.opacity;g.position.set(HERO.pos.x,0,HERO.pos.z-4);
       palm.position.set(HERO.pos.x,.08,HERO.pos.z);const pk=t<1.3?0:Math.min(1,(t-1.3)/.25);palm.scale.setScalar(.5+pk*18);palm.material.opacity=pk<1?pk*.6:Math.max(0,.6-(t-1.55)*.5);

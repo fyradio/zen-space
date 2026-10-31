@@ -61,7 +61,7 @@ Object.assign(BOSSES,{
     build(g){const R=toon(0x181a22,{emissive:0x080a10}),H=toon(0x6a5a3a),W=toon(0x8a8a82,{emissive:0x181818}),body=new THREE.Group();body.scale.setScalar(1.9);g.add(body);
       part(lathe([[0,0],[.5,0],[.4,.8],[.25,1.5],[0,1.6]],12),R,body,{p:[0,0,0]});part(new THREE.SphereGeometry(.2,12,10),W,body,{p:[0,1.65,0]});part(new THREE.ConeGeometry(.5,.35,12),H,body,{p:[0,1.95,0]});
       const oar=new THREE.Group();oar.position.set(.45,1.1,.2);body.add(oar);part(new THREE.CylinderGeometry(.03,.03,2.6,6),H,oar,{p:[0,0,.9],r:[Math.PI/2,0,0]});part(new THREE.BoxGeometry(.5,.04,.8),H,oar,{p:[0,0,2.1]});
-      const L=new THREE.PointLight(0x6affc8,1.4,9,1.4);L.position.set(-.5,1.3,.4);body.add(L);const lm=new THREE.Mesh(new THREE.SphereGeometry(.14,10,8),new THREE.MeshBasicMaterial({color:0x6affc8}));lm.position.copy(L.position);body.add(lm);
+      const L=new FxLight(0x6affc8,1.4,9,1.4);L.position.set(-.5,1.3,.4);body.add(L);const lm=new THREE.Mesh(new THREE.SphereGeometry(.14,10,8),new THREE.MeshBasicMaterial({color:0x6affc8}));lm.position.copy(L.position);body.add(lm);
       return {body,oar,spin:b=>{oar.rotation.y=b.swing>0?Math.sin((1-b.swing/.5)*Math.PI)*1.7-.85:Math.sin(b.t*1.2)*.15}}},
     act(b,dt){b.swing=Math.max(0,(b.swing||0)-dt);b.cd-=dt;const a0=Math.atan2(HERO.pos.x-b.x,HERO.pos.z-b.z);
       if(b.cd<=0){b.k=(b.k||0)+1;const m=b.k%4;

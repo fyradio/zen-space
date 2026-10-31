@@ -1606,6 +1606,21 @@ function updSkillUI(){for(const k in SK){const b=skBtn[k];let p,txt='';
     else{const c=G.cd[k];p=c>0?c/SK[k].cd():0;b.style.setProperty('--p',(p*100).toFixed(1)+'%');txt=c>0?String(Math.ceil(c)):''}
     if(b._t!==txt){b._t=txt;b.querySelector('b').textContent=txt}}}
 
+/* ================= 特效燈光池 =================
+   場上點光源的「數量」一變，three.js 就要把所有受光材質的著色器重編一次（魔王出場、放大絕時會卡一下）。
+   所以魔王、元嬰、法相這些要發光的東西不直接 new PointLight，而是用 FxLight（只是一個位置＋亮度的記號），
+   每幀把最靠近主角、正在亮的兩個指派給固定 2 盞真的燈；燈的數量永遠不變。 */
+const LIGHT_POOL=[0,1].map(()=>{const l=new THREE.PointLight(0xffffff,0,10,1.4);scene.add(l);return l});
+const FX_LIGHTS=new Set();
+class FxLight extends THREE.Object3D{constructor(col=0xffffff,intensity=1,distance=10,decay=1.4){super();this.color=new THREE.Color(col);this._i=intensity;this.distance=distance;this.decay=decay;FX_LIGHTS.add(this)}
+  get intensity(){return this._i}set intensity(v){this._i=v}}
+const _lw=new THREE.Vector3();
+function inScene(o){let v=true;while(o){if(!o.visible)return false;if(o===scene)return v;o=o.parent}return false}
+function syncLights(){const act=[];for(const L of FX_LIGHTS){if(L._i<=0.01||!inScene(L)){if(!L.parent&&L._dead)FX_LIGHTS.delete(L);continue}L.getWorldPosition(_lw);act.push([L,_lw.distanceToSquared(HERO.pos),_lw.clone()])}
+  act.sort((a,b)=>a[1]-b[1]);LIGHT_POOL.forEach((P,i)=>{const a=act[i];if(!a){P.intensity=0;return}const [L,,w]=a;P.position.copy(w);P.color.copy(L.color);P.intensity=L._i;P.distance=L.distance;P.decay=L.decay})}
+// 用完的 FxLight 從場景拿掉後要丟出集合：在 parent 被移除時看不到，所以每 5 秒清一次沒掛在場景上的
+setInterval(()=>{for(const L of FX_LIGHTS)if(!inScene(L)&&!(L.parent&&L.parent.parent))FX_LIGHTS.delete(L)},5000);
+
 /* ================= 三個普通技能：隨境界換一套 =================
    煉氣：青竹劍（綠扇形橫掃）、劍氣長虹（紅直線→散射）、五雷咒（紫色連鎖閃電，點一下自動追妖）
    築基：寒霜劍輪（冰藍劍輪從身邊飛出，緩速→冰封）、赤焰火龍（火龍沿直線飛、留下燃燒）、太極氣旋（自動找妖最多處，捲進來再爆開）
@@ -1883,7 +1898,7 @@ const BOSSES={
       const body=part(new THREE.LatheGeometry(lanternPts,28),new THREE.MeshStandardMaterial({map:faceT,emissive:LC(0x9a3a0a),emissiveIntensity:.8,roughness:.6}),g,{s:[3.4,3.4,3.4],p:[0,2.1,0]});body.rotation.y=-Math.PI/2;
       part(new THREE.CylinderGeometry(.44,.5,.22,16),toon(0x24160f),g,{p:[0,3.25,0]});part(new THREE.CylinderGeometry(.5,.44,.22,16),toon(0x24160f),g,{p:[0,.95,0]});
       [-1,1].forEach(d=>part(new THREE.ConeGeometry(.16,.7,8),toon(0x24160f),g,{p:[d*.45,3.6,0],r:[0,0,-d*.4]}));
-      const L=new THREE.PointLight(0xff8a3a,2.4,12,1.4);L.position.y=2.1;g.add(L);const gl=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex,color:0xff9a4a,opacity:.6,blending:THREE.AdditiveBlending,depthWrite:false}));gl.scale.set(6,6,1);gl.position.y=2.1;g.add(gl);
+      const L=new FxLight(0xff8a3a,2.4,12,1.4);L.position.y=2.1;g.add(L);const gl=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex,color:0xff9a4a,opacity:.6,blending:THREE.AdditiveBlending,depthWrite:false}));gl.scale.set(6,6,1);gl.position.y=2.1;g.add(gl);
       return {body,L,spin:b=>{body.rotation.y=-Math.PI/2+Math.sin(b.t*2)*.1;if(b.rage)body.scale.setScalar(3.4*(1+Math.sin(b.t*10)*.03))}}},
     act(b,dt){b.cd-=dt;if(b.cd<=0){b.cd=Math.max(b.rage?1.2:1.8,(b.rage?2.2:3.2)-minute()*.12);const n=3+Math.floor(Math.random()*3);
         for(let i=0;i<n;i++){const a=Math.random()*Math.PI*2,r=i===0?0:1.2+Math.random()*2.8;warn(HERO.pos.x+Math.sin(a)*r+HERO.vel.x*.5,HERO.pos.z+Math.cos(a)*r+HERO.vel.z*.5,1.1,1.25,14)}}
@@ -1921,7 +1936,7 @@ const BOSSES={
       const faceT=ctex(256,128,(x,w,h)=>{x.fillStyle='#8a6a2a';x.fillRect(0,0,w,h);x.fillStyle='#1a0e04';const cx=w*.25;[-1,1].forEach(d=>{x.beginPath();x.ellipse(cx+d*22,52,12,8,0,0,7);x.fill()});x.beginPath();x.ellipse(cx,88,26,10,0,0,7);x.fill();
         x.strokeStyle='#c8a050';x.lineWidth=3;for(let i=0;i<6;i++){x.beginPath();x.arc(w*.75,64,10+i*8,0,7);x.stroke()}});
       const body=part(new THREE.LatheGeometry(V2([[0,0],[1.15,0],[1.05,.3],[.85,1.3],[.7,2],[.5,2.3],[0,2.4]]),28),new THREE.MeshStandardMaterial({map:faceT,roughness:.4,metalness:.5,emissive:LC(0x2a1a06)}),g,{p:[0,.6,0]});body.rotation.y=-Math.PI/2;
-      part(new THREE.TorusGeometry(.25,.07,8,16),K,g,{p:[0,3.1,0]});const L=new THREE.PointLight(0xffc860,1.6,10,1.4);L.position.y=1.6;g.add(L);
+      part(new THREE.TorusGeometry(.25,.07,8,16),K,g,{p:[0,3.1,0]});const L=new FxLight(0xffc860,1.6,10,1.4);L.position.y=1.6;g.add(L);
       return {body,L,spin:b=>{body.rotation.z=Math.sin(b.t*3)*(b.ring>0?.12:.04)}}},
     act(b,dt){b.ring=Math.max(0,(b.ring||0)-dt);b.cd-=dt;if(b.cd<=0){b.k=(b.k||0)+1;
         if(b.k%3!==0){b.cd=b.rage?1.9:2.8;b.ring=.8;SFX.play('bell');const gap=Math.atan2(HERO.pos.x-b.x,HERO.pos.z-b.z)+(Math.random()-.5)*2.6;wave(b.x,b.z,5,13,gap,.9,15,0xffc860,()=>{G.slowT=1})}
@@ -2050,7 +2065,7 @@ Object.assign(BOSSES,{
     build(g){const R=toon(0x181a22,{emissive:0x080a10}),H=toon(0x6a5a3a),W=toon(0x8a8a82,{emissive:0x181818}),body=new THREE.Group();body.scale.setScalar(1.9);g.add(body);
       part(lathe([[0,0],[.5,0],[.4,.8],[.25,1.5],[0,1.6]],12),R,body,{p:[0,0,0]});part(new THREE.SphereGeometry(.2,12,10),W,body,{p:[0,1.65,0]});part(new THREE.ConeGeometry(.5,.35,12),H,body,{p:[0,1.95,0]});
       const oar=new THREE.Group();oar.position.set(.45,1.1,.2);body.add(oar);part(new THREE.CylinderGeometry(.03,.03,2.6,6),H,oar,{p:[0,0,.9],r:[Math.PI/2,0,0]});part(new THREE.BoxGeometry(.5,.04,.8),H,oar,{p:[0,0,2.1]});
-      const L=new THREE.PointLight(0x6affc8,1.4,9,1.4);L.position.set(-.5,1.3,.4);body.add(L);const lm=new THREE.Mesh(new THREE.SphereGeometry(.14,10,8),new THREE.MeshBasicMaterial({color:0x6affc8}));lm.position.copy(L.position);body.add(lm);
+      const L=new FxLight(0x6affc8,1.4,9,1.4);L.position.set(-.5,1.3,.4);body.add(L);const lm=new THREE.Mesh(new THREE.SphereGeometry(.14,10,8),new THREE.MeshBasicMaterial({color:0x6affc8}));lm.position.copy(L.position);body.add(lm);
       return {body,oar,spin:b=>{oar.rotation.y=b.swing>0?Math.sin((1-b.swing/.5)*Math.PI)*1.7-.85:Math.sin(b.t*1.2)*.15}}},
     act(b,dt){b.swing=Math.max(0,(b.swing||0)-dt);b.cd-=dt;const a0=Math.atan2(HERO.pos.x-b.x,HERO.pos.z-b.z);
       if(b.cd<=0){b.k=(b.k||0)+1;const m=b.k%4;
@@ -2196,7 +2211,7 @@ Object.assign(BOSSES,{
     build(g){const D=toon(0x2a2838,{emissive:0x0a0814}),P=new THREE.MeshBasicMaterial({color:0xb784ff}),body=new THREE.Group();body.scale.setScalar(1.7);g.add(body);part(new THREE.SphereGeometry(.7,14,10),D,body,{p:[0,.9,0],s:[1,.9,1.5]});part(new THREE.SphereGeometry(.4,12,10),D,body,{p:[0,1.2,1.1]});
       [-1,1].forEach(d=>{[.7,-.7].forEach(z=>part(C0,D,body,{p:[d*.4,.35,z],s:[.12,.7,.12]}));part(new THREE.ConeGeometry(.06,.5,5),P,body,{p:[d*.2,1.7,1.15],r:[0,0,-d*.3]});part(new THREE.SphereGeometry(.05,6,5),P,body,{p:[d*.15,1.3,1.45]})});
       for(let i=0;i<5;i++)part(new THREE.ConeGeometry(.1,.45,5),P,body,{p:[0,1.6-i*.1,.6-i*.35],r:[-.2,0,0]});
-      const L=new THREE.PointLight(0xb784ff,2,10,1.4);L.position.y=1.5;body.add(L);return {body,L,Li:2,spin:b=>{}}},
+      const L=new FxLight(0xb784ff,2,10,1.4);L.position.y=1.5;body.add(L);return {body,L,Li:2,spin:b=>{}}},
     act(b,dt){if(b.dash>0){b.dash-=dt;b.x+=b.dx*13*dt;b.z+=b.dz*13*dt;return}skyFollow(b,dt,6,4);b.cd-=dt;
       if(b.cd<=0){b.k=(b.k||0)+1;
         if(b.k%3===1){b.cd=b.rage?2.6:3.4;const rows=b.rage?4:3;for(let r=0;r<rows;r++)for(let i=-3;i<=3;i++){if(i===(r%2?-1:1)*2&&r%2===0)continue;const x=HERO.pos.x+i*2.1,z=HERO.pos.z+2+r*2.4;warn(x,z,1.1,1+r*.3,16,null,0xb784ff);act(1+r*.3,null,()=>{if(G&&!G.over)boltAt(x,z,0,0,0xd8c8ff,.1,14)})}}
@@ -2296,7 +2311,7 @@ function robed(o){return g=>{const R=toon(o.robe,{emissive:o.em||0x080810}),A=to
   part(new THREE.ConeGeometry(.75,1.9,10),R,body,{p:[0,.95,0]});part(new THREE.SphereGeometry(.26,12,10),F,body,{p:[0,2.1,0]});part(new THREE.ConeGeometry(.3,.5,8),A,body,{p:[0,2.5,0]});
   [-1,1].forEach(d=>{part(new THREE.CylinderGeometry(.09,.12,.9,6),R,body,{p:[d*.6,1.3,.2],r:[.9,0,d*.5]});part(new THREE.SphereGeometry(.05,6,5),new THREE.MeshBasicMaterial({color:o.eye||0xff3a3a}),body,{p:[d*.1,2.15,.22]})});
   const orb=[];for(let i=0;i<(o.n||4);i++){const m=new THREE.Mesh(o.orb||new THREE.OctahedronGeometry(.28),new THREE.MeshBasicMaterial({color:o.glow||0xb784ff}));body.add(m);orb.push(m)}
-  const L=new THREE.PointLight(o.glow||0xb784ff,2,11,1.4);L.position.y=1.8;body.add(L);if(o.extra)o.extra(body,A,R);
+  const L=new FxLight(o.glow||0xb784ff,2,11,1.4);L.position.y=1.8;body.add(L);if(o.extra)o.extra(body,A,R);
   return {body,L,Li:2.2,spin:b=>orb.forEach((m,i)=>{const a=b.t*1.6+i/orb.length*6.28;m.position.set(Math.sin(a)*1.5,1.6+Math.sin(b.t*2+i)*.3,Math.cos(a)*1.5);m.rotation.y=a})}}}
 // ---------- 魔王 ----------
 Object.assign(BOSSES,{
@@ -2316,7 +2331,7 @@ Object.assign(BOSSES,{
     build:robed({robe:0x3a0e14,acc:0xc02a2a,glow:0xff5a4a,eye:0xff2a2a,skin:0xb8a8a0,em:0x300808,n:8,s:1.2,orb:new THREE.SphereGeometry(.26,8,6),extra:(b,A,R)=>{part(new THREE.TorusGeometry(.62,.06,8,40),new THREE.MeshBasicMaterial({color:0xff4a3a}),b,{p:[0,2.2,-.35]});[-1,1].forEach(d=>part(new THREE.ConeGeometry(.42,1.3,8),R,b,{p:[d*.75,1.15,.15],r:[0,0,d*1.1]}));part(new THREE.TorusGeometry(1.25,.12,6,48),new THREE.MeshBasicMaterial({color:0x8a1a1a,transparent:true,opacity:.75}),b,{p:[0,.06,0],r:[Math.PI/2,0,0]});for(let i=0;i<5;i++)part(new THREE.ConeGeometry(.05,.35,4),A,b,{p:[(i-2)*.12,2.48,0],r:[0,0,(i-2)*-.2]})}}),
     act:duelAct([b=>AT.ring(b),AT.blink,b=>AT.lines(b,5),b=>AT.rain(b,10),b=>AT.fan(b,3),b=>AT.homing(b,4),AT.dash],2.1,['lamp',3,11])},
   jie:{duel:1,noHit:1,col:0xd8c8ff,name:'九重雷劫',winText:'你渡過了九重雷劫，元嬰更凝實了！',line:'天空黑了——九重雷劫，降下！',rage:'',tip:'撐過九重雷劫！看紫色圈圈，一道一道閃開。',r:.1,dmg:14,spd:0,y:9,
-    build(g){const L=new THREE.PointLight(0xb784ff,3,30,1.2);L.position.y=0;g.add(L);const body=new THREE.Group();g.add(body);return {body,L,Li:3,spin:()=>{}}},
+    build(g){const L=new FxLight(0xb784ff,3,30,1.2);L.position.y=0;g.add(L);const body=new THREE.Group();g.add(body);return {body,L,Li:3,spin:()=>{}}},
     act(b,dt){b.x=HERO.pos.x;b.z=HERO.pos.z;if(G.clash)return;b.rd=b.rd??0;b.cd-=dt;
       if(b.cd<=0&&b.rd<9){b.rd++;const r=b.rd;b.cd=4.4;banner(`第 ${r} 道雷劫`,r===9?'最後一道！':'',false);const n=3+r*1.3|0,dl=Math.max(.7,1.4-r*.08);
         for(let i=0;i<n;i++)act(i*.18,null,()=>{if(!G||G.over)return;const lead=i%2===0,a=Math.random()*6.28,d=lead?Math.random()*1.2:1.5+Math.random()*(r>5?5:3.5),x=HERO.pos.x+(lead?HERO.vel.x*dl:0)+Math.sin(a)*d,z=HERO.pos.z+(lead?HERO.vel.z*dl:0)+Math.cos(a)*d;warn(x,z,1.35,dl,b.dmg*(.5+r*.08),null,0xb784ff);act(dl,null,()=>{if(G&&!G.over)boltAt(x,z,0,0,0xe0d0ff,.1+r*.01,16)})});
@@ -2385,7 +2400,7 @@ function yuanyingCast(){const dmg=swordDmg()*6,DUR=8;G.ultBoss=0;G.slow=.4;G.med
   const av=new THREE.Group(),fig=soulFig(0xd89420,.8),M=fig.userData.M;fig.scale.setScalar(.95);av.add(fig);
   const glow=new THREE.Sprite(new THREE.SpriteMaterial({map:soulGlowTex(),color:0xffd86a,transparent:true,opacity:.7,blending:THREE.AdditiveBlending,depthWrite:false}));glow.scale.set(3,3.6,1);glow.position.y=.9;av.add(glow);
   const sw=new THREE.Group();av.add(sw);const blade=new THREE.Mesh(new THREE.ConeGeometry(.06,1,4),new THREE.MeshBasicMaterial({color:0xfff4c0,transparent:true,opacity:.95,blending:THREE.AdditiveBlending,depthWrite:false}));blade.rotation.x=Math.PI/2;blade.position.set(.55,.8,0);sw.add(blade);
-  const L=new THREE.PointLight(0xffd86a,2,6,1.5);L.position.y=.8;av.add(L);av.position.set(HERO.pos.x,HERO.pos.y+1.6,HERO.pos.z);scene.add(av);
+  const L=new FxLight(0xffd86a,2,6,1.5);L.position.y=.8;av.add(L);av.position.set(HERO.pos.x,HERO.pos.y+1.6,HERO.pos.z);scene.add(av);
   const st={tg:null,cd:0,hitT:0};const pickTg=()=>{const near=enemies.filter(e=>!e.dead&&onScreen(e.x,.4,e.z)).sort((a,b)=>Math.hypot(a.x-av.position.x,a.z-av.position.z)-Math.hypot(b.x-av.position.x,b.z-av.position.z)).slice(0,5);
     if(boss.alive&&bossOnScreen()&&(Math.random()<.35||!near.length))return boss;return near[Math.floor(Math.random()*near.length)]||null};
   act(DUR,(t,dt)=>{G.iframe=Math.max(G.iframe,.3);const back=t>DUR-.6;let tx,tz,ty=1.1;
@@ -3534,7 +3549,7 @@ function timeStopUlt(){ultStart('光陰凝');const T=3;for(const e of enemies)if
   act(T,null,()=>{cv.style.filter=''})}
 // 百丈法相（化神）：身後升起十倍高的金色法相，一巴掌按下全場
 function fashenUlt(){ultStart('百丈法相');const g=new THREE.Group(),fig=soulFig(0xd89420,.0),M=fig.userData.M;fig.scale.setScalar(.1);g.add(fig);g.position.set(HERO.pos.x,0,HERO.pos.z-4);g.rotation.y=0;scene.add(g);
-  const palm=new THREE.Mesh(new THREE.CircleGeometry(1,40).rotateX(-Math.PI/2),new THREE.MeshBasicMaterial({color:0xffd86a,transparent:true,opacity:0,blending:THREE.AdditiveBlending,depthWrite:false}));scene.add(palm);const L=new THREE.PointLight(0xffd86a,0,40,1.2);L.position.y=12;g.add(L);
+  const palm=new THREE.Mesh(new THREE.CircleGeometry(1,40).rotateX(-Math.PI/2),new THREE.MeshBasicMaterial({color:0xffd86a,transparent:true,opacity:0,blending:THREE.AdditiveBlending,depthWrite:false}));scene.add(palm);const L=new FxLight(0xffd86a,0,40,1.2);L.position.y=12;g.add(L);
   let slam=false;G.iframe=Math.max(G.iframe,3);
   act(3,(t)=>{const k=Math.min(1,t/.9);fig.scale.setScalar(.1+9.4*k*k*(3-2*k)/1);M.opacity=.55*Math.min(1,t/.4,(3-t)/.5);L.intensity=3*M.opacity;g.position.set(HERO.pos.x,0,HERO.pos.z-4);
       palm.position.set(HERO.pos.x,.08,HERO.pos.z);const pk=t<1.3?0:Math.min(1,(t-1.3)/.25);palm.scale.setScalar(.5+pk*18);palm.material.opacity=pk<1?pk*.6:Math.max(0,.6-(t-1.55)*.5);
@@ -3625,7 +3640,7 @@ const CARDS=[
 const RAR=['凡品','靈品','仙品'];
 let offer=[];
 // gold = 仙緣頓悟 after an elite or the boss: every card is 靈品 or better
-function openCards(gold){if(!G||G.over)return;cancelAim();if($('#cardOv').classList.contains('on')){G.pendingGold=(G.pendingGold||0)+(gold?1:0);return}
+function openCards(gold){if(!G||G.over)return;cancelAim();resetJoy();if($('#cardOv').classList.contains('on')){G.pendingGold=(G.pendingGold||0)+(gold?1:0);return}
   G.paused=true;const pool=CARDS.filter(c=>(!c.when||c.when())&&!(c.max&&c.max()));offer=[];
   const rar=c=>Math.max(c.minR?c.minR():0,c.evo?2:gold?(Math.random()<.5?2:1):(()=>{const y=Math.random();return y<.08?2:y<.36?1:0})());// 「數值取較好」的卡只出比手上更高的品階
   const take=c=>{pool.splice(pool.indexOf(c),1);offer.push({c,r:rar(c)})};
@@ -3783,7 +3798,7 @@ function hurtHero(dmg,kx,kz,src='碰撞'){if(G.iframe>0||G.over)return;if(G.turt
 
 /* ================= 操作：全畫面拖曳 ================= */
 const joy={id:null,ox:0,oy:0,x:0,y:0,on:false};const keys=new Set();
-canvas.addEventListener('pointerdown',e=>{if(!G||G.paused||joy.id!==null)return;if(e.clientY>innerHeight-20)return;// bottom edge ignored (home bar)
+canvas.addEventListener('pointerdown',e=>{if(!G||G.paused)return;if(joy.id!==null){if(e.pointerId===joy.id)return;joy.id=null}// 舊的那隻手指沒收到放開：讓新的接手if(e.clientY>innerHeight-20)return;// bottom edge ignored (home bar)
   if(e.clientX>innerWidth*.55&&innerWidth>innerHeight)return;// right hand side is for the skill buttons
   canvas.setPointerCapture(e.pointerId);Object.assign(joy,{id:e.pointerId,ox:e.clientX,oy:e.clientY,x:0,y:0,on:true});drawJoy();hideTip()});
 canvas.addEventListener('pointermove',e=>{if(e.pointerId!==joy.id)return;let dx=e.clientX-joy.ox,dy=e.clientY-joy.oy;const R=56,l=Math.hypot(dx,dy);
@@ -3814,7 +3829,7 @@ function inputDir(){let x=joy.x,y=joy.y;if(keys.has('a')||keys.has('arrowleft'))
 let bannerT=0;function banner(t,s='',big=false){$('#bannerText').textContent=t;$('#bannerSmall').textContent=s;$('#banner').classList.toggle('ult',big);$('#banner').classList.add('on');bannerT=big?2:2.6}
 let sayT=0;function say(t,s=4){const b=$('#bubble');b.textContent=t;b.classList.add('on');sayT=s}
 let tipShown=false;function hideTip(){if(!tipShown){tipShown=true;sayT=Math.min(sayT,1.2)}}
-function togglePause(){if(!G||G.over)return;if($('#cardOv').classList.contains('on'))return;cancelAim();const on=!$('#pauseOv').classList.contains('on');$('#pauseOv').classList.toggle('on',on);G.paused=on;
+function togglePause(){if(!G||G.over)return;resetJoy();if($('#cardOv').classList.contains('on'))return;cancelAim();const on=!$('#pauseOv').classList.contains('on');$('#pauseOv').classList.toggle('on',on);G.paused=on;
   if(on)$('#pauseInfo').textContent=`已斬 ${G.kills} 隻妖，離雞啼還有 ${clockText()}`}
 $('#viewBtn').onclick=()=>cycleCam();$('#sfxBtn').onclick=()=>{SFX.resume();const on=SFX.toggle();$('#sfxBtn').textContent=on?'音':'靜';if(on)BGM.resumeIfOn();else BGM.stop()};
 $('#powerBtn').onclick=()=>{POWER.cycle();$('#powerBtn').textContent='省電模式：'+POWER.label};$('#powerBtn').textContent='省電模式：'+POWER.label;
@@ -3826,7 +3841,7 @@ function pickChar(c){if(c!==who){saveFace();useChar(c);applyFace({g:1,x:1});appl
   $$('[data-who]').forEach(b=>b.setAttribute('aria-pressed',String(+b.dataset.who===who)))}
 $$('[data-who]').forEach(b=>b.onclick=()=>pickChar(+b.dataset.who));pickChar(who);
 if(save.pal)applyPal(save.pal);
-function startNight(len,opt={}){BGM.play('night');bannerT=0;$('#banner').classList.remove('on');$('#breakBtn').hidden=true;SFX.resume();tryLandscape();leaveSky();if((opt.ch||0)===11)endlessPick();buildMap(opt.ch||0);setUlt(save.ult);resetWorld();cancelAim();G=newNight(len);G.sky=!!(CHC[opt.ch||0]&&CHC[opt.ch||0].sky);G.camAuto=G.sky;setSkills(G.tier=skillTier());setBlink();hsAura.visible=save.realm>=18;G.ch=opt.ch||0;G.nt=opt.nt||0;G.endless=G.ch===11;if(G.ch===12)G.endBoss=['yinshi','xuanbing','jinjia','shenhan','xuehe'][Math.floor(Math.random()*5)];G.clearK=G.ch<=8?Math.round([2200,3100,2650][G.nt]*(G.sky?.88:1)*1.5/50)*50:0;G.showClear=G.clearK&&save.realm>chRec(G.ch);$('#bossMark').hidden=G.endless;G.mod=[{spawn:1,boss:1,elite2:0},{spawn:1.4,boss:1,elite2:1},{spawn:1.2,boss:1.5,elite2:0}][G.nt];G.paused=false;$('#pillBtn').hidden=!(save.inv.pill.hui>0);$('#pillN').textContent=save.inv.pill.hui;$('#skills').hidden=$('#joy').hidden=false;drawJoy();$('#startOv').classList.remove('on');$('#endOv').classList.remove('on');$('#hud').hidden=false;
+function startNight(len,opt={}){BGM.play('night');bannerT=0;$('#banner').classList.remove('on');$('#breakBtn').hidden=true;SFX.resume();tryLandscape();leaveSky();if((opt.ch||0)===11)endlessPick();buildMap(opt.ch||0);setUlt(save.ult);resetWorld();cancelAim();G=newNight(len);G.sky=!!(CHC[opt.ch||0]&&CHC[opt.ch||0].sky);G.camAuto=G.sky;setSkills(G.tier=skillTier());setBlink();resetJoy();WARM.redo();hsAura.visible=save.realm>=18;G.ch=opt.ch||0;G.nt=opt.nt||0;G.endless=G.ch===11;if(G.ch===12)G.endBoss=['yinshi','xuanbing','jinjia','shenhan','xuehe'][Math.floor(Math.random()*5)];G.clearK=G.ch<=8?Math.round([2200,3100,2650][G.nt]*(G.sky?.88:1)*1.5/50)*50:0;G.showClear=G.clearK&&save.realm>chRec(G.ch);$('#bossMark').hidden=G.endless;G.mod=[{spawn:1,boss:1,elite2:0},{spawn:1.4,boss:1,elite2:1},{spawn:1.2,boss:1.5,elite2:0}][G.nt];G.paused=false;$('#pillBtn').hidden=!(save.inv.pill.hui>0);$('#pillN').textContent=save.inv.pill.hui;$('#skills').hidden=$('#joy').hidden=false;drawJoy();$('#startOv').classList.remove('on');$('#endOv').classList.remove('on');$('#hud').hidden=false;
   $('#bossMark').style.left=(BOSS_AT*100)+'%';if(G.ch!==12)spawnRing('ghost',8,7.5);// an opening ring so the first monsters are seen walking in
   renderBuffs();tipShown=false;say('左手走路，右手放技能！按住技能拖曳可以瞄準',6);
   setTimeout(()=>{if(G&&!G.over&&G.kills<3)say('吸青色的魂火可以頓悟喔！',4)},9000)}
@@ -3879,7 +3894,7 @@ function frame(now){requestAnimationFrame(frame);let dt=Math.min(.05,(now-last)/
   else if(live){POWER.tick(dt);let d=dt;if(G.slow>0){G.slow-=dt;d*=.3}G.t+=d;stepGame(d)}
   else if(G&&G.over){mode='idle'}
   else if(!G){if(med)stepMed(dt);else if(lookCam){root.rotation.y=angLerp(root.rotation.y,0,1-Math.exp(-dt*5));mode='idle'}else{root.rotation.y+=dt*.25;mode='idle'}}
-  animateHero(dt);hsAura.visible=save.realm>=18;if(hsAura.visible)hsAura.userData.spin(dt);
+  WARM.tick();animateHero(dt);syncLights();hsAura.visible=save.realm>=18;if(hsAura.visible)hsAura.userData.spin(dt);
   fogs.forEach((m,i)=>{m.rotation.z+=m.userData.s*dt});
   if(D2.on)DUEL.cam(dt);else updateCamera(dt,false);
   // UI that follows the scene
@@ -4142,6 +4157,29 @@ const DF=(()=>{let tab='go',libTab='sweep',tick=0,lookTab=0,lt=0,ld={g:0,x:0,b:0
   return {render,set tab(v){tab=v}}})();
 
 DF.render();
+/* ================= 效能：預先編譯著色器、上傳貼圖；搖桿卡住的保險 =================
+   放招會 new 很多 MeshBasicMaterial／SpriteMaterial，第一次用到某種組合時 GPU 要現場編譯著色器 → 首次放招卡一下；
+   而且招式結束 dispose 掉最後一個用到它的材質時，three.js 會把著色器丟掉，下次又要重編。
+   這裡在載入時把常用的材質組合（有／無貼圖、加亮／一般、單面／雙面、精靈、線、點、拖影）各留一份，畫一次後藏起來但不丟，
+   著色器就一直留在快取裡；所有招式用的貼圖也先上傳。 */
+const WARM=(()=>{const g=new THREE.Group();g.position.set(0,-40,0);scene.add(g);const geo=new THREE.PlaneGeometry(.1,.1);
+  const texs=[null,glowTex,beamTex,wBeamTex,talTex2,coinTex,TG.ring,TG.wash,TG.stroke,TG.lwash,taijiTex,soulGlowTex(),talTex];
+  if(typeof thForm!=='undefined'&&thForm.material&&thForm.material.map)texs.push(thForm.material.map);
+  for(const map of texs)for(const blending of [THREE.NormalBlending,THREE.AdditiveBlending])for(const side of [THREE.FrontSide,THREE.DoubleSide]){
+    g.add(new THREE.Mesh(geo,new THREE.MeshBasicMaterial({map,transparent:true,blending,side,depthWrite:false})));
+    if(side===THREE.FrontSide)g.add(new THREE.Sprite(new THREE.SpriteMaterial({map:map||glowTex,transparent:true,blending,depthWrite:false})))}
+  g.add(new THREE.Mesh(geo,new THREE.MeshBasicMaterial({color:0xffffff})));g.add(new THREE.Mesh(geo,toon(0x888888)));g.add(new THREE.Mesh(geo,new THREE.MeshLambertMaterial({color:0xffffff,transparent:true})));
+  g.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(),new THREE.Vector3(0,.1,0)]),new THREE.LineBasicMaterial({color:0xffffff,transparent:true})));
+  g.add(new THREE.Points(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3()]),new THREE.PointsMaterial({size:.1})));
+  try{g.add(soulFig(0xffffff,.5))}catch(e){}// 元嬰／元神斬／法相用的分身（同時讓第一次 clone 的 JS 先跑過）
+  if(typeof soulTrail!=='undefined'&&!soulTrail)soulTrail=new Trail(30,.55,0xffc040);
+  g.traverse(o=>{o.frustumCulled=false});
+  let left=2;// 畫兩幀確保都編譯／上傳了，之後藏起來（材質不 dispose，著色器就留在快取）
+  return {tick(){if(left===2)try{renderer.compile(scene,camera)}catch(e){}if(left>0&&--left===0)g.visible=false},redo(){g.visible=true;left=2}}})();
+// 搖桿卡住保險：手指的 pointerup 有時收不到（例如畫面換了、系統手勢），joy.id 卡著就再也按不動
+canvas.addEventListener('lostpointercapture',e=>{if(e.pointerId===joy.id){joy.on=false;joy.id=null;joy.x=joy.y=0;drawJoy()}});
+function resetJoy(){joy.on=false;joy.id=null;joy.x=joy.y=0;drawJoy()}
+
 window.__game={get save(){return save},DUEL,T:{HERO,get SKILL_LIB(){return SKILL_LIB},get NORM(){return NORM},skById,equipSkills,get enemies(){return enemies},spawn,warn,warnFan,warnLine,wave,domainWarn,SK,SKILL_SETS,setSkills,ULT_DEF,setUlt,swordDmg,resetWorld,get acts(){return acts}},B:boss,hurtBoss:(d)=>hurtBoss(d),cast:k=>castSkill(k,null),DF,startTribulation,canBreak,setCam:i=>{setCam(i)},ic:()=>{const m=ET.paper.mesh;return {cnt:m.count,ic:[...m.instanceColor.array.slice(0,9)],attr:Object.keys(m.geometry.attributes),vc:m.material.vertexColors,prog:renderer.info.programs.map(p=>p.name)}},cols:k=>{const a=ET[k].geo.attributes.color.array,u=new Set();for(let i=0;i<a.length;i+=3)u.add(a[i].toFixed(2)+','+a[i+1].toFixed(2)+','+a[i+2].toFixed(2));return [...u].concat([ET[k].mesh.material.vertexColors,!!ET[k].mesh.instanceColor])},gallery:(ks=['ghost','paper','jiang','lgh'])=>{G.paused=true;resetWorld();G.paused=true;ks.forEach((k,i)=>{const e=spawn(k,-(ks.length-1)*.45+i*.9,0);e.cd=99;e.cd2=99});root.position.set(0,0,-2.5);root.rotation.y=Math.PI;HERO.pos.set(0,0,3);root.rotation.y=0;writeInstances()},camD:d=>{camOverride=d},start:(ch=0,nt=0)=>startNight(NIGHT,{ch,nt}),startBoss:()=>{if(G&&!boss.alive)startBoss()},boss:()=>({alive:boss.alive,hp:boss.hp,max:boss.max,name:boss.def&&boss.def.name}),get G(){return G},setT:s=>{if(G)G.t=s},auto:v=>{if(G)G.auto=v},pick:i=>pickCard(i),god:()=>{if(G){G.maxhp=G.hp=1e9}},
   spawnRing,setWho:pickChar,sim,mat:k=>[...ET[k].mesh.instanceMatrix.array.slice(0,16)].map(v=>+v.toFixed(3)).concat(ET[k].list.slice(0,3).map(e=>[e.x,e.y,e.z,e.s,e.flash])),bdbg:()=>({n:(ndc.set(boss.x,1.5,boss.z).project(camera),[ndc.x,ndc.y,ndc.z].map(v=>+v.toFixed(2))),bx:[boss.x,boss.z],cam:camera.position.toArray().map(v=>+v.toFixed(1)),d:Math.hypot(boss.x-HERO.pos.x,boss.z-HERO.pos.z),on:bossOnScreen(),hp:boss.hp,max:boss.max,dps:G.dps,sw:swords.filter(s=>s.on&&s.tgt===boss).length}),dbg:()=>({cnt:Object.keys(ET).map(k=>k+':'+ET[k].mesh.count+(ET[k].mesh.instanceColor?'c':'')+(ET[k].mesh.visible?'v':'')),pr:renderer.getPixelRatio(),gl2:renderer.capabilities.isWebGL2,prog:renderer.info.programs.length,en:enemies.length,near:enemies.filter(e=>Math.hypot(e.x-HERO.pos.x,e.z-HERO.pos.z)<6.5).length,sw:swords.filter(s=>s.on).length,hero:[HERO.pos.x,HERO.pos.z],e0:enemies[0]&&[enemies[0].x,enemies[0].z,enemies[0].hp],vol:G&&G.volley})};
 })();
