@@ -76,6 +76,7 @@ html,body{height:100%;margin:0;background:var(--night);color:var(--ink);overflow
 .sk[data-sk=beam]{border-color:#ff5a46;box-shadow:0 0 12px rgba(255,90,70,.35)}.sk[data-sk=beam] .ic{color:#ffd2c8;text-shadow:0 0 8px rgba(255,90,70,.9)}
 .sk[data-sk=thunder]{border-color:#b784ff;box-shadow:0 0 12px rgba(183,132,255,.4)}.sk[data-sk=thunder] .ic{color:#e8d8ff;text-shadow:0 0 8px rgba(183,132,255,.9)}
 .sk.ult{width:84px;height:84px;border-color:#f2c75c;box-shadow:0 0 16px rgba(242,199,92,.45);background:radial-gradient(circle at 50% 40%,rgba(84,62,20,.94),rgba(22,15,6,.94))}
+.sk.blink{width:46px;height:46px;border-color:#b46cff;box-shadow:0 0 12px rgba(180,108,255,.45)}.sk.blink .ic{font-size:21px;color:#e6d0ff}.sk.blink em{font-size:10px;color:#cdb0ff}
 .sk.ult .ic{font-size:38px;color:#ffe9a8;text-shadow:0 0 10px rgba(242,199,92,.9)}
 .sk.ult .cd{background:conic-gradient(transparent var(--p,0%),rgba(0,0,0,.72) 0)}
 .sk.ult em{color:#f2c75c}
@@ -618,10 +619,12 @@ const SK={
   sweep:{n:'青竹劍',ic:'竹',col:0x5dff7a,shape:'fan',ang:2.3,range:()=>4.6*G.k.sweepR,cd:()=>6.5*G.k.sweepCd},
   beam:{n:'劍氣長虹',ic:'虹',col:0xff5a46,shape:'line',w:1.1,range:()=>9,cd:()=>5*G.k.beamCd},
   thunder:{n:'五雷咒',ic:'雷',col:0xb784ff,shape:'circle',r:()=>2.4*G.k.thR*(G.k.thLv>=3?1.3:1),range:()=>7,cd:()=>10},
-  ult:{n:'萬劍歸宗',ic:'萬',col:0xffd86a,shape:'circle',ult:1,r:()=>3.8,range:()=>8}};
-const SK_POS={sweep:[45,119],beam:[78,40],thunder:[157,7],ult:[146,108]};// inside the 236×206 cluster at the bottom right
+  ult:{n:'萬劍歸宗',ic:'萬',col:0xffd86a,shape:'circle',ult:1,r:()=>3.8,range:()=>8},
+  // 閃現（結丹開放）：點一下自動找妖最少、沒有預警的地方；拖曳可自己指定。元嬰起＝風雷翼，可連閃兩次
+  blink:{n:'閃現',ic:'閃',col:0xb46cff,shape:'circle',r:()=>.7,range:()=>4.2,cd:()=>save.realm>=15&&G.blink2?.35:5,aim:()=>blinkSpot(),cast:A=>blinkCast(A)}};
+const SK_POS={sweep:[45,119],beam:[78,40],thunder:[157,7],ult:[146,108],blink:[-14,136]};// inside the 236×206 cluster at the bottom right
 const skBtn={};let aim=null;
-for(const k of ['sweep','beam','thunder','ult']){const S=SK[k],b=document.createElement('button');b.className='sk'+(S.ult?' ult':'');b.dataset.sk=k;b.setAttribute('aria-label',S.n);
+for(const k of ['sweep','beam','thunder','ult','blink']){const S=SK[k],b=document.createElement('button');b.className='sk'+(k==='blink'?' blink':'')+(S.ult?' ult':'');b.dataset.sk=k;b.setAttribute('aria-label',S.n);
   b.innerHTML=`<span class="ic">${S.ic}</span><i class="cd"></i><b></b><em>${S.n}</em>`;b.style.left=SK_POS[k][0]+'px';b.style.top=SK_POS[k][1]+'px';$('#skills').appendChild(b);skBtn[k]=b;
   b.addEventListener('pointerdown',e=>{e.preventDefault();if(!G||G.paused||G.over)return;SFX.resume();
     if(!ready(k)){b.classList.remove('no');void b.offsetWidth;b.classList.add('no');return}
@@ -633,10 +636,10 @@ for(const k of ['sweep','beam','thunder','ult']){const S=SK[k],b=document.create
   const up=e=>{if(!aim||e.pointerId!==aim.id)return;const a=aim;cancelAim();if(e.type==='pointerup'&&!a.cancel)castSkill(a.k,a.moved?aimInfo(a.k,a):null)};
   b.addEventListener('pointerup',up);b.addEventListener('pointercancel',up)}
 function cancelAim(){if(aim&&skBtn[aim.k])skBtn[aim.k].classList.remove('aiming');aim=null;$('#cancelZone').classList.remove('on','hot')}
-const ready=k=>!!G&&(k==='ult'?G.ult>=G.k.ultNeed:G.cd[k]<=0);
+const ready=k=>!!G&&(k==='ult'?G.ult>=G.k.ultNeed:k==='blink'?save.realm>=12&&G.cd.blink<=0:G.cd[k]<=0);
 const facing=()=>[Math.sin(root.rotation.y),Math.cos(root.rotation.y)];
 function screenToWorld(dx,dy){const c=Math.cos(camYaw),s=Math.sin(camYaw);return [dx*c+dy*s,-dx*s+dy*c]}
-function autoAim(k){const S=SK[k],hx=HERO.pos.x,hz=HERO.pos.z;if(S.shape==='auto'||S.shape==='self')return {dir:facing()};
+function autoAim(k){const S=SK[k],hx=HERO.pos.x,hz=HERO.pos.z;if(S.aim)return S.aim();if(S.shape==='auto'||S.shape==='self')return {dir:facing()};
   if(S.shape==='circle'){const R=S.range(),r=S.r();
     if(S.ult&&boss.alive&&Math.hypot(boss.x-hx,boss.z-hz)<R+2){const dx=boss.x-hx,dz=boss.z-hz,l=Math.hypot(dx,dz)||1,f=Math.min(l,R);return {pt:[hx+dx/l*f,hz+dz/l*f]}}
     // the most crowded spot in range
@@ -835,7 +838,7 @@ const NIGHT=180;
 function newNight(len){return {nextPill:67,walked:0,moving:false,len,boost:480/len*.75,t:0,over:false,paused:true,kills:0,souls:0,wu:0,wuNeed:25,lv:0,slow:0,pendingGold:0,spawnAcc:0,waveAt:60,
   hp:Math.round(150*realmMult()),maxhp:Math.round(150*realmMult()),iframe:0,breaking:false,regenAcc:0,eliteDone:false,bossDone:false,bossKilled:false,eliteKilled:false,
   s:{dmg:realmMult(),rate:1,count:3,pierce:1,range:7.5,move:3.2,magnet:1.8,regen:0,orbit:0,talis:0,talisN:0,lamp:0,size:1,crit:.12},
-  skills:{},volley:0,orbitHit:new Map(),talisCd:2,lampCd:1.5,stand:0,auto:false,castT:0,ult:40,ultBoss:0,cd:{sweep:0,beam:0,thunder:0},
+  skills:{},volley:0,orbitHit:new Map(),talisCd:2,lampCd:1.5,stand:0,auto:false,castT:0,ult:40,ultBoss:0,cd:{sweep:0,beam:0,thunder:0,blink:0},
   k:{sweepR:1,sweepD:1,sweepCd:1,sweepLv:0,beamLv:0,beamD:1,beamCd:1,thLv:0,thN:6,thR:1,thD:1,ultNeed:120,ultN:1}}}
 const minute=()=>G.t/G.len*8;// night progress in "minutes" of an 8-minute night
 const hpScale=()=>1.25*Math.pow(1+.2*minute(),1.3);
@@ -1035,7 +1038,7 @@ const upJ=e=>{if(e.pointerId===joy.id){joy.on=false;joy.id=null;joy.x=joy.y=0;dr
 // at rest the stick waits faintly at the bottom left so the thumb knows where to go
 function drawJoy(){const el=$('#joy'),k=$('#joyKnob');const x=joy.on?joy.ox:$('#safeL').getBoundingClientRect().left+96,y=joy.on?joy.oy:innerHeight-96;
   el.style.left=x+'px';el.style.top=y+'px';el.classList.toggle('on',joy.on);k.style.transform=`translate(${joy.x*50}px,${joy.y*50}px)`}canvas.addEventListener('pointerup',upJ);canvas.addEventListener('pointercancel',upJ);
-addEventListener('keydown',e=>{keys.add(e.key.toLowerCase());if(e.key==='Escape'&&G&&!G.over)togglePause();if(e.key.toLowerCase()==='v')cycleCam();const sk={j:'sweep',k:'beam',l:'thunder',u:'ult',' ':'ult','1':'sweep','2':'beam','3':'thunder','4':'ult'}[e.key.toLowerCase()];if(sk&&G&&!G.paused){e.preventDefault();castSkill(sk,null)}});addEventListener('keyup',e=>keys.delete(e.key.toLowerCase()));
+addEventListener('keydown',e=>{keys.add(e.key.toLowerCase());if(e.key==='Escape'&&G&&!G.over)togglePause();if(e.key.toLowerCase()==='v')cycleCam();const sk={j:'sweep',k:'beam',l:'thunder',u:'ult',' ':'ult','1':'sweep','2':'beam','3':'thunder','4':'ult',b:'blink','5':'blink'}[e.key.toLowerCase()];if(sk&&G&&!G.paused){e.preventDefault();castSkill(sk,null)}});addEventListener('keyup',e=>keys.delete(e.key.toLowerCase()));
 function inputDir(){let x=joy.x,y=joy.y;if(keys.has('a')||keys.has('arrowleft'))x-=1;if(keys.has('d')||keys.has('arrowright'))x+=1;if(keys.has('w')||keys.has('arrowup'))y-=1;if(keys.has('s')||keys.has('arrowdown'))y+=1;
   if(G.auto){// test pilot (world space): drift around the square, steer away from nearby monsters and red circles
     const a=G.t*.4;x=Math.cos(a)*.5-HERO.pos.x*.05;y=Math.sin(a)*.5-(G.sky?0:HERO.pos.z*.05);
@@ -1068,7 +1071,7 @@ function pickChar(c){if(c!==who){saveFace();useChar(c);applyFace({g:1,x:1});appl
   $$('[data-who]').forEach(b=>b.setAttribute('aria-pressed',String(+b.dataset.who===who)))}
 $$('[data-who]').forEach(b=>b.onclick=()=>pickChar(+b.dataset.who));pickChar(who);
 if(save.pal)applyPal(save.pal);
-function startNight(len,opt={}){BGM.play('night');bannerT=0;$('#banner').classList.remove('on');$('#breakBtn').hidden=true;SFX.resume();tryLandscape();leaveSky();if((opt.ch||0)===11)endlessPick();buildMap(opt.ch||0);setUlt(save.ult);resetWorld();cancelAim();G=newNight(len);G.sky=!!(CHC[opt.ch||0]&&CHC[opt.ch||0].sky);G.camAuto=G.sky;setSkills(G.tier=skillTier());hsAura.visible=save.realm>=18;G.ch=opt.ch||0;G.nt=opt.nt||0;G.endless=G.ch===11;G.clearK=G.ch<=8?Math.round([2200,3100,2650][G.nt]*(G.sky?.88:1)*1.5/50)*50:0;G.showClear=G.clearK&&save.realm>chRec(G.ch);$('#bossMark').hidden=G.endless;G.mod=[{spawn:1,boss:1,elite2:0},{spawn:1.4,boss:1,elite2:1},{spawn:1.2,boss:1.5,elite2:0}][G.nt];G.paused=false;$('#pillBtn').hidden=!(save.inv.pill.hui>0);$('#pillN').textContent=save.inv.pill.hui;$('#skills').hidden=$('#joy').hidden=false;drawJoy();$('#startOv').classList.remove('on');$('#endOv').classList.remove('on');$('#hud').hidden=false;
+function startNight(len,opt={}){BGM.play('night');bannerT=0;$('#banner').classList.remove('on');$('#breakBtn').hidden=true;SFX.resume();tryLandscape();leaveSky();if((opt.ch||0)===11)endlessPick();buildMap(opt.ch||0);setUlt(save.ult);resetWorld();cancelAim();G=newNight(len);G.sky=!!(CHC[opt.ch||0]&&CHC[opt.ch||0].sky);G.camAuto=G.sky;setSkills(G.tier=skillTier());setBlink();hsAura.visible=save.realm>=18;G.ch=opt.ch||0;G.nt=opt.nt||0;G.endless=G.ch===11;G.clearK=G.ch<=8?Math.round([2200,3100,2650][G.nt]*(G.sky?.88:1)*1.5/50)*50:0;G.showClear=G.clearK&&save.realm>chRec(G.ch);$('#bossMark').hidden=G.endless;G.mod=[{spawn:1,boss:1,elite2:0},{spawn:1.4,boss:1,elite2:1},{spawn:1.2,boss:1.5,elite2:0}][G.nt];G.paused=false;$('#pillBtn').hidden=!(save.inv.pill.hui>0);$('#pillN').textContent=save.inv.pill.hui;$('#skills').hidden=$('#joy').hidden=false;drawJoy();$('#startOv').classList.remove('on');$('#endOv').classList.remove('on');$('#hud').hidden=false;
   $('#bossMark').style.left=(BOSS_AT*100)+'%';spawnRing('ghost',8,7.5);// an opening ring so the first monsters are seen walking in
   renderBuffs();tipShown=false;say('左手走路，右手放技能！按住技能拖曳可以瞄準',6);
   setTimeout(()=>{if(G&&!G.over&&G.kills<3)say('吸青色的魂火可以頓悟喔！',4)},9000)}

@@ -89,3 +89,19 @@ function setSkills(t){const S=SKILL_SETS[t];
   for(const k of ['sweep','beam','thunder']){SK[k]=S[k];const b=skBtn[k],c='#'+S[k].col.toString(16).padStart(6,'0');b.querySelector('.ic').textContent=S[k].ic;b.querySelector('em').textContent=S[k].n;b.setAttribute('aria-label',S[k].n);
     b.style.borderColor=c;b.style.boxShadow=`0 0 12px ${c}66`;b.querySelector('.ic').style.textShadow=`0 0 8px ${c}`}}
 setSkills(0);
+
+// ---------- 閃現／風雷翼 ----------
+function setBlink(){const b=skBtn.blink,on=save.realm>=12,wing=save.realm>=15;b.hidden=!on;SK.blink.n=wing?'風雷翼':'閃現';SK.blink.ic=wing?'翼':'閃';b.querySelector('.ic').textContent=SK.blink.ic;b.querySelector('em').textContent=SK.blink.n;G.blink2=false}
+function blinkSpot(){const hx=HERO.pos.x,hz=HERO.pos.z;let best=null,bs=1e9;
+  for(let i=0;i<20;i++){const a=i/20*6.28,r=i%2?4:3;let x=hx+Math.sin(a)*r,z=hz+Math.cos(a)*r;if(!G.sky&&Math.hypot(x,z)>ARENA-1)continue;let s=0;
+    for(const e of enemies){if(e.dead)continue;const d=Math.hypot(e.x-x,e.z-z);if(d<3.5)s+=(3.5-d)}
+    for(const w of warnPool)if(w.on&&Math.hypot(w.x-x,w.z-z)<w.r+.8)s+=40;for(const h of HZ)if(h.k!=='wave'&&Math.hypot(h.x-x,h.z-z)<(h.r||h.len||h.R||3))s+=20;
+    if(boss.alive&&Math.hypot(boss.x-x,boss.z-z)<boss.r+2)s+=30;s+=Math.random()*.3;if(s<bs){bs=s;best=[x,z]}}
+  return {pt:best||[hx,hz-3]}}
+function blinkCast(A){const [tx0,tz0]=A.pt,hx=HERO.pos.x,hz=HERO.pos.z;let dx=tx0-hx,dz=tz0-hz,d=Math.hypot(dx,dz)||1;const R=SK.blink.range();if(d>R){dx*=R/d;dz*=R/d;d=R}
+  const tx=hx+dx,tz=hz+dz;SFX.play('soul');buzz(15);G.iframe=Math.max(G.iframe,.2);root.position.x=tx;root.position.z=tz;root.rotation.y=Math.atan2(dx,dz);
+  if(save.realm>=15)G.blink2=!G.blink2;
+  const m=new THREE.Mesh(beamGeo,new THREE.MeshBasicMaterial({map:beamTex,color:0x7a3aff,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide}));m.position.set(hx,.9,hz);m.rotation.y=Math.atan2(dx,dz);m.scale.set(.9,1,d);scene.add(m);
+  act(.35,t=>{m.material.opacity=1-t/.35;m.scale.x=.9*(1-t/.35)+.1},()=>{scene.remove(m);m.material.dispose()});
+  for(let i=0;i<6;i++){const k=i/5;fx({p:tmp.set(hx+dx*k,.6+Math.random()*.8,hz+dz*k),col:i%2?0xd8b0ff:0x9a5aff,add:true,life:.45,s0:1.1,s1:.2,op:.9,vy:.4})}
+  fx({p:tmp.set(tx,.4,tz),col:0xc89aff,add:true,life:.35,s0:.6,s1:2.6,op:.9,vy:0});if(save.realm>=15)boltAt(tx,tz,0,0,0xd8c8ff,.06,6)}
