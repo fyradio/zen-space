@@ -568,6 +568,7 @@ const bellCrack=(()=>{const c=document.createElement('canvas');c.width=256;c.hei
   for(let i=0;i<14;i++)crack(10+i*18+Math.random()*8,Math.random()*30,6+Math.floor(Math.random()*4),2+Math.random()*2);
   const t=new THREE.CanvasTexture(c);t.wrapS=THREE.RepeatWrapping;const m=new THREE.Mesh(bellMesh.geometry,new THREE.MeshBasicMaterial({map:t,color:0xffffff,transparent:true,opacity:0,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide}));m.scale.setScalar(1.01);bellMesh.add(m);return m})();
 const BELL_C=[new THREE.Color(0xff3a2a),new THREE.Color(0xff6a10),new THREE.Color(0xffd65a)];
+/*@include game/shields.js*/
 // 萬劍歸宗: giant swords dropping point-first from the sky
 const falls=[];for(let i=0;i<40;i++){const g=new THREE.Group();g.visible=false;scene.add(g);
   part(new THREE.BoxGeometry(.09,.02,1.3),swordMat,g,{ol:false});const tp=new THREE.ConeGeometry(.06,.22,4);tp.rotateX(Math.PI/2);part(tp,swordMat,g,{p:[0,0,.75],ol:false});
@@ -787,7 +788,7 @@ function startTribulation(){if(!G||G.over||G.paused||G.breaking||!canBreak(true)
     ()=>{if(!G||G.over)return;G.breaking=false;realmUp();G.s.dmg*=1.1*1.2;G.maxhp=Math.round(150*realmMult());G.hp=G.maxhp;
       banner('突破成功！',REALMS[save.realm],true);SFX.play('gold');buzz(90);shake=Math.max(shake,.5);
       fx({p:tmp.set(HERO.pos.x,1,HERO.pos.z),col:0xffe08a,add:true,life:1,s0:1,s1:7,op:1,vy:1.5});
-      const t=skillTier();if(t!==G.tier){setSkills(G.tier=t);for(const k in G.cd)G.cd[k]=0;say(`${SKILL_SETS[t].name}新招：${SK.sweep.n}、${SK.beam.n}、${SK.thunder.n}！`,5)}else say('突破了！血補滿，這一夜傷害再 +20%',4)})}
+      const t=skillTier();SHIELD.setTier(t);if(t!==G.tier){setSkills(G.tier=t);for(const k in G.cd)G.cd[k]=0;say(`${SKILL_SETS[t].name}新招：${SK.sweep.n}、${SK.beam.n}、${SK.thunder.n}！`,5)}else say('突破了！血補滿，這一夜傷害再 +20%',4)})}
 function checkBreak(){const b=$('#breakBtn');const can=!G.breaking&&canBreak(true);if(can&&b.hidden){b.hidden=false;if(!simming){SFX.play('ready');say('可以突破了！按左上「突破」引雷劫',4)}}else if(!can&&!b.hidden)b.hidden=true}
 function updSkillUI(){for(const k in SK){const b=skBtn[k];let p,txt='';
     if(k==='ult'){p=Math.min(1,G.ult/G.k.ultNeed);b.classList.toggle('ready',p>=1);b.style.setProperty('--p',(p*100).toFixed(1)+'%')}
@@ -801,7 +802,6 @@ function updSkillUI(){for(const k in SK){const b=skBtn[k];let p,txt='';
 /*@include game/chapters2.js*/
 /*@include game/chapters3.js*/
 /*@include game/chapters4.js*/
-/*@include game/aux.js*/
 /*@include game/arena.js*/
 /*@include game/skilllib.js*/
 /*@include game/ults2.js*/
@@ -867,10 +867,7 @@ const CARDS=[
   {k:'magnet',ic:'攝',n:'攝魂',d:r=>`立刻吸光全場魂火，之後吸取範圍 +${[60,100,200][r]}%`,f:r=>{G.s.magnet=Math.min(8,G.s.magnet*(1+[.6,1,2][r]));souls.forEach(s=>{s.pull=true})},max:()=>G.s.magnet>=8},
   {k:'heal',ic:'春',n:'回春',d:r=>`立刻回復 ${[40,70,100][r]}% 生命${r===2?'，之後慢慢回血':''}`,f:r=>{G.hp=Math.min(G.maxhp,G.hp+G.maxhp*[.4,.7,1][r]);if(r===2)G.s.regen+=1.5},when:()=>G.hp<G.maxhp*.7},
   {k:'orbit',ic:'陣',n:'劍陣',skill:1,d:r=>G.s.orbit?`劍陣 +${[1,2,3][r]} 把，轉得更快`:`新招：${[3,4,5][r]} 把飛劍繞身斬妖`,f:r=>{G.s.orbit=Math.min(8,G.s.orbit+(G.s.orbit?[1,2,3][r]:[3,4,5][r]))},max:()=>G.s.orbit>=8},
-  {k:'talis',ic:'符',n:'雷火符',skill:1,d:r=>G.s.talis?`符籙威力 +${[40,70,120][r]}%，一次多丟一張`:`新招：每 2.6 秒往最近的妖丟符，大爆炸＋燃燒`,
-    f:r=>{if(G.s.talis){G.s.talis*=1+[.4,.7,1.2][r];G.s.talisN=Math.min(4,G.s.talisN+1)}else{G.s.talis=[1,1.4,2][r];G.s.talisN=1}}},
-  {k:'lamp',ic:'燈',n:'燈燈助陣',skill:1,d:r=>G.s.lamp?`燈燈火球更快更痛 +${[40,70,120][r]}%`:`新招：燈燈每秒吐一顆追蹤火球，爆開燃燒`,f:r=>{G.s.lamp=G.s.lamp?G.s.lamp*(1+[.4,.7,1.2][r]):[1,1.4,2][r]}},
-  {k:'bell',ic:'鐘',n:'金鐘罩',skill:1,d:r=>`金鐘罩：擋 ${[10,20,30][r]} 下傷害，破了之後 ${[10,7,5][r]} 秒重新罩上${G.s.bell?'（取較好的）':''}，破的時候震開周圍的妖`,f:r=>{G.bellR=Math.max(G.bellR??-1,r);G.bellMax=Math.max(G.bellMax||0,[10,20,30][r]);G.s.bell=Math.min(G.s.bell||99,[10,7,5][r]);G.bellT=G.s.bell;G.bellOn=false},minR:()=>(G.bellR??-1)+1,max:()=>G.bellR>=2},
+  {k:'bell',ic:'鐘',n:'金鐘罩',skill:1,d:r=>`${SHIELD.name}：擋 ${[10,20,30][r]} 下傷害，破了之後 ${[10,7,5][r]} 秒重新罩上${G.s.bell?'（取較好的）':''}，破的時候震開周圍的妖`,f:r=>{G.bellR=Math.max(G.bellR??-1,r);G.bellMax=Math.max(G.bellMax||0,[10,20,30][r]);G.s.bell=Math.min(G.s.bell||99,[10,7,5][r]);G.bellT=G.s.bell;G.bellOn=false},minR:()=>(G.bellR??-1)+1,max:()=>G.bellR>=2},
   // upgrades for the four right-hand skills
   {k:'sweepUp',get ic(){return SK.sweep.ic},get n(){return SK.sweep.n+'・進化'},up:1,d:r=>`${SK.sweep.lv[G.k.sweepLv]}${r?'，冷卻 -15%':''}`,f:r=>{G.k.sweepLv=Math.min(3,G.k.sweepLv+1);G.k.sweepD*=1.3;if(G.k.sweepLv===1)G.k.sweepR=1.3;if(r)G.k.sweepCd*=.85},max:()=>G.k.sweepLv>=3},
   {k:'beamUp',get ic(){return SK.beam.ic},get n(){return SK.beam.n+'・進化'},up:1,d:r=>`${beamText(SK.beam,G.k.beamStep)}${r?'，傷害 +30%':''}`,f:r=>{G.k.beamStep=Math.min(3,G.k.beamStep+1);G.k.beamLv=BEAM_MAP[G.k.beamStep];if(r)G.k.beamD*=1.3},max:()=>G.k.beamStep>=3},
@@ -886,7 +883,7 @@ function openCards(gold){if(!G||G.over)return;cancelAim();resetJoy();if($('#card
   // the evolution, when it unlocks, is always offered first
   const evo=pool.find(c=>c.evo&&!G.s[c.k]);if(evo)take(evo);
   // keep it varied: while fewer than 3 techniques are known, one card is always a technique not learned yet
-  const known=['orbit','talis','lamp','bell'].filter(k=>G.s[k]).length,fresh=pool.filter(c=>c.skill&&!c.evo&&!G.s[c.k]);
+  const known=['orbit','bell'].filter(k=>G.s[k]).length,fresh=pool.filter(c=>c.skill&&!c.evo&&!G.s[c.k]);
   if(known<2&&fresh.length)take(fresh[Math.floor(Math.random()*fresh.length)]);
   while(offer.length<3&&pool.length){const w=pool.map(c=>c.skill||c.up?2:1),tot=w.reduce((a,b)=>a+b,0);let x=Math.random()*tot,i=0;while(x>w[i]){x-=w[i];i++}take(pool[i])}
   $('#cardTitle').textContent=gold?'仙緣頓悟':'頓悟';$('#cardSub').textContent=gold?'斬了強敵，福至心靈':'三選一，只在這一夜有效';
@@ -909,7 +906,7 @@ function spawn(type,x,z,o={}){const t=ET[type];if(enemies.length>=CAP||t.list.le
   e.cd=2+Math.random()*4;e.max=e.hp;enemies.push(e);t.list.push(e);return e}
 const specialChance=()=>minute()<1.5?0:Math.min(.12,.03+.012*minute());
 function spawnRing(type,n,r){for(let i=0;i<n;i++){const a=i/n*Math.PI*2;spawn(type,HERO.pos.x+Math.sin(a)*r,HERO.pos.z+Math.cos(a)*r)}}
-function spawnTick(dt){const m=minute(),rate=1.25*(1+1.1*m+.18*m*m)*G.mod.spawn*((CHC[G.ch]||CHC[0]).rate??1)*(G.clearK?Math.min(2.6,Math.pow(1.1,Math.max(0,save.realm-chRec(G.ch)))):1);/* 修為比推薦高：妖來得更多，斬得夠快就能提前通關 */G.spawnAcc+=dt*rate;
+function spawnTick(dt){const m=minute(),rate=1.25*(1+1.1*m+.18*m*m)*G.mod.spawn*((CHC[G.ch]||CHC[0]).rate??1)*(G.clearK?Math.min(2.6,Math.pow(1.1,Math.max(0,save.realm-chRec(G.ch)))):1)*(G.replay?G.clearT/3300*(((CHC[G.ch]||CHC[0]).rate??1)<1?1/(CHC[G.ch]||CHC[0]).rate:1):1);/* 修為比推薦高：妖來得更多，斬得夠快就能提前通關 */G.spawnAcc+=dt*rate;
   const C=CHC[G.ch]||CHC[0];
   while(G.spawnAcc>=1){G.spawnAcc-=1;const w=C.mobs.map(([n,v,m0])=>[n,m>=m0?v:0]);let tot=w.reduce((a,b)=>a+b[1],0),x=Math.random()*tot,k=w[0][0];
     for(const [n,v] of w){x-=v;if(x<=0){k=n;break}}
@@ -974,11 +971,10 @@ function stepSkills(dt){
   if(G.s.thunder){G.thunderCd=(G.thunderCd??1.5)-dt;if(G.thunderCd<=0){G.thunderCd=3;SFX.play('thunder');const used=new Set();
     for(let j=0;j<G.s.thunder;j++){const tg=(j===0&&boss.alive&&bossOnScreen())?boss:nearest(HERO.pos.x+(Math.random()-.5)*6,HERO.pos.z+(Math.random()-.5)*6,9,used);if(!tg)break;used.add(tg);setTimeout(()=>bolt(tg.x,tg.z),j*90)}}}
   // 金鐘罩: a golden bell over the hero that soaks one hit
-  if(G.s.bell){if(!G.bellOn){G.bellT=(G.bellT||0)+dt;if(G.bellT>=G.s.bell){G.bellOn=true;G.bellT=0;G.bellN=G.bellMax||10;G.bellDrop=0;SFX.play('bell');shake=Math.max(shake,.15)}}bellMesh.visible=G.bellOn;
-    const fr=G.bellOn?G.bellN/(G.bellMax||10):1,dropK=Math.min(1,(G.bellDrop=(G.bellDrop||0)+dt)/.3);bellMesh.position.set(HERO.pos.x,(1-dropK)*(1-dropK)*4,HERO.pos.z);bellMesh.rotation.y+=dt;
-    if(dropK>=1&&!G.bellLanded&&G.bellOn){G.bellLanded=true;fx({p:tmp.set(HERO.pos.x,.2,HERO.pos.z),col:0xffd65a,add:true,life:.45,s0:1,s1:3.4,op:.9,vy:0})}if(dropK<1)G.bellLanded=false;
-    bellMesh.material.color.copy(fr>.5?BELL_C[2]:fr>.2?BELL_C[1]:BELL_C[0]);const crit=fr<=.2;
-    bellMesh.material.opacity=(crit?.32+Math.abs(Math.sin(G.t*14))*.25:.28+Math.sin(G.t*4)*.06);bellCrack.material.opacity=fr>.5?0:fr>.2?.35:.75*(crit?.6+.4*Math.abs(Math.sin(G.t*14)):1);bellCrack.material.color.copy(bellMesh.material.color)}else bellMesh.visible=false;
+  if(G.s.bell){if(!G.bellOn){G.bellT=(G.bellT||0)+dt;if(G.bellT>=G.s.bell){G.bellOn=true;G.bellT=0;G.bellN=G.bellMax||10;G.bellDrop=0;SFX.play('bell');shake=Math.max(shake,.15)}}SHIELD.show(G.bellOn);
+    const fr=G.bellOn?G.bellN/(G.bellMax||10):1,dropK=Math.min(1,(G.bellDrop=(G.bellDrop||0)+dt)/.3);
+    if(dropK>=1&&!G.bellLanded&&G.bellOn){G.bellLanded=true;fx({p:tmp.set(HERO.pos.x,.2,HERO.pos.z),col:SHIELD.color,add:true,life:.45,s0:1,s1:3.4,op:.9,vy:0})}if(dropK<1)G.bellLanded=false;
+    SHIELD.update(fr,fr<=.2,G.t,dt,HERO.pos.x,HERO.pos.y+(1-dropK)*(1-dropK)*4,HERO.pos.z)}else SHIELD.show(false);
   // 萬劍歸宗: a rain of giant swords onto everything on screen
   stepActs(dt);
   stepFalls(dt);
@@ -1030,7 +1026,7 @@ function stepWarns(dt){for(const w of warnPool){if(!w.on)continue;w.t+=dt;const 
 /* ================= 主角受傷 ================= */
 let shake=0;
 function hurtHero(dmg,kx,kz,src='碰撞'){if(G.iframe>0||G.over)return;if(G.turtle>0){G.turtle--;G.iframe=.4;SFX.play('bell');fx({p:tmp.set(HERO.pos.x,1,HERO.pos.z),col:0x5ad8a0,add:true,life:.4,s0:1.4,s1:3.4,op:.9,vy:0});return}
-  if(G.bellOn){G.bellN--;G.iframe=.2;SFX.play('bell');if(G.bellN>0){fx({p:tmp.set(HERO.pos.x,1,HERO.pos.z),col:0xffd65a,add:true,life:.25,s0:1,s1:2.5,op:.8,vy:0});return}G.bellOn=false;G.iframe=.5;shake=Math.max(shake,.3);if(!simming)for(let i=0;i<14;i++){const a=i/14*6.28;fx({p:tmp.set(HERO.pos.x+Math.sin(a)*.8,.3+Math.random()*1.6,HERO.pos.z+Math.cos(a)*.8),col:i%2?0xffd65a:0xffb03a,add:true,life:.6+Math.random()*.3,s0:.35,s1:.1,op:1,vy:1.5+Math.random()*2})}fx({p:tmp.set(HERO.pos.x,1,HERO.pos.z),col:0xffd65a,add:true,life:.5,s0:1.5,s1:4,op:.9,vy:0});
+  if(G.bellOn){G.bellN--;G.iframe=.2;SFX.play('bell');if(G.bellN>0){fx({p:tmp.set(HERO.pos.x,1,HERO.pos.z),col:0xffd65a,add:true,life:.25,s0:1,s1:2.5,op:.8,vy:0});return}G.bellOn=false;G.iframe=.5;shake=Math.max(shake,.3);if(!simming)for(let i=0;i<14;i++){const a=i/14*6.28;fx({p:tmp.set(HERO.pos.x+Math.sin(a)*.8,.3+Math.random()*1.6,HERO.pos.z+Math.cos(a)*.8),col:i%2?SHIELD.color:0xffb03a,add:true,life:.6+Math.random()*.3,s0:.35,s1:.1,op:1,vy:1.5+Math.random()*2})}fx({p:tmp.set(HERO.pos.x,1,HERO.pos.z),col:0xffd65a,add:true,life:.5,s0:1.5,s1:4,op:.9,vy:0});
     for(const e of enemies){const dx=e.x-HERO.pos.x,dz=e.z-HERO.pos.z,d=Math.hypot(dx,dz);if(d<2.8){e.x+=dx/(d||1)*2;e.z+=dz/(d||1)*2;hurtEnemy(e,swordDmg()*1.5)}}return}G.hurtBy=G.hurtBy||{};G.hurtBy[src]=Math.round((G.hurtBy[src]||0)+dmg);G.hp-=dmg;G.iframe=.85;shake=Math.max(shake,.25);SFX.play('hurt');buzz(30);const h=$('#hurt');h.classList.add('on');setTimeout(()=>h.classList.remove('on'),60);
   if(G.hp<=0){if(save.inv.paper>0&&!G.revived){save.inv.paper--;writeSave();G.revived=true;G.hp=G.maxhp*.5;G.iframe=2.5;banner('替身紙人','替你擋了一劫，原地復活');SFX.play('gold');
       for(const e of enemies){const dx=e.x-HERO.pos.x,dz=e.z-HERO.pos.z,d=Math.hypot(dx,dz);if(d<4)hurtEnemy(e,swordDmg()*3,dx/(d||1)*2,dz/(d||1)*2,false,5)}return}G.hp=0;endNight(false)}}
@@ -1080,7 +1076,8 @@ function pickChar(c){if(c!==who){saveFace();useChar(c);applyFace({g:1,x:1});appl
   $$('[data-who]').forEach(b=>b.setAttribute('aria-pressed',String(+b.dataset.who===who)))}
 $$('[data-who]').forEach(b=>b.onclick=()=>pickChar(+b.dataset.who));pickChar(who);
 if(save.pal)applyPal(save.pal);
-function startNight(len,opt={}){BGM.play('night');bannerT=0;$('#banner').classList.remove('on');$('#breakBtn').hidden=true;SFX.resume();tryLandscape();leaveSky();if((opt.ch||0)===11)endlessPick();buildMap(opt.ch||0);setUlt(save.ult);resetWorld();cancelAim();G=newNight(len);G.sky=!!(CHC[opt.ch||0]&&CHC[opt.ch||0].sky);G.camAuto=G.sky;setSkills(G.tier=skillTier());setBlink();resetJoy();WARM.redo();hsAura.visible=save.realm>=18;G.ch=opt.ch||0;G.nt=opt.nt||0;G.endless=G.ch===11;if(G.ch===12)G.endBoss=['yinshi','xuanbing','jinjia','shenhan','xuehe'][Math.floor(Math.random()*5)];G.clearK=G.ch<=8?Math.round([2200,3100,2650][G.nt]*(G.sky?.88:1)*1.5/50)*50:0;G.showClear=G.clearK&&save.realm>chRec(G.ch);$('#bossMark').hidden=G.endless;G.mod=[{spawn:1,boss:1,elite2:0},{spawn:1.4,boss:1,elite2:1},{spawn:1.2,boss:1.5,elite2:0}][G.nt];G.paused=false;$('#pillBtn').hidden=!(save.inv.pill.hui>0);$('#pillN').textContent=save.inv.pill.hui;$('#skills').hidden=$('#joy').hidden=false;drawJoy();$('#startOv').classList.remove('on');$('#endOv').classList.remove('on');$('#hud').hidden=false;
+function startNight(len,opt={}){BGM.play('night');bannerT=0;$('#banner').classList.remove('on');$('#breakBtn').hidden=true;SFX.resume();tryLandscape();leaveSky();if((opt.ch||0)===11)endlessPick();buildMap(opt.ch||0);setUlt(save.ult);resetWorld();cancelAim();G=newNight(len);G.sky=!!(CHC[opt.ch||0]&&CHC[opt.ch||0].sky);G.camAuto=G.sky;setSkills(G.tier=skillTier());setBlink();resetJoy();WARM.redo();SHIELD.setTier(skillTier());hsAura.visible=save.realm>=18;G.ch=opt.ch||0;G.nt=opt.nt||0;G.endless=G.ch===11;if(G.ch===12)G.endBoss=['yinshi','xuanbing','jinjia','shenhan','xuehe'][Math.floor(Math.random()*5)];G.replay=G.ch<=10&&[0,1,2].some(n=>save.won[`${G.ch}-${n}`]);// 破過一次再玩：照境界的斬妖目標（煉氣 3300、築基 4500、結丹 6000、元嬰 8000），魔王死了也不會提早天亮
+  G.clearT=[3300,3300,3300,3300,4500,4500,6000,6000,6000,8000,8000][G.ch]||0;G.clearK=G.replay?Math.round(G.clearT*[1,1.3,1.15][G.nt]/50)*50:G.ch<=8?Math.round([2200,3100,2650][G.nt]*(G.sky?.88:1)*1.5/50)*50:0;G.showClear=G.clearK&&(G.replay||save.realm>chRec(G.ch));$('#bossMark').hidden=G.endless;G.mod=[{spawn:1,boss:1,elite2:0},{spawn:1.4,boss:1,elite2:1},{spawn:1.2,boss:1.5,elite2:0}][G.nt];G.paused=false;$('#pillBtn').hidden=!(save.inv.pill.hui>0);$('#pillN').textContent=save.inv.pill.hui;$('#skills').hidden=$('#joy').hidden=false;drawJoy();$('#startOv').classList.remove('on');$('#endOv').classList.remove('on');$('#hud').hidden=false;
   $('#bossMark').style.left=(BOSS_AT*100)+'%';if(G.ch!==12)spawnRing('ghost',8,7.5);// an opening ring so the first monsters are seen walking in
   renderBuffs();tipShown=false;say('左手走路，右手放技能！按住技能拖曳可以瞄準',6);
   setTimeout(()=>{if(G&&!G.over&&G.kills<3)say('吸青色的魂火可以頓悟喔！',4)},9000)}
@@ -1092,7 +1089,7 @@ $('#again').onclick=()=>startNight(NIGHT,{ch:G?G.ch:0,nt:G?G.nt:0});$('#toTitle'
 function resetWorld(){corpses.length=0;let guard=0;while(acts.length&&guard++<5000){const a=acts.shift();if(a.end)a.end()}acts.length=0;// 結束回呼裡又排進來的效果也要收掉，不然會留在場上for(const m of Object.values(IND))m.visible=false;for(const e of enemies)e.dead=true;enemies=[];for(const k in ET)ET[k].list=[];souls=[];shots.length=0;
   swords.forEach(s=>{s.on=false;s.g.visible=false;s.tr.build(0)});warnPool.forEach(w=>{w.on=false;w.m.visible=w.f.visible=false});fxPool.forEach(f=>{f.on=false;f.s.visible=false});
   for(const k in ET)ET[k].mesh.count=0;soulMesh.count=0;shadowMesh.count=0;ebs=[];ebMesh.count=ebGlow.count=0;dashPool.forEach(l=>{l.e=null;l.m.visible=false});
-  bolts.forEach(b=>scene.remove(b.m));bolts.length=0;falls.forEach(f=>{f.on=false;f.g.visible=false});bellMesh.visible=false;shots.forEach(s=>{if(s.card)scene.remove(s.card)});
+  bolts.forEach(b=>scene.remove(b.m));bolts.length=0;falls.forEach(f=>{f.on=false;f.g.visible=false});SHIELD.show(false);shots.forEach(s=>{if(s.card)scene.remove(s.card)});
   pills.forEach(p=>scene.remove(p.g));pills.length=0;qiRings.forEach(q=>scene.remove(q.m));qiRings.length=0;clearHZ();
   boss.alive=false;boss.g.visible=false;$('#bossBox').classList.remove('on');orbitBlades.forEach(g=>g.visible=false);root.position.set(0,0,0);
   scene.fog.color.copy(NIGHT_FOG);scene.background.copy(NIGHT_FOG);hemi.intensity=.55}
@@ -1171,12 +1168,12 @@ function stepGame(dt){const g=G;
   if(g.endless)stepEndless(dt);else{
   const dk=BOSSES[bossKey(g)],cc=CHC[g.ch]||CHC[0];if(!cc.noElite&&!g.eliteDone&&p>=(g.mod.elite2?.17:.22))startElite();if(g.mod.elite2&&!g.elite2Done&&p>=.3){g.elite2Done=true;startElite()}
   if(!g.bossDone&&p>=(dk.duel?.025:BOSS_AT))startBoss();
-  if(dk.duel&&g.bossDone&&!boss.alive&&g.bossKilled){g.winT=(g.winT||0)+dt;if(g.winT>2.5){endNight(true);return}}
-  if(dk.duel&&g.bossDone&&!boss.alive&&!g.bossKilled){g.winT=(g.winT||0)+dt;if(g.winT>3){endNight(true);return}}
+  if(dk.duel&&!g.replay&&g.bossDone&&!boss.alive&&g.bossKilled){g.winT=(g.winT||0)+dt;if(g.winT>2.5){endNight(true);return}}
+  if(dk.duel&&!g.replay&&g.bossDone&&!boss.alive&&!g.bossKilled){g.winT=(g.winT||0)+dt;if(g.winT>3){endNight(true);return}}
   if(p>=.9){const k=Math.min(1,(p-.9)/.1);scene.fog.color.lerpColors(NIGHT_FOG,DAWN_FOG,k);scene.background.copy(scene.fog.color);hemi.intensity=.55+.6*k}
   if(g.clearK&&g.kills>=g.clearK){g.early=true;banner('斬妖達標！','妖群潰散，提前天亮',true);endNight(true);if(boss.alive){boss.alive=false;boss.g.visible=false;$('#bossBox').classList.remove('on')}for(const e of enemies)if(!e.dead){killEnemyQuiet(e)}return}
   if(p>=1){endNight(g.ch!==12);if(boss.alive){boss.alive=false;boss.g.visible=false}for(const e of enemies)if(!e.dead){killEnemyQuiet(e)}return}}
-  spawnTick(dt);stepAux(dt);
+  spawnTick(dt);
   // attack: standing still (站樁) makes the swords 30% faster
   for(const k in g.cd)g.cd[k]=Math.max(0,g.cd[k]-dt);if(g.castT>0){g.castT-=dt;mode='cast'}
   if(g.auto)for(const k in SK)if(ready(k))castSkill(k,null);

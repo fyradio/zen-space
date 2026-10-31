@@ -157,16 +157,31 @@ function zhoutianCast(){const lv=SL(),R=SK.sweep.range()*1.1,n=lv>=3?72:36,cyc=l
       if(u>=.6&&inn<c){inn=c;SFX.play('sweep');aoe(hx,hz,R,dmg,{stun:.4});shake=Math.max(shake,.3)}
       if(u>=.8&&fired<c){fired=c;ringFx(hx,hz,R*1.7,0xbff8ff,.4);aoe(hx,hz,R*1.7,dmg*1.2,{kb:1.6,fly:5})}},
     ()=>{sw.forEach(m=>scene.remove(m));M.dispose()})}
-// 六臂法相：身後升起三頭六臂金身，六拳連打四周
-function sixArmCast(){const lv=SL(),R=SK.sweep.range(),n=lv>=2?12:6,dmg=swordDmg()*1.7*G.k.sweepD,T=n*.12+.5;SFX.play('ult');
-  const g=new THREE.Group(),fig=soulFig(0xe0a030,.55),M=fig.userData.M;fig.scale.setScalar(2.4);g.add(fig);const heads=[-1,1].map(d=>{const h=new THREE.Mesh(new THREE.SphereGeometry(.22,10,8),M);h.position.set(d*.45,2.15*2.4/2.4*1,0);fig.add(h);return h});
-  const arms=[];for(let i=0;i<6;i++){const a=new THREE.Group(),side=i%2?1:-1,row=Math.floor(i/2);a.position.set(side*.55*2.4/2.4,(1.5-row*.25)*2.4/1.6,0);fig.add(a);
-    const up=new THREE.Mesh(new THREE.CylinderGeometry(.06,.08,.8,6).translate(0,-.4,0),M);up.rotation.z=side*(1.1+row*.3);a.add(up);const fist=new THREE.Mesh(new THREE.SphereGeometry(.14,8,6),M);fist.position.set(side*.75,-.3,0);a.add(fist);arms.push(a)}
-  g.position.set(HERO.pos.x,0,HERO.pos.z);scene.add(g);let k=0;
-  act(T,t=>{g.position.set(HERO.pos.x,0,HERO.pos.z);g.rotation.y=root.rotation.y+Math.PI;M.opacity=.55*Math.min(1,t/.2,(T-t)/.25);arms.forEach((a,i)=>a.rotation.x=Math.sin(t*18+i)*.8);
-      while(k<n&&t>=.2+k*.12){const a=k/n*6.28*1.618+Math.random()*.4,d=R*.6,x=HERO.pos.x+Math.sin(a)*d,z=HERO.pos.z+Math.cos(a)*d;k++;SFX.play('hit');shake=Math.max(shake,.2);
-        fx({p:tmp.set(x,.5,z),col:0xffd86a,add:true,life:.35,s0:1,s1:4,op:.95,vy:0});aoe(x,z,2,dmg,{kb:1,fly:4});if(lv>=3&&k===n){ringFx(HERO.pos.x,HERO.pos.z,R*1.3,0xffe08a,.6);aoe(HERO.pos.x,HERO.pos.z,R*1.3,dmg*3,{stun:1.5,bstun:1})}}},
-    ()=>{scene.remove(g);M.dispose()})}
+// 六臂法相：身邊升起一尊包住主角的金色法相，等級越高外殼越華麗（骨架 → 肉身 → 鎧甲 → 三頭六臂＋光環＋羽翼＋巨劍）；
+// 法相在的時候主角不會受傷，六隻（滿級十二隻）手臂連打四周。
+function guardianModel(lv){const g=new THREE.Group(),M=new THREE.MeshBasicMaterial({color:0xd8902a,transparent:true,opacity:.5,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide}),
+    D=new THREE.MeshBasicMaterial({color:0xb86a18,transparent:true,opacity:.32,depthWrite:false,side:THREE.DoubleSide}),P=(geo,m,p,r,sc)=>{const o=new THREE.Mesh(geo,m);if(p)o.position.set(...p);if(r)o.rotation.set(...r);if(sc)o.scale.set(...sc);g.add(o);return o};
+  // 骨架（每一級都有）：脊椎、肋骨、頭骨
+  P(new THREE.CylinderGeometry(.08,.1,2.6,6),M,[0,1.5,-.55]);for(let i=0;i<5;i++)P(new THREE.TorusGeometry(.75-i*.06,.05,5,20,Math.PI*1.3),M,[0,2.2-i*.28,-.35],[Math.PI/2,0,Math.PI*.85]);
+  const head=P(new THREE.SphereGeometry(.42,14,10),lv>=1?M:D,[0,3.15,-.3],null,[1,1.1,1]);P(new THREE.BoxGeometry(.5,.12,.3),M,[0,2.8,-.05]);
+  [-1,1].forEach(d=>P(new THREE.SphereGeometry(.07,6,5),new THREE.MeshBasicMaterial({color:0xffffff}),[d*.15,3.2,.08]));
+  if(lv>=1){P(new THREE.SphereGeometry(1,16,12),D,[0,1.9,-.35],null,[1.05,1.15,.75]);[-1,1].forEach(d=>P(new THREE.SphereGeometry(.38,10,8),M,[d*1.05,2.55,-.3]))}
+  if(lv>=2){P(new THREE.BoxGeometry(1.3,.9,.12),M,[0,2.2,.38]);P(new THREE.BoxGeometry(1.1,.2,.9),M,[0,1.15,-.3]);[-1,1].forEach(d=>{P(new THREE.ConeGeometry(.42,.7,4),M,[d*1.15,2.75,-.3],[0,0,d*-1.2]);P(new THREE.ConeGeometry(.07,.6,4),M,[d*.2,3.65,-.3],[0,0,d*-.4])});P(new THREE.ConeGeometry(.12,.8,4),M,[0,3.75,-.25])}
+  if(lv>=3){[-1,1].forEach(d=>{P(new THREE.SphereGeometry(.32,12,8),M,[d*.62,3.0,-.4]);const w=P(new THREE.ConeGeometry(.9,2.6,4,1,true),D,[d*1.3,2.6,-.9],[0,d*.6,d*1.1],[1,1,.15])});
+    P(new THREE.TorusGeometry(.8,.05,6,48),M,[0,3.2,-.75]);P(new THREE.RingGeometry(.85,1.25,48),D,[0,3.2,-.78])}
+  const arms=[],na=lv>=2?6:lv>=1?4:2;for(let i=0;i<na;i++){const side=i%2?1:-1,row=Math.floor(i/2),a=new THREE.Group();a.position.set(side*1.05,2.45-row*.42,-.3);g.add(a);
+    const up=new THREE.Mesh(new THREE.CylinderGeometry(.09,.12,1.3,6).translate(0,-.65,0),M);up.rotation.z=side*(1.0+row*.25);a.add(up);const fist=new THREE.Mesh(new THREE.SphereGeometry(lv>=1?.22:.14,8,6),lv>=1?M:D);fist.position.set(side*1.1,-.55,.25);a.add(fist);arms.push(a)}
+  let sword=null;if(lv>=3){sword=new THREE.Mesh(new THREE.BoxGeometry(.14,3.4,.04).translate(0,1.7,0),new THREE.MeshBasicMaterial({color:0xfff4c0,transparent:true,opacity:.8,blending:THREE.AdditiveBlending,depthWrite:false}));sword.position.set(1.6,1.6,.3);sword.rotation.z=-.5;g.add(sword)}
+  g.scale.setScalar(lv>=3?.95:.82);g.userData.s=g.scale.x;return {g,M,D,arms,sword}}
+function sixArmCast(){const lv=SL(),R=SK.sweep.range(),n=lv>=3?12:lv>=2?9:6,dmg=swordDmg()*1.7*G.k.sweepD,T=[1.6,2,2.4,2.9][lv];SFX.play('ult');shake=Math.max(shake,.3);
+  const F=guardianModel(lv),g=F.g;g.position.set(HERO.pos.x,0,HERO.pos.z);scene.add(g);let k=0;
+  act(T,(t,dt)=>{G.iframe=Math.max(G.iframe,.25);// 法相在就不受傷
+      g.position.set(HERO.pos.x,0,HERO.pos.z);g.rotation.y=root.rotation.y;const rise=Math.min(1,t/.3);g.scale.y=g.userData.s*rise;F.M.opacity=.5*Math.min(1,(T-t)/.3);F.D.opacity=.32*Math.min(1,(T-t)/.3);
+      F.arms.forEach((a,i)=>a.rotation.x=Math.sin(t*16+i*1.7)*.9);if(F.sword)F.sword.rotation.y=t*3;
+      if(!simming&&Math.random()<.35)fx({p:tmp.set(HERO.pos.x+(Math.random()-.5)*2.4,.3+Math.random()*3,HERO.pos.z+(Math.random()-.5)*1.6),col:0xffb040,add:true,life:.5,s0:.6,s1:.1,op:.7,vy:1.2});
+      while(k<n&&t>=.3+k*((T-.6)/n)){const a=k/n*6.28*1.618+Math.random()*.4,d=R*.6,x=HERO.pos.x+Math.sin(a)*d,z=HERO.pos.z+Math.cos(a)*d;k++;SFX.play('hit');shake=Math.max(shake,.2);
+        fx({p:tmp.set(x,.5,z),col:0xffd86a,add:true,life:.35,s0:1,s1:4,op:.95,vy:0});aoe(x,z,2,dmg,{kb:1,fly:4});if(lv>=3&&k===n){ringFx(HERO.pos.x,HERO.pos.z,R*1.4,0xffe08a,.6);aoe(HERO.pos.x,HERO.pos.z,R*1.4,dmg*3,{stun:1.5,bstun:1})}}},
+    ()=>{scene.remove(g);g.traverse(o=>{if(o.geometry)o.geometry.dispose()});F.M.dispose();F.D.dispose();if(F.sword)F.sword.material.dispose()})}
 // 破煞金雷：金雷沿直線一路炸過去，對鬼怪傷害加倍
 function goldThunderCast(A){const st=bs(),n=[1,1,3,5][st],a0=aimD(A),L=SK.beam.range()*(st>=1?1.3:1),dmg=swordDmg()*3.2*G.k.beamD;SFX.play('thunder');
   for(let j=0;j<n;j++){const a=n>1?a0+(j-(n-1)/2)*.42:a0,hx=HERO.pos.x,hz=HERO.pos.z,dx=Math.sin(a),dz=Math.cos(a),steps=Math.ceil(L/1.3);
@@ -190,10 +205,13 @@ function magnetCast(A){const st=bs(),n=[1,1,2,3][st],a0=aimD(A),L=SK.beam.range(
 // 噬靈金蟲：一群金蟲追妖，吃一隻分裂一隻
 // 噬靈金蟲：一大群金蟲（一個 Points 一次畫完）先往四面八方散開，再各自挑附近不同的妖、繞著牠打轉啃咬；吃掉一隻就分裂一隻。
 // 數量：初始 30→滿級 120 隻起跳、最多 200 隻；單隻傷害低。每隻有自己的繞圈半徑、角速度、速度，不會擠在同一點。
+const bugTex=ctex(64,64,(x)=>{const g=x.createRadialGradient(32,30,2,32,32,28);g.addColorStop(0,'rgba(232,190,90,1)');g.addColorStop(.35,'rgba(170,120,30,1)');g.addColorStop(.7,'rgba(96,62,12,.85)');g.addColorStop(1,'rgba(60,36,6,0)');x.fillStyle=g;x.beginPath();x.ellipse(32,32,26,30,0,0,7);x.fill();x.strokeStyle='rgba(40,24,4,.7)';x.lineWidth=2;x.beginPath();x.moveTo(32,8);x.lineTo(32,56);x.stroke()});
 const BUG_N0=[30,50,80,120],BUG_CAP=[60,100,150,200];let bugPts=null;
 function bugCast(){const lv=TL(),n0=BUG_N0[lv],cap=BUG_CAP[lv],T=lv>=2?7.5:6,dmg=swordDmg()*.32*G.k.thD*(1+lv*.1);SFX.play('soul');
   if(!bugPts){const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.Float32BufferAttribute(new Float32Array(220*3),3));
-    bugPts=new THREE.Points(geo,new THREE.PointsMaterial({map:glowTex,color:0xffc020,size:.75,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false}));bugPts.frustumCulled=false;bugPts.visible=false;scene.add(bugPts)}
+    // 暗金色：一層一般混色的暗金蟲身（不會被加亮成白色）＋一層很小的亮點當翅膀反光，兩層共用同一份座標
+    bugPts=new THREE.Points(geo,new THREE.PointsMaterial({map:bugTex,color:0xffffff,size:.62,transparent:true,depthWrite:false}));bugPts.frustumCulled=false;bugPts.visible=false;scene.add(bugPts);
+    const glint=new THREE.Points(geo,new THREE.PointsMaterial({map:glowTex,color:0x8a5a10,size:.3,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false}));glint.frustumCulled=false;bugPts.add(glint)}
   const P=bugPts.geometry.attributes.position,bugs=[],hx=HERO.pos.x,hz=HERO.pos.z;bugPts.visible=true;bugPts.material.opacity=1;
   const add=(x,z,burst)=>{if(bugs.length>=cap)return;const a=Math.random()*6.28,sp=burst?4+Math.random()*6:2;bugs.push({x,z,y:.6+Math.random()*.6,vx:Math.sin(a)*sp,vz:Math.cos(a)*sp,tg:null,bite:Math.random()*.3,ph:Math.random()*6.28,orb:.35+Math.random()*1.1,w:(Math.random()<.5?-1:1)*(3+Math.random()*4),spd:7+Math.random()*5,free:.35+Math.random()*.35})};
   for(let i=0;i<n0;i++)add(hx,hz,true);
@@ -245,7 +263,7 @@ const NEW=[
  ['thunder',2,'wuxing',{n:'五行珠',ic:'珠',col:0xffe08a,shape:'auto',range:()=>9,cd:()=>9,lv:['八顆','爆炸變大','十二顆'],d:'五色光珠輪流射出，各帶效果',cast:orbCast}],
  ['thunder',2,'gourd',{n:'聚魂瓶',ic:'瓶',col:0x7affd0,shape:'auto',range:()=>9,cd:()=>10,lv:['範圍 +25%','兩個瓶','爆炸 +40%'],d:'把妖吸到一點再爆開',cast:gourdCast}],
  ['sweep',3,'zhoutian',{n:'周天劍陣',ic:'陣',col:0xbff8ff,shape:'self',range:R_SW,cd:()=>7*G.k.sweepCd,lv:['範圍 +30%','轉兩輪','七十二把劍'],d:'36 把飛劍列陣旋轉，收攏絞殺再向外爆射',cast:zhoutianCast},1],
- ['sweep',3,'sixarm',{n:'六臂法相',ic:'臂',col:0xffd86a,shape:'self',range:()=>4.4*G.k.sweepR,cd:()=>7.5*G.k.sweepCd,lv:['範圍 +30%','十二拳','最後一掌震暈全場'],d:'身後升起三頭六臂金身，六拳連打四周',cast:sixArmCast}],
+ ['sweep',3,'sixarm',{n:'六臂法相',ic:'臂',col:0xffd86a,shape:'self',range:()=>4.4*G.k.sweepR,cd:()=>7.5*G.k.sweepCd,lv:['長出肉身、四臂，護體更久','披上鎧甲、六臂九拳','三頭六臂、光環羽翼巨劍，十二拳＋最後一掌震暈全場'],d:'升起包住你的金色法相（期間不受傷），手臂連打四周；等級越高外殼越華麗',cast:sixArmCast}],
  ['beam',3,'goldlei',{n:'破煞金雷',ic:'煞',col:0xffe08a,shape:'line',w:1.4,range:()=>10,cd:()=>5.5*G.k.beamCd,lv3:['打得更遠','三道金雷','五道，最後一記巨雷'],d:'金雷沿直線一路炸過去，對鬼怪傷害加倍',cast:goldThunderCast},1],
  ['beam',3,'icefire',{n:'玄冥冰焰',ic:'冥',col:0x8ad8ff,shape:'fan',ang:.8,range:()=>9,cd:()=>6*G.k.beamCd,lv3:['留下冰焰地','噴更久','凍住'],d:'藍白冰焰噴流，燒加凍結',cast:iceFireCast}],
  ['beam',3,'magnet',{n:'兩儀磁光',ic:'儀',col:0xf0ece0,shape:'line',w:2.6,range:()=>10,cd:()=>6*G.k.beamCd,lv3:['光束變長','兩道','三道、爆開暈 1 秒'],d:'黑白磁光先把線上的妖吸在一起再爆開',cast:magnetCast}],

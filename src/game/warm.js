@@ -4,14 +4,14 @@
    這裡在載入時把常用的材質組合（有／無貼圖、加亮／一般、單面／雙面、精靈、線、點、拖影）各留一份，畫一次後藏起來但不丟，
    著色器就一直留在快取裡；所有招式用的貼圖也先上傳。 */
 const WARM=(()=>{const g=new THREE.Group();g.position.set(0,-40,0);scene.add(g);const geo=new THREE.PlaneGeometry(.1,.1);
-  const texs=[null,glowTex,beamTex,wBeamTex,talTex2,coinTex,TG.ring,TG.wash,TG.stroke,TG.lwash,taijiTex,soulGlowTex(),talTex];
+  const texs=[null,bugTex,glowTex,beamTex,wBeamTex,talTex2,coinTex,TG.ring,TG.wash,TG.stroke,TG.lwash,taijiTex,soulGlowTex(),talTex];
   if(typeof thForm!=='undefined'&&thForm.material&&thForm.material.map)texs.push(thForm.material.map);
   for(const map of texs)for(const blending of [THREE.NormalBlending,THREE.AdditiveBlending])for(const side of [THREE.FrontSide,THREE.DoubleSide]){
     g.add(new THREE.Mesh(geo,new THREE.MeshBasicMaterial({map,transparent:true,blending,side,depthWrite:false})));
     if(side===THREE.FrontSide)g.add(new THREE.Sprite(new THREE.SpriteMaterial({map:map||glowTex,transparent:true,blending,depthWrite:false})))}
   g.add(new THREE.Mesh(geo,new THREE.MeshBasicMaterial({color:0xffffff})));g.add(new THREE.Mesh(geo,toon(0x888888)));g.add(new THREE.Mesh(geo,new THREE.MeshLambertMaterial({color:0xffffff,transparent:true})));
   g.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(),new THREE.Vector3(0,.1,0)]),new THREE.LineBasicMaterial({color:0xffffff,transparent:true})));
-  g.add(new THREE.Points(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3()]),new THREE.PointsMaterial({size:.1})));g.add(new THREE.Points(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3()]),new THREE.PointsMaterial({map:glowTex,size:.3,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false})));
+  g.add(new THREE.Points(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3()]),new THREE.PointsMaterial({size:.1})));g.add(new THREE.Points(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3()]),new THREE.PointsMaterial({map:glowTex,size:.3,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false})));g.add(new THREE.Points(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3()]),new THREE.PointsMaterial({map:bugTex,size:.3,transparent:true,depthWrite:false})));
   try{g.add(soulFig(0xffffff,.5))}catch(e){}// 元嬰／元神斬／法相用的分身（同時讓第一次 clone 的 JS 先跑過）
   if(typeof soulTrail!=='undefined'&&!soulTrail)soulTrail=new Trail(30,.55,0xffc040);
   g.traverse(o=>{o.frustumCulled=false});
