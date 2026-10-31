@@ -188,13 +188,25 @@ function magnetCast(A){const st=bs(),n=[1,1,2,3][st],a0=aimD(A),L=SK.beam.range(
         if(t<.75)for(const e of enemies){if(e.dead||e.elite||!inLine(e.x,e.z,hx,hz,a,L,W+1.5,e.r))continue;const ex=cx-e.x,ez=cz-e.z,d=Math.hypot(ex,ez);if(d>.3){const v=Math.min(d,7*dt);e.x+=ex/d*v;e.z+=ez/d*v}}},
       ()=>{bw.forEach(m=>{scene.remove(m);m.material.dispose()});SFX.play('boom');shake=Math.max(shake,.45);fx({p:tmp.set(cx,.5,cz),col:0xffffff,add:true,life:.5,s0:1,s1:7,op:1,vy:0});fx({p:tmp.set(cx,.5,cz),col:0x101014,life:.7,s0:1,s1:6,op:.7,vy:.6});aoe(cx,cz,3,dmg,{kb:1.6,fly:6,stun:st>=3?1:0})})}}
 // 噬靈金蟲：一群金蟲追妖，吃一隻分裂一隻
-function bugCast(){const lv=TL(),n0=lv>=1?12:8,T=lv>=2?7.5:6,dmg=swordDmg()*1.2*G.k.thD,cap=lv>=3?40:30;if(!enemies.some(e=>!e.dead&&onScreen(e.x,.4,e.z))&&!boss.alive)return false;SFX.play('soul');
-  const bugs=[];const add=(x,z)=>{if(bugs.length>=cap)return;bugs.push({x,z,s:spr(0xffd040,.45),tg:null,bite:0,a:Math.random()*6.28})};for(let i=0;i<n0;i++)add(HERO.pos.x,HERO.pos.z);
-  act(T,(t,dt)=>{for(const b of bugs){if(!b.tg||b.tg.dead||(b.tg===boss&&!boss.alive)){b.tg=(lv>=3&&boss.alive&&Math.random()<.3)?boss:nearE(b.x,b.z,9)}
-      let tx,tz;if(b.tg){tx=b.tg.x;tz=b.tg.z}else{b.a+=dt*4;tx=HERO.pos.x+Math.sin(b.a)*1.5;tz=HERO.pos.z+Math.cos(b.a)*1.5}
-      const dx=tx-b.x,dz=tz-b.z,d=Math.hypot(dx,dz)||1,v=Math.min(d,11*dt);b.x+=dx/d*v+Math.sin(t*30+b.a)*.03;b.z+=dz/d*v+Math.cos(t*27+b.a)*.03;b.s.position.set(b.x,.7+Math.sin(t*25+b.a)*.15,b.z);b.s.material.opacity=Math.min(1,(T-t)/.4);
-      b.bite-=dt;if(b.tg&&d<(b.tg.r||.4)+.3&&b.bite<=0){b.bite=.3;if(b.tg===boss)hurtBoss(dmg);else{const was=b.tg;hurtEnemy(was,dmg,0,0,false,0);if(was.dead)add(b.x,b.z)}}}},
-    ()=>bugs.forEach(b=>unspr(b.s)));return true}
+// 噬靈金蟲：一大群金蟲（一個 Points 一次畫完）先往四面八方散開，再各自挑附近不同的妖、繞著牠打轉啃咬；吃掉一隻就分裂一隻。
+// 數量：初始 30→滿級 120 隻起跳、最多 200 隻；單隻傷害低。每隻有自己的繞圈半徑、角速度、速度，不會擠在同一點。
+const BUG_N0=[30,50,80,120],BUG_CAP=[60,100,150,200];let bugPts=null;
+function bugCast(){const lv=TL(),n0=BUG_N0[lv],cap=BUG_CAP[lv],T=lv>=2?7.5:6,dmg=swordDmg()*.32*G.k.thD*(1+lv*.1);SFX.play('soul');
+  if(!bugPts){const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.Float32BufferAttribute(new Float32Array(220*3),3));
+    bugPts=new THREE.Points(geo,new THREE.PointsMaterial({map:glowTex,color:0xffc020,size:.75,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false}));bugPts.frustumCulled=false;bugPts.visible=false;scene.add(bugPts)}
+  const P=bugPts.geometry.attributes.position,bugs=[],hx=HERO.pos.x,hz=HERO.pos.z;bugPts.visible=true;bugPts.material.opacity=1;
+  const add=(x,z,burst)=>{if(bugs.length>=cap)return;const a=Math.random()*6.28,sp=burst?4+Math.random()*6:2;bugs.push({x,z,y:.6+Math.random()*.6,vx:Math.sin(a)*sp,vz:Math.cos(a)*sp,tg:null,bite:Math.random()*.3,ph:Math.random()*6.28,orb:.35+Math.random()*1.1,w:(Math.random()<.5?-1:1)*(3+Math.random()*4),spd:7+Math.random()*5,free:.35+Math.random()*.35})};
+  for(let i=0;i<n0;i++)add(hx,hz,true);
+  const pick=b=>{if(lv>=3&&boss.alive&&Math.random()<.15&&Math.hypot(boss.x-b.x,boss.z-b.z)<10)return boss;const near=[];for(const e of enemies){if(e.dead)continue;const d=(e.x-b.x)**2+(e.z-b.z)**2;if(d<100)near.push([d,e])}
+    if(!near.length)return null;near.sort((p,q)=>p[0]-q[0]);return near[Math.floor(Math.random()*Math.min(8,near.length))][1]};
+  act(T,(t,dt)=>{for(const b of bugs){b.ph+=dt*b.w;
+      if(b.free>0){b.free-=dt;b.x+=b.vx*dt;b.z+=b.vz*dt;b.vx*=.94;b.vz*=.94}// 先散開
+      else{if(!b.tg||b.tg.dead||(b.tg===boss&&!boss.alive)||(b.tg!==boss&&b.tg.hp<=0))b.tg=pick(b);
+        let tx,tz;if(b.tg){tx=b.tg.x+Math.cos(b.ph)*b.orb;tz=b.tg.z+Math.sin(b.ph)*b.orb}else{const r=2+b.orb*2;tx=HERO.pos.x+Math.cos(b.ph*.3)*r;tz=HERO.pos.z+Math.sin(b.ph*.3)*r}
+        const dx=tx-b.x,dz=tz-b.z,d=Math.hypot(dx,dz)||1,v=Math.min(d,b.spd*dt);b.x+=dx/d*v;b.z+=dz/d*v;
+        b.bite-=dt;if(b.tg&&b.bite<=0){const r=(b.tg.r||.4)+b.orb+.3;if((b.tg.x-b.x)**2+(b.tg.z-b.z)**2<r*r){b.bite=.35;if(b.tg===boss)hurtBoss(dmg);else{const was=b.tg;hurtEnemy(was,dmg,0,0,false,0);if(was.dead){add(b.x,b.z,true);b.tg=null}}}}}}
+    const n=bugs.length;for(let i=0;i<220;i++){if(i<n){const b=bugs[i];P.setXYZ(i,b.x,b.y+Math.sin(b.ph*2)*.15,b.z)}else P.setXYZ(i,0,-50,0)}P.needsUpdate=true;bugPts.geometry.setDrawRange(0,n);bugPts.material.opacity=Math.min(1,(T-t)/.5)},
+    ()=>{bugPts.visible=false});return true}
 // 天罰雷雲：頭頂雷雲跟著你，自動劈附近的妖
 function cloudCast(){const lv=TL(),n=lv>=2?2:1,T=5,iv=lv>=1?.3:.4,dmg=swordDmg()*2.4*G.k.thD,R=6;SFX.play('thunder');
   for(let j=0;j<n;j++){const cl=[];for(let i=0;i<5;i++){const s=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex,color:0x5a5070,transparent:true,opacity:.85,depthWrite:false}));s.scale.set(2.2,1.2,1);scene.add(s);cl.push(s)}let tk=j*.15;
@@ -237,11 +249,11 @@ const NEW=[
  ['beam',3,'goldlei',{n:'破煞金雷',ic:'煞',col:0xffe08a,shape:'line',w:1.4,range:()=>10,cd:()=>5.5*G.k.beamCd,lv3:['打得更遠','三道金雷','五道，最後一記巨雷'],d:'金雷沿直線一路炸過去，對鬼怪傷害加倍',cast:goldThunderCast},1],
  ['beam',3,'icefire',{n:'玄冥冰焰',ic:'冥',col:0x8ad8ff,shape:'fan',ang:.8,range:()=>9,cd:()=>6*G.k.beamCd,lv3:['留下冰焰地','噴更久','凍住'],d:'藍白冰焰噴流，燒加凍結',cast:iceFireCast}],
  ['beam',3,'magnet',{n:'兩儀磁光',ic:'儀',col:0xf0ece0,shape:'line',w:2.6,range:()=>10,cd:()=>6*G.k.beamCd,lv3:['光束變長','兩道','三道、爆開暈 1 秒'],d:'黑白磁光先把線上的妖吸在一起再爆開',cast:magnetCast}],
- ['thunder',3,'bugs',{n:'噬靈金蟲',ic:'蟲',col:0xffd040,shape:'auto',range:()=>9,cd:()=>10,lv:['十二隻','飛更久','會咬魔王、最多 40 隻'],d:'一群金蟲追妖，吃一隻分裂一隻',cast:bugCast},1],
+ ['thunder',3,'bugs',{n:'噬靈金蟲',ic:'蟲',col:0xffd040,shape:'auto',range:()=>9,cd:()=>10,lv:['五十隻起、最多一百隻','八十隻起、飛更久','一百二十隻起、最多兩百隻、會咬魔王'],d:'一大群金蟲散開追妖，吃一隻分裂一隻（三十隻起）',cast:bugCast},1],
  ['thunder',3,'leiyun',{n:'天罰雷雲',ic:'雲',col:0xc8b8ff,shape:'auto',range:()=>6,cd:()=>10,lv:['劈更快','兩朵雷雲','雷更粗、會暈'],d:'頭頂雷雲跟著你 5 秒，自動劈附近的妖',cast:cloudCast}]];
 for(const [slot,tier,id,def,dflt] of NEW)addSk(slot,tier,id,def,dflt);
 // 同境界拉平（實測每秒傷害校正；1＝沒校正）。每高一個大境界 ×1.3
-const NORM={"sweep0": 1.0, "sweep1": 0.75, "sweep2": 0.85, "sweep3": 1.19, "peach": 1.75, "vajra": 0.74, "firedance": 0.65, "stone": 0.78, "qkring": 0.85, "turtle": 1.87, "zhoutian": 1.1, "sixarm": 1.54, "beam0": 1.0, "beam1": 1.25, "beam2": 2.21, "seek": 0.79, "coin": 1.72, "icecone": 3.12, "wind": 1.98, "mirror": 1.92, "rope": 3.04, "goldlei": 2.37, "icefire": 3.73, "magnet": 3.62, "thunder0": 1.0, "thunder1": 1.37, "thunder2": 1.25, "thunder3": 1.4, "yinlei": 1.35, "bell2": 1.62, "rock": 1.71, "vine": 1.6, "wuxing": 1.4, "gourd": 1.8, "bugs": 1.48, "leiyun": 1.89};// m.py 實測（30 隻木樁、初始與滿級的幾何平均）
+const NORM={"sweep0": 1.0, "sweep1": 0.75, "sweep2": 0.85, "sweep3": 1.19, "peach": 1.75, "vajra": 0.74, "firedance": 0.65, "stone": 0.78, "qkring": 0.85, "turtle": 1.87, "zhoutian": 1.1, "sixarm": 1.54, "beam0": 1.0, "beam1": 1.25, "beam2": 2.21, "seek": 0.79, "coin": 1.72, "icecone": 3.12, "wind": 1.98, "mirror": 1.92, "rope": 3.04, "goldlei": 2.37, "icefire": 3.73, "magnet": 3.62, "thunder0": 1.0, "thunder1": 1.37, "thunder2": 1.25, "thunder3": 1.4, "yinlei": 1.35, "bell2": 1.62, "rock": 1.71, "vine": 1.6, "wuxing": 1.4, "gourd": 1.8, "bugs": 1.18, "leiyun": 1.89};// m.py 實測（30 隻木樁、初始與滿級的幾何平均）
 function skMul(S){return NORM[S.id]||Math.pow(1.3,S.tier)}
 // 第二格三級：舊的直線招用原本的 0/2/3/4 級
 const BEAM_MAP=[0,2,3,4];

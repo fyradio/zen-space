@@ -140,7 +140,7 @@ let _sgt=null;function soulGlowTex(){if(_sgt)return _sgt;const c=document.create
 // ---------- 大絕：元嬰出竅 ----------
 let soulTrail=null;
 // 元嬰出竅：頭頂飛出半透明金色的小主角，帶拖影和小飛劍，在妖群間高速穿梭斬妖；本體原地打坐、無敵
-function yuanyingCast(){const dmg=swordDmg()*6,DUR=8;G.ultBoss=0;G.slow=.4;G.medit=DUR;shake=Math.max(shake,.5);SFX.play('ult');buzz(60);const u=$('#ultFx');u.classList.remove('on');void u.offsetWidth;u.classList.add('on');banner('元嬰出竅','本體打坐，元嬰替你斬妖',true);
+function yuanyingCast(){const dmg=swordDmg()*6,DUR=8;G.ultBoss=0;G.slow=.4;shake=Math.max(shake,.5);SFX.play('ult');buzz(60);const u=$('#ultFx');u.classList.remove('on');void u.offsetWidth;u.classList.add('on');banner('元嬰出竅','元嬰替你斬妖，本體這段時間無敵',true);
   if(!soulTrail)soulTrail=new Trail(30,.55,0xffc040);
   const av=new THREE.Group(),fig=soulFig(0xd89420,.8),M=fig.userData.M;fig.scale.setScalar(.95);av.add(fig);
   const glow=new THREE.Sprite(new THREE.SpriteMaterial({map:soulGlowTex(),color:0xffd86a,transparent:true,opacity:.7,blending:THREE.AdditiveBlending,depthWrite:false}));glow.scale.set(3,3.6,1);glow.position.y=.9;av.add(glow);
@@ -157,7 +157,7 @@ function yuanyingCast(){const dmg=swordDmg()*6,DUR=8;G.ultBoss=0;G.slow=.4;G.med
         for(const e of enemies)if(!e.dead&&Math.hypot(e.x-av.position.x,e.z-av.position.z)<2.4)hurtEnemy(e,dmg,0,0,true,4);
         if(boss.alive&&Math.hypot(boss.x-av.position.x,boss.z-av.position.z)<2.4+boss.r){const room=boss.max*.22-G.ultBoss;if(room>0){const dd=Math.min(dmg*2,room);G.ultBoss+=dd;boss.allow+=dd;hurtBoss(dd,true)}}
         st.tg=pickTg()}},
-    ()=>{scene.remove(av);M.dispose();glow.material.dispose();soulTrail.build(0);G.medit=0;fx({p:tmp.set(HERO.pos.x,1.5,HERO.pos.z),col:0xffe9a0,add:true,life:.4,s0:1,s1:3,op:.9,vy:0})})}
+    ()=>{scene.remove(av);M.dispose();glow.material.dispose();soulTrail.build(0);fx({p:tmp.set(HERO.pos.x,1.5,HERO.pos.z),col:0xffe9a0,add:true,life:.4,s0:1,s1:3,op:.9,vy:0})})}
 ULT_DEF.yuanying={n:'元嬰出竅',ic:'嬰',col:0xffe9a0,shape:'self',ult:1,range:()=>8,cast:yuanyingCast};
 // ---------- 水墨過場 ----------
 Object.assign(INK.scenes,{
