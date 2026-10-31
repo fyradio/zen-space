@@ -259,7 +259,7 @@ const NEW=[
  ['sweep',2,'qkring',{n:'乾坤圈',ic:'圈',col:0xffd86a,shape:'self',range:()=>4*G.k.sweepR,cd:()=>7*G.k.sweepCd,lv:['範圍 +30%','兩個圈','打中暈 1 秒'],d:'金圈擴出去再收回，打兩次',cast:ringCast}],
  ['sweep',2,'turtle',{n:'玄龜震',ic:'龜',col:0x5ad8a0,shape:'self',range:()=>4*G.k.sweepR,cd:()=>7.5*G.k.sweepCd,lv:['範圍 +30%','擋兩下','震暈 1.2 秒'],d:'龜殼震地，擋一下傷害並擊退',cast:turtleCast}],
  ['beam',2,'mirror',{n:'照妖鏡光',ic:'鏡',col:0xffe9a0,shape:'line',w:2.4,range:()=>11,cd:()=>6*G.k.beamCd,lv3:['兩道光','三道光','五道光、照 5 秒'],d:'被照到的妖 3 秒內受傷加倍',cast:mirrorCast}],
- ['beam',2,'rope',{n:'縛妖索',ic:'索',col:0xffd86a,shape:'line',w:1.2,range:()=>11,cd:()=>6*G.k.beamCd,lv3:['繩子變粗','綁更久','三條繩'],d:'金繩串起沿路的妖，綁住精英或魔王並拉近',cast:ropeCast}],
+ ['beam',2,'rope',{n:'縛妖索',ic:'索',col:0xffd86a,shape:'line',w:1.2,range:()=>11,cd:()=>6*G.k.beamCd,lv3:['繩子變粗','兩條繩、綁更久','三條繩'],d:'金繩串起沿路的妖，綁住精英或魔王並拉近',cast:ropeCast}],
  ['thunder',2,'wuxing',{n:'五行珠',ic:'珠',col:0xffe08a,shape:'auto',range:()=>9,cd:()=>9,lv:['八顆','爆炸變大','十二顆'],d:'五色光珠輪流射出，各帶效果',cast:orbCast}],
  ['thunder',2,'gourd',{n:'聚魂瓶',ic:'瓶',col:0x7affd0,shape:'auto',range:()=>9,cd:()=>10,lv:['範圍 +25%','兩個瓶','爆炸 +40%'],d:'把妖吸到一點再爆開',cast:gourdCast}],
  ['sweep',3,'zhoutian',{n:'周天劍陣',ic:'陣',col:0xbff8ff,shape:'self',range:R_SW,cd:()=>7*G.k.sweepCd,lv:['範圍 +30%','轉兩輪','七十二把劍'],d:'36 把飛劍列陣旋轉，收攏絞殺再向外爆射',cast:zhoutianCast},1],
@@ -274,8 +274,8 @@ for(const [slot,tier,id,def,dflt] of NEW)addSk(slot,tier,id,def,dflt);
 const NORM={"sweep0": 1.0, "sweep1": 0.75, "sweep2": 0.85, "sweep3": 1.19, "peach": 1.75, "vajra": 0.74, "firedance": 0.65, "stone": 0.78, "qkring": 0.85, "turtle": 1.87, "zhoutian": 1.1, "sixarm": 1.54, "beam0": 1.0, "beam1": 1.25, "beam2": 2.21, "seek": 0.79, "coin": 1.72, "icecone": 3.12, "wind": 1.98, "mirror": 1.92, "rope": 3.04, "goldlei": 2.37, "icefire": 3.73, "magnet": 3.62, "thunder0": 1.0, "thunder1": 1.37, "thunder2": 1.25, "thunder3": 1.4, "yinlei": 1.35, "bell2": 1.62, "rock": 1.71, "vine": 1.6, "wuxing": 1.4, "gourd": 1.8, "bugs": 1.18, "leiyun": 1.89};// m.py 實測（30 隻木樁、初始與滿級的幾何平均）
 function skMul(S){return NORM[S.id]||Math.pow(1.3,S.tier)}
 // 第二格三級：舊的直線招用原本的 0/2/3/4 級
-const BEAM_MAP=[0,2,3,4];
-function beamText(S,step){if(S.lv3)return S.lv3[step];const a=BEAM_MAP[step],b=BEAM_MAP[step+1];return S.lv.slice(a,b).join('，')}
+const BEAM_MAP=[0,1,3,4];// 第二格三級對應的等級：劍氣長虹 1→5→18→36 道
+function beamText(S,step){if(S.lv3)return S.lv3[step];return S.lv[BEAM_MAP[step+1]-1]}
 // 存檔：裝備中的三招、已參悟的招、上次送招的境界
 const skById=id=>{for(const slot in SKILL_LIB){const s=SKILL_LIB[slot].find(s=>s.id===id);if(s)return s}return null};
 const skDefault=(slot,t)=>SKILL_LIB[slot].find(s=>s.tier===t&&s.dflt);

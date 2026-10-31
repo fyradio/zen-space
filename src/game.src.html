@@ -736,7 +736,7 @@ function sweepCast(A){const lv=G.k.sweepLv,full=lv>=3,ang=full?Math.PI*2:SK.swee
         if(boss.alive){const dx=boss.x-hx,dz=boss.z-hz,d=Math.hypot(dx,dz);if(d<R+boss.r&&(full||Math.abs(angDiff(Math.atan2(dx,dz),a0))<=ang/2+.35))hurtBoss(dmg)}
         if(killed){G.slow=Math.max(G.slow,.07);shake=Math.max(shake,.35)}if(hits>1)SFX.play('sweep')}},
     ()=>{bamboo.visible=false;scene.remove(arc);arc.geometry.dispose();arc.material.dispose()})}
-// 劍氣長虹（紅）: beams of sword qi. 進化：1 → 5 → 10 → 18 道 → 360° 散射
+// 劍氣長虹（紅）: beams of sword qi. 頓悟進化三次：1 → 5 → 18 → 36 道（360° 散射）
 const BEAM_N=[1,5,10,18,36],BEAM_SPREAD=[0,1.05,2.1,3.5,Math.PI*2];
 const BEAM_LV=['一次射出 5 道（扇形）','10 道','18 道','360° 全方位散射（36 道）'];
 const beamTex=ctex(64,16,(x,w,h)=>{const g=x.createLinearGradient(0,0,w,0);g.addColorStop(0,'rgba(255,40,30,0)');g.addColorStop(.28,'rgba(255,70,50,.6)');g.addColorStop(.5,'rgba(255,235,225,1)');

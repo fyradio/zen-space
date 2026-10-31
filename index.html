@@ -1588,7 +1588,7 @@ function sweepCast(A){const lv=G.k.sweepLv,full=lv>=3,ang=full?Math.PI*2:SK.swee
         if(boss.alive){const dx=boss.x-hx,dz=boss.z-hz,d=Math.hypot(dx,dz);if(d<R+boss.r&&(full||Math.abs(angDiff(Math.atan2(dx,dz),a0))<=ang/2+.35))hurtBoss(dmg)}
         if(killed){G.slow=Math.max(G.slow,.07);shake=Math.max(shake,.35)}if(hits>1)SFX.play('sweep')}},
     ()=>{bamboo.visible=false;scene.remove(arc);arc.geometry.dispose();arc.material.dispose()})}
-// 劍氣長虹（紅）: beams of sword qi. 進化：1 → 5 → 10 → 18 道 → 360° 散射
+// 劍氣長虹（紅）: beams of sword qi. 頓悟進化三次：1 → 5 → 18 → 36 道（360° 散射）
 const BEAM_N=[1,5,10,18,36],BEAM_SPREAD=[0,1.05,2.1,3.5,Math.PI*2];
 const BEAM_LV=['一次射出 5 道（扇形）','10 道','18 道','360° 全方位散射（36 道）'];
 const beamTex=ctex(64,16,(x,w,h)=>{const g=x.createLinearGradient(0,0,w,0);g.addColorStop(0,'rgba(255,40,30,0)');g.addColorStop(.28,'rgba(255,70,50,.6)');g.addColorStop(.5,'rgba(255,235,225,1)');
@@ -2182,7 +2182,7 @@ function riverCast(A){const lv=G.k.beamLv,L=SK.beam.range(),a0=Math.atan2(A.dir[
         if(boss.alive&&!hit.has(boss)){const px=boss.x-hx,pz=boss.z-hz,al=px*dx+pz*dz,pe=Math.abs(px*dz-pz*dx);if(al>0&&al<front&&pe<W/2+boss.r){hit.add(boss);hurtBoss(dmg)}}},
       ()=>{scene.remove(m);m.material.dispose()})}}
 // 紫霄雷網: bolts rain on the nearest monsters and lightning links them into a net
-const NET_LV=['落雷更多','雷網：被劈到的妖之間連電','雷網麻痺 1.5 秒','雷暴：落雷再翻倍'];
+const NET_LV=['落雷更多，雷網：被劈到的妖之間連電','雷網麻痺 1.5 秒','雷暴：落雷再翻倍'];
 function netCast(){const lv=G.k.thLv,n=8+G.k.thN+(lv>=3?8:0),dmg=swordDmg()*2.6*G.k.thD,hx=HERO.pos.x,hz=HERO.pos.z,R=SK.thunder.range(),used=new Set(),hits=[];
   for(let i=0;i<n;i++){const tg=(i===0&&boss.alive&&bossOnScreen())?boss:pickNear(hx,hz,R,used);if(!tg)break;used.add(tg);hits.push(tg)}
   if(!hits.length)return false;SFX.play('thunder');shake=Math.max(shake,.3);
@@ -2465,12 +2465,12 @@ function hongCast(A){const lv=G.k.beamLv,L=SK.beam.range(),a0=Math.atan2(A.dir[0
         for(const e of enemies){if(e.dead||hit.has(e))continue;const px=e.x-hx,pz=e.z-hz,al=px*dx+pz*dz,pe=Math.abs(px*dz-pz*dx);if(al>0&&al<L*k&&pe<W/2+e.r){hit.add(e);if(lv>=2)e.stun=Math.max(e.stun||0,1);hurtEnemy(e,dmg,dx*.6,dz*.6,true,4)}}
         if(boss.alive&&!hit.has(boss)){const px=boss.x-hx,pz=boss.z-hz,al=px*dx+pz*dz,pe=Math.abs(px*dz-pz*dx);if(al>0&&al<L*k&&pe<W/2+boss.r){hit.add(boss);hurtBoss(dmg,true)}}},
       ()=>{scene.remove(m);m.material.dispose()})}}
-const SHADOW_LV=['劍影 +3 把','持續更久','劍影更快更痛','劍影 +4 把，會追魔王'];
-function shadowCast(){const lv=G.k.thLv,n=8+G.k.thN+(lv>=1?3:0)+(lv>=4?4:0),dur=3.6+(lv>=2?1.4:0),dmg=swordDmg()*3.4*G.k.thD*(lv>=3?1.3:1),spd=lv>=3?15:11;
+const SHADOW_LV=['劍影 +3 把','持續更久','劍影更快更痛、再 +4 把、會追魔王'];
+function shadowCast(){const lv=G.k.thLv,n=8+G.k.thN+(lv>=1?3:0)+(lv>=3?4:0),dur=3.6+(lv>=2?1.4:0),dmg=swordDmg()*3.4*G.k.thD*(lv>=3?1.3:1),spd=lv>=3?15:11;
   if(!enemies.some(e=>!e.dead&&onScreen(e.x,.4,e.z))&&!boss.alive)return false;SFX.play('thunder');
   for(let i=0;i<n;i++){const m=new THREE.Mesh(new THREE.ConeGeometry(.12,1.1,4),new THREE.MeshBasicMaterial({color:0xdfe8ff,transparent:true,opacity:.9,blending:THREE.AdditiveBlending,depthWrite:false}));m.rotation.order='YXZ';scene.add(m);
     const s={x:HERO.pos.x,z:HERO.pos.z,tg:null,cd:0,hit:new Map(),a:i/n*6.28};
-    act(dur,(t,dt)=>{s.cd-=dt;if(!s.tg||s.tg.dead||s.cd<=0){s.cd=.7;let best=null,bd=1e9;const pool=(lv>=4&&boss.alive&&i%3===0)?[boss]:enemies;for(const e of pool){if(e.dead)continue;const d=Math.hypot(e.x-s.x,e.z-s.z)+Math.random()*3;if(d<bd){bd=d;best=e}}s.tg=best}
+    act(dur,(t,dt)=>{s.cd-=dt;if(!s.tg||s.tg.dead||s.cd<=0){s.cd=.7;let best=null,bd=1e9;const pool=(lv>=3&&boss.alive&&i%3===0)?[boss]:enemies;for(const e of pool){if(e.dead)continue;const d=Math.hypot(e.x-s.x,e.z-s.z)+Math.random()*3;if(d<bd){bd=d;best=e}}s.tg=best}
         let tx,tz;if(s.tg){tx=s.tg.x;tz=s.tg.z}else{s.a+=dt*3;tx=HERO.pos.x+Math.sin(s.a)*2.5;tz=HERO.pos.z+Math.cos(s.a)*2.5}
         const dx=tx-s.x,dz=tz-s.z,d=Math.hypot(dx,dz)||1,v=Math.min(d,spd*dt);s.x+=dx/d*v;s.z+=dz/d*v;m.position.set(s.x,.9,s.z);m.rotation.set(Math.PI/2,Math.atan2(dx,dz),0);m.material.opacity=.9*Math.min(1,(dur-t)/.5);
         if(s.tg&&d<s.tg.r+.6&&(s.hit.get(s.tg)||0)<t-.45){s.hit.set(s.tg,t);if(s.tg===boss)hurtBoss(dmg);else hurtEnemy(s.tg,dmg,dx/d*.8,dz/d*.8,false,3)}},
@@ -3573,7 +3573,7 @@ const NEW=[
  ['sweep',2,'qkring',{n:'乾坤圈',ic:'圈',col:0xffd86a,shape:'self',range:()=>4*G.k.sweepR,cd:()=>7*G.k.sweepCd,lv:['範圍 +30%','兩個圈','打中暈 1 秒'],d:'金圈擴出去再收回，打兩次',cast:ringCast}],
  ['sweep',2,'turtle',{n:'玄龜震',ic:'龜',col:0x5ad8a0,shape:'self',range:()=>4*G.k.sweepR,cd:()=>7.5*G.k.sweepCd,lv:['範圍 +30%','擋兩下','震暈 1.2 秒'],d:'龜殼震地，擋一下傷害並擊退',cast:turtleCast}],
  ['beam',2,'mirror',{n:'照妖鏡光',ic:'鏡',col:0xffe9a0,shape:'line',w:2.4,range:()=>11,cd:()=>6*G.k.beamCd,lv3:['兩道光','三道光','五道光、照 5 秒'],d:'被照到的妖 3 秒內受傷加倍',cast:mirrorCast}],
- ['beam',2,'rope',{n:'縛妖索',ic:'索',col:0xffd86a,shape:'line',w:1.2,range:()=>11,cd:()=>6*G.k.beamCd,lv3:['繩子變粗','綁更久','三條繩'],d:'金繩串起沿路的妖，綁住精英或魔王並拉近',cast:ropeCast}],
+ ['beam',2,'rope',{n:'縛妖索',ic:'索',col:0xffd86a,shape:'line',w:1.2,range:()=>11,cd:()=>6*G.k.beamCd,lv3:['繩子變粗','兩條繩、綁更久','三條繩'],d:'金繩串起沿路的妖，綁住精英或魔王並拉近',cast:ropeCast}],
  ['thunder',2,'wuxing',{n:'五行珠',ic:'珠',col:0xffe08a,shape:'auto',range:()=>9,cd:()=>9,lv:['八顆','爆炸變大','十二顆'],d:'五色光珠輪流射出，各帶效果',cast:orbCast}],
  ['thunder',2,'gourd',{n:'聚魂瓶',ic:'瓶',col:0x7affd0,shape:'auto',range:()=>9,cd:()=>10,lv:['範圍 +25%','兩個瓶','爆炸 +40%'],d:'把妖吸到一點再爆開',cast:gourdCast}],
  ['sweep',3,'zhoutian',{n:'周天劍陣',ic:'陣',col:0xbff8ff,shape:'self',range:R_SW,cd:()=>7*G.k.sweepCd,lv:['範圍 +30%','轉兩輪','七十二把劍'],d:'36 把飛劍列陣旋轉，收攏絞殺再向外爆射',cast:zhoutianCast},1],
@@ -3588,8 +3588,8 @@ for(const [slot,tier,id,def,dflt] of NEW)addSk(slot,tier,id,def,dflt);
 const NORM={"sweep0": 1.0, "sweep1": 0.75, "sweep2": 0.85, "sweep3": 1.19, "peach": 1.75, "vajra": 0.74, "firedance": 0.65, "stone": 0.78, "qkring": 0.85, "turtle": 1.87, "zhoutian": 1.1, "sixarm": 1.54, "beam0": 1.0, "beam1": 1.25, "beam2": 2.21, "seek": 0.79, "coin": 1.72, "icecone": 3.12, "wind": 1.98, "mirror": 1.92, "rope": 3.04, "goldlei": 2.37, "icefire": 3.73, "magnet": 3.62, "thunder0": 1.0, "thunder1": 1.37, "thunder2": 1.25, "thunder3": 1.4, "yinlei": 1.35, "bell2": 1.62, "rock": 1.71, "vine": 1.6, "wuxing": 1.4, "gourd": 1.8, "bugs": 1.18, "leiyun": 1.89};// m.py 實測（30 隻木樁、初始與滿級的幾何平均）
 function skMul(S){return NORM[S.id]||Math.pow(1.3,S.tier)}
 // 第二格三級：舊的直線招用原本的 0/2/3/4 級
-const BEAM_MAP=[0,2,3,4];
-function beamText(S,step){if(S.lv3)return S.lv3[step];const a=BEAM_MAP[step],b=BEAM_MAP[step+1];return S.lv.slice(a,b).join('，')}
+const BEAM_MAP=[0,1,3,4];// 第二格三級對應的等級：劍氣長虹 1→5→18→36 道
+function beamText(S,step){if(S.lv3)return S.lv3[step];return S.lv[BEAM_MAP[step+1]-1]}
 // 存檔：裝備中的三招、已參悟的招、上次送招的境界
 const skById=id=>{for(const slot in SKILL_LIB){const s=SKILL_LIB[slot].find(s=>s.id===id);if(s)return s}return null};
 const skDefault=(slot,t)=>SKILL_LIB[slot].find(s=>s.tier===t&&s.dflt);

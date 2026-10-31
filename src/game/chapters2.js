@@ -108,7 +108,7 @@ function riverCast(A){const lv=G.k.beamLv,L=SK.beam.range(),a0=Math.atan2(A.dir[
         if(boss.alive&&!hit.has(boss)){const px=boss.x-hx,pz=boss.z-hz,al=px*dx+pz*dz,pe=Math.abs(px*dz-pz*dx);if(al>0&&al<front&&pe<W/2+boss.r){hit.add(boss);hurtBoss(dmg)}}},
       ()=>{scene.remove(m);m.material.dispose()})}}
 // 紫霄雷網: bolts rain on the nearest monsters and lightning links them into a net
-const NET_LV=['落雷更多','雷網：被劈到的妖之間連電','雷網麻痺 1.5 秒','雷暴：落雷再翻倍'];
+const NET_LV=['落雷更多，雷網：被劈到的妖之間連電','雷網麻痺 1.5 秒','雷暴：落雷再翻倍'];
 function netCast(){const lv=G.k.thLv,n=8+G.k.thN+(lv>=3?8:0),dmg=swordDmg()*2.6*G.k.thD,hx=HERO.pos.x,hz=HERO.pos.z,R=SK.thunder.range(),used=new Set(),hits=[];
   for(let i=0;i<n;i++){const tg=(i===0&&boss.alive&&bossOnScreen())?boss:pickNear(hx,hz,R,used);if(!tg)break;used.add(tg);hits.push(tg)}
   if(!hits.length)return false;SFX.play('thunder');shake=Math.max(shake,.3);

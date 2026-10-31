@@ -128,12 +128,12 @@ function hongCast(A){const lv=G.k.beamLv,L=SK.beam.range(),a0=Math.atan2(A.dir[0
         for(const e of enemies){if(e.dead||hit.has(e))continue;const px=e.x-hx,pz=e.z-hz,al=px*dx+pz*dz,pe=Math.abs(px*dz-pz*dx);if(al>0&&al<L*k&&pe<W/2+e.r){hit.add(e);if(lv>=2)e.stun=Math.max(e.stun||0,1);hurtEnemy(e,dmg,dx*.6,dz*.6,true,4)}}
         if(boss.alive&&!hit.has(boss)){const px=boss.x-hx,pz=boss.z-hz,al=px*dx+pz*dz,pe=Math.abs(px*dz-pz*dx);if(al>0&&al<L*k&&pe<W/2+boss.r){hit.add(boss);hurtBoss(dmg,true)}}},
       ()=>{scene.remove(m);m.material.dispose()})}}
-const SHADOW_LV=['劍影 +3 把','持續更久','劍影更快更痛','劍影 +4 把，會追魔王'];
-function shadowCast(){const lv=G.k.thLv,n=8+G.k.thN+(lv>=1?3:0)+(lv>=4?4:0),dur=3.6+(lv>=2?1.4:0),dmg=swordDmg()*3.4*G.k.thD*(lv>=3?1.3:1),spd=lv>=3?15:11;
+const SHADOW_LV=['劍影 +3 把','持續更久','劍影更快更痛、再 +4 把、會追魔王'];
+function shadowCast(){const lv=G.k.thLv,n=8+G.k.thN+(lv>=1?3:0)+(lv>=3?4:0),dur=3.6+(lv>=2?1.4:0),dmg=swordDmg()*3.4*G.k.thD*(lv>=3?1.3:1),spd=lv>=3?15:11;
   if(!enemies.some(e=>!e.dead&&onScreen(e.x,.4,e.z))&&!boss.alive)return false;SFX.play('thunder');
   for(let i=0;i<n;i++){const m=new THREE.Mesh(new THREE.ConeGeometry(.12,1.1,4),new THREE.MeshBasicMaterial({color:0xdfe8ff,transparent:true,opacity:.9,blending:THREE.AdditiveBlending,depthWrite:false}));m.rotation.order='YXZ';scene.add(m);
     const s={x:HERO.pos.x,z:HERO.pos.z,tg:null,cd:0,hit:new Map(),a:i/n*6.28};
-    act(dur,(t,dt)=>{s.cd-=dt;if(!s.tg||s.tg.dead||s.cd<=0){s.cd=.7;let best=null,bd=1e9;const pool=(lv>=4&&boss.alive&&i%3===0)?[boss]:enemies;for(const e of pool){if(e.dead)continue;const d=Math.hypot(e.x-s.x,e.z-s.z)+Math.random()*3;if(d<bd){bd=d;best=e}}s.tg=best}
+    act(dur,(t,dt)=>{s.cd-=dt;if(!s.tg||s.tg.dead||s.cd<=0){s.cd=.7;let best=null,bd=1e9;const pool=(lv>=3&&boss.alive&&i%3===0)?[boss]:enemies;for(const e of pool){if(e.dead)continue;const d=Math.hypot(e.x-s.x,e.z-s.z)+Math.random()*3;if(d<bd){bd=d;best=e}}s.tg=best}
         let tx,tz;if(s.tg){tx=s.tg.x;tz=s.tg.z}else{s.a+=dt*3;tx=HERO.pos.x+Math.sin(s.a)*2.5;tz=HERO.pos.z+Math.cos(s.a)*2.5}
         const dx=tx-s.x,dz=tz-s.z,d=Math.hypot(dx,dz)||1,v=Math.min(d,spd*dt);s.x+=dx/d*v;s.z+=dz/d*v;m.position.set(s.x,.9,s.z);m.rotation.set(Math.PI/2,Math.atan2(dx,dz),0);m.material.opacity=.9*Math.min(1,(dur-t)/.5);
         if(s.tg&&d<s.tg.r+.6&&(s.hit.get(s.tg)||0)<t-.45){s.hit.set(s.tg,t);if(s.tg===boss)hurtBoss(dmg);else hurtEnemy(s.tg,dmg,dx/d*.8,dz/d*.8,false,3)}},
