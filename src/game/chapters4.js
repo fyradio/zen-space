@@ -96,11 +96,20 @@ function stepEndless(dt){const g=G;if(g.enNext===undefined){g.enNext=30;g.wave=0
 function endlessPick(){const m=Math.floor(Math.random()*6),src=CHC[m];Object.assign(CHC[11],{map:m,fog:src.fog,ground:src.ground,mobs:src.mobs.concat([['skel',1,2]]),elite:src.elite});curMap=-1}
 // ---------- 元嬰技能組 ----------
 const SOUL_LV=['範圍 +30%、傷害 +30%','雙斬：回頭再斬一次','斬得更重，斬完回復一成生命'];
+// 元神斬：主角身上站出金色虛影，揮一把巨大金劍橫掃一圈，地上留下金色劍痕；二段斬反手再揮
 function soulCast(){const lv=G.k.sweepLv,R=SK.sweep.range(),dmg=swordDmg()*4.2*G.k.sweepD*(lv>=3?1.25:1),n=lv>=2?2:1;SFX.play('sweep');shake=Math.max(shake,.3);buzz(25);
-  for(let w=0;w<n;w++)act(w*.32,null,()=>{const rr=R*(1+w*.18),a0=Math.random()*6.28;fx({p:tmp.set(HERO.pos.x,.5,HERO.pos.z),col:0xffe9a0,add:true,life:.45,s0:1,s1:rr*2.4,op:.95,vy:0});fx({p:tmp.set(HERO.pos.x,.9,HERO.pos.z),col:0xffffff,add:true,life:.3,s0:1,s1:rr*1.6,op:.8,vy:0});
-    if(w===n-1&&lv>=3)G.hp=Math.min(G.maxhp,G.hp+G.maxhp*.1);SFX.play('sweep');
-    for(const e of enemies){if(e.dead)continue;const dx=e.x-HERO.pos.x,dz=e.z-HERO.pos.z,d=Math.hypot(dx,dz);if(d<rr+e.r)hurtEnemy(e,dmg,dx/(d||1)*1.5,dz/(d||1)*1.5,false,6)}
-    if(boss.alive&&Math.hypot(boss.x-HERO.pos.x,boss.z-HERO.pos.z)<rr+boss.r)hurtBoss(dmg)})}
+  const ph=new THREE.Group(),fig=soulFig(0xffe08a,.5),M=fig.userData.M;fig.scale.setScalar(1.7);ph.add(fig);ph.position.set(HERO.pos.x,0,HERO.pos.z);ph.rotation.y=root.rotation.y;scene.add(ph);
+  const arm=new THREE.Group();arm.position.y=1.5;ph.add(arm);const BM=new THREE.MeshBasicMaterial({color:0xfff0b0,transparent:true,opacity:.9,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide});
+  const blade=new THREE.Mesh(new THREE.PlaneGeometry(.5,R*.95).rotateX(-Math.PI/2).translate(0,0,R*.5),BM);arm.add(blade);const tip=new THREE.Mesh(new THREE.ConeGeometry(.25,.8,4).rotateX(Math.PI/2).translate(0,0,R),BM);arm.add(tip);
+  const scars=[];const T=.42*n+.25;
+  act(T,(t)=>{ph.position.set(HERO.pos.x,0,HERO.pos.z);const w=Math.min(n-1,Math.floor(t/.42)),tt=t-w*.42,k=Math.min(1,tt/.3),dir=w%2?-1:1;arm.rotation.y=dir*(k*Math.PI*2)-dir*.6;
+      M.opacity=.5*Math.min(1,t/.1,(T-t)/.2);BM.opacity=.9*Math.min(1,(T-t)/.2);
+      if(!scars[w]&&tt>=.05){const rr=R*(1+w*.18),g=new THREE.Mesh(new THREE.RingGeometry(rr*.8,rr,64).rotateX(-Math.PI/2),new THREE.MeshBasicMaterial({color:0xffd86a,transparent:true,opacity:.75,blending:THREE.AdditiveBlending,depthWrite:false}));g.position.set(HERO.pos.x,.06,HERO.pos.z);scene.add(g);scars[w]=g;
+        act(.9,(u)=>{g.material.opacity=.75*(1-u/.9);g.scale.setScalar(1+u*.08)},()=>{scene.remove(g);g.geometry.dispose();g.material.dispose()});
+        SFX.play('sweep');shake=Math.max(shake,.25);if(w===n-1&&lv>=3)G.hp=Math.min(G.maxhp,G.hp+G.maxhp*.1);
+        for(const e of enemies){if(e.dead)continue;const dx=e.x-HERO.pos.x,dz=e.z-HERO.pos.z,d=Math.hypot(dx,dz);if(d<rr+e.r)hurtEnemy(e,dmg,dx/(d||1)*1.5,dz/(d||1)*1.5,false,6)}
+        if(boss.alive&&Math.hypot(boss.x-HERO.pos.x,boss.z-HERO.pos.z)<rr+boss.r)hurtBoss(dmg)}},
+    ()=>{scene.remove(ph);M.dispose();BM.dispose();blade.geometry.dispose()})}
 const HONG_LV=['光柱變寬','兩道貫虹','三道，被貫穿的定身 1 秒','五道貫虹'];const HONG_N=[1,1,2,3,5],HONG_W=[1.8,2.6,2.6,2.6,2.6],HONG_SP=[0,0,.5,.9,1.8];
 function hongCast(A){const lv=G.k.beamLv,L=SK.beam.range(),a0=Math.atan2(A.dir[0],A.dir[1]),dmg=swordDmg()*9*G.k.beamD*[1,1,.9,.8,.7][lv],hx=HERO.pos.x,hz=HERO.pos.z,n=HONG_N[lv],W=HONG_W[lv];SFX.play('beam');shake=Math.max(shake,.3);
   for(let j=0;j<n;j++){const a=n>1?a0-HONG_SP[lv]/2+HONG_SP[lv]*j/(n-1):a0,dx=Math.sin(a),dz=Math.cos(a),hit=new Set();
@@ -128,19 +137,27 @@ function soulFig(col,op=.55){const f=body.clone(true);f.position.set(0,0,0);f.ro
   const M=new THREE.MeshBasicMaterial({color:col,transparent:true,opacity:op,blending:THREE.AdditiveBlending,depthWrite:false});f.traverse(o=>{if(o.isMesh||o.isLine||o.isPoints){o.material=M;o.castShadow=false}});f.userData.M=M;return f}
 let _sgt=null;function soulGlowTex(){if(_sgt)return _sgt;const c=document.createElement('canvas');c.width=c.height=128;const x=c.getContext('2d'),g=x.createRadialGradient(64,64,4,64,64,64);g.addColorStop(0,'rgba(255,255,255,1)');g.addColorStop(.35,'rgba(255,240,200,.45)');g.addColorStop(1,'rgba(255,220,150,0)');x.fillStyle=g;x.fillRect(0,0,128,128);return _sgt=new THREE.CanvasTexture(c)}
 // ---------- 大絕：元嬰出竅 ----------
-function yuanyingCast(A){const [px,pz]=A.pt,dmg=swordDmg()*5;G.ultBoss=0;G.slow=.4;shake=Math.max(shake,.5);SFX.play('ult');buzz(60);const u=$('#ultFx');u.classList.remove('on');void u.offsetWidth;u.classList.add('on');banner('元嬰出竅','元嬰化身替你斬妖',true);
-  const av=new THREE.Group(),fig=soulFig(0xffe08a,.5),M=fig.userData.M;fig.scale.setScalar(2.1);av.add(fig);
-  const glow=new THREE.Sprite(new THREE.SpriteMaterial({map:soulGlowTex(),color:0xffd86a,transparent:true,opacity:.55,blending:THREE.AdditiveBlending,depthWrite:false}));glow.scale.set(5,6,1);glow.position.y=2;av.add(glow);
-  const sw=new THREE.Group();sw.position.set(.9,2.2,.3);av.add(sw);const blade=new THREE.Mesh(new THREE.BoxGeometry(.09,3.2,.02),new THREE.MeshBasicMaterial({color:0xfff4c0,transparent:true,opacity:.85,blending:THREE.AdditiveBlending,depthWrite:false}));blade.position.y=1.4;sw.add(blade);
-  const L=new THREE.PointLight(0xffd86a,2.5,9,1.5);L.position.y=2;av.add(L);av.position.set(px,0,pz);scene.add(av);let tk=0;const DUR=9;
-  act(DUR,(t,dt)=>{G.iframe=Math.max(G.iframe,.3);let best=null,bd=1e9;for(const e of enemies){if(e.dead)continue;const d=Math.hypot(e.x-av.position.x,e.z-av.position.z);if(d<bd){bd=d;best=e}}
-      const tg=boss.alive&&(!best||bd>8)?boss:best;if(tg){const dx=tg.x-av.position.x,dz=tg.z-av.position.z,d=Math.hypot(dx,dz)||1;if(d>2){const v=Math.min(d,9*dt);av.position.x+=dx/d*v;av.position.z+=dz/d*v}av.rotation.y=Math.atan2(dx,dz)}
-      av.position.y=.3+Math.sin(t*3)*.2;M.opacity=.5*Math.min(1,(DUR-t)/.8,t/.4);glow.material.opacity=M.opacity*1.1;tk-=dt;
-      if(tk<=0){tk=.3;sw.rotation.x=(sw.rotation.x||0)+1.2;fx({p:tmp.set(av.position.x,.8,av.position.z),col:0xffe9a0,add:true,life:.3,s0:1,s1:11,op:.8,vy:0});
-        for(const e of enemies)if(!e.dead&&Math.hypot(e.x-av.position.x,e.z-av.position.z)<5.5)hurtEnemy(e,dmg,0,0,false,3);
-        if(boss.alive&&Math.hypot(boss.x-av.position.x,boss.z-av.position.z)<5.5+boss.r){const room=boss.max*.22-G.ultBoss;if(room>0){const d=Math.min(dmg*2.5,room);G.ultBoss+=d;boss.allow+=d;hurtBoss(d,true)}}}},
-    ()=>{scene.remove(av);M.dispose();glow.material.dispose()})}
-ULT_DEF.yuanying={n:'元嬰出竅',ic:'嬰',col:0xffe9a0,shape:'circle',ult:1,r:()=>2,range:()=>8,cast:yuanyingCast};
+let soulTrail=null;
+// 元嬰出竅：頭頂飛出半透明金色的小主角，帶拖影和小飛劍，在妖群間高速穿梭斬妖；本體原地打坐、無敵
+function yuanyingCast(){const dmg=swordDmg()*6,DUR=8;G.ultBoss=0;G.slow=.4;G.medit=DUR;shake=Math.max(shake,.5);SFX.play('ult');buzz(60);const u=$('#ultFx');u.classList.remove('on');void u.offsetWidth;u.classList.add('on');banner('元嬰出竅','本體打坐，元嬰替你斬妖',true);
+  if(!soulTrail)soulTrail=new Trail(30,.55,0xffc040);
+  const av=new THREE.Group(),fig=soulFig(0xd89420,.8),M=fig.userData.M;fig.scale.setScalar(.95);av.add(fig);
+  const glow=new THREE.Sprite(new THREE.SpriteMaterial({map:soulGlowTex(),color:0xffd86a,transparent:true,opacity:.7,blending:THREE.AdditiveBlending,depthWrite:false}));glow.scale.set(3,3.6,1);glow.position.y=.9;av.add(glow);
+  const sw=new THREE.Group();av.add(sw);const blade=new THREE.Mesh(new THREE.ConeGeometry(.06,1,4),new THREE.MeshBasicMaterial({color:0xfff4c0,transparent:true,opacity:.95,blending:THREE.AdditiveBlending,depthWrite:false}));blade.rotation.x=Math.PI/2;blade.position.set(.55,.8,0);sw.add(blade);
+  const L=new THREE.PointLight(0xffd86a,2,6,1.5);L.position.y=.8;av.add(L);av.position.set(HERO.pos.x,HERO.pos.y+1.6,HERO.pos.z);scene.add(av);
+  const st={tg:null,cd:0,hitT:0};const pickTg=()=>{const near=enemies.filter(e=>!e.dead&&onScreen(e.x,.4,e.z)).sort((a,b)=>Math.hypot(a.x-av.position.x,a.z-av.position.z)-Math.hypot(b.x-av.position.x,b.z-av.position.z)).slice(0,5);
+    if(boss.alive&&bossOnScreen()&&(Math.random()<.35||!near.length))return boss;return near[Math.floor(Math.random()*near.length)]||null};
+  act(DUR,(t,dt)=>{G.iframe=Math.max(G.iframe,.3);const back=t>DUR-.6;let tx,tz,ty=1.1;
+      if(back){tx=HERO.pos.x;tz=HERO.pos.z;ty=HERO.pos.y+1.6}else{if(!st.tg||st.tg.dead||(st.tg===boss&&!boss.alive))st.tg=pickTg();if(st.tg){tx=st.tg.x;tz=st.tg.z}else{const a=t*3;tx=HERO.pos.x+Math.sin(a)*2.5;tz=HERO.pos.z+Math.cos(a)*2.5}}
+      const dx=tx-av.position.x,dz=tz-av.position.z,dy=ty-av.position.y,d=Math.hypot(dx,dz)||1,v=Math.min(d,(back?14:17)*dt);av.position.x+=dx/d*v;av.position.z+=dz/d*v;av.position.y+=dy*Math.min(1,dt*6);av.rotation.y=Math.atan2(dx,dz);
+      fig.rotation.x=Math.min(.5,d*.08);sw.rotation.y+=dt*14;soulTrail.push(tmp.set(av.position.x,av.position.y+.75,av.position.z));soulTrail.build(.9*Math.min(1,(DUR-t)/.4));
+      M.opacity=.8*Math.min(1,t/.3);glow.material.opacity=.7*Math.min(1,(DUR-t)/.5);st.hitT-=dt;
+      if(!back&&st.tg&&d<1&&st.hitT<=0){st.hitT=.18;SFX.play('sweep');fx({p:tmp.set(av.position.x,.7,av.position.z),col:0xffe9a0,add:true,life:.3,s0:.8,s1:5,op:.95,vy:0});
+        for(const e of enemies)if(!e.dead&&Math.hypot(e.x-av.position.x,e.z-av.position.z)<2.4)hurtEnemy(e,dmg,0,0,true,4);
+        if(boss.alive&&Math.hypot(boss.x-av.position.x,boss.z-av.position.z)<2.4+boss.r){const room=boss.max*.22-G.ultBoss;if(room>0){const dd=Math.min(dmg*2,room);G.ultBoss+=dd;boss.allow+=dd;hurtBoss(dd,true)}}
+        st.tg=pickTg()}},
+    ()=>{scene.remove(av);M.dispose();glow.material.dispose();soulTrail.build(0);G.medit=0;fx({p:tmp.set(HERO.pos.x,1.5,HERO.pos.z),col:0xffe9a0,add:true,life:.4,s0:1,s1:3,op:.9,vy:0})})}
+ULT_DEF.yuanying={n:'元嬰出竅',ic:'嬰',col:0xffe9a0,shape:'self',ult:1,range:()=>8,cast:yuanyingCast};
 // ---------- 水墨過場 ----------
 Object.assign(INK.scenes,{
   baby:(x,I)=>{const g=x.createRadialGradient(400,190,10,400,190,330);g.addColorStop(0,'#fff4d0');g.addColorStop(.5,'#c8a8ff');g.addColorStop(1,'#1a1030');x.fillStyle=g;x.fillRect(0,0,800,360);I.figure(x,400,330,1.3,{col:'rgba(10,8,20,.9)'});x.fillStyle='rgba(255,250,220,.95)';x.beginPath();x.arc(400,170,28,0,7);x.fill();x.beginPath();x.ellipse(400,214,20,26,0,0,7);x.fill();I.seal(x,'嬰')},
