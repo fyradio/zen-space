@@ -1877,28 +1877,42 @@ function frostCast(){const lv=G.k.sweepLv,R=SK.sweep.range(),dmg=swordDmg()*4.6*
 // ---------- 赤焰火龍（築基・橘紅）----------
 const DRAGON_N=[1,2,3,5,8],DRAGON_SPREAD=[0,.5,.9,1.6,Math.PI*2];
 const DRAGON_LV=['兩條火龍','三條火龍','五條火龍','八條火龍，四面八方'];
+// 火龍龍頭貼圖（俯視、龍口朝上）：火鬃、雙角、龍鬚、金眼
+const dragonHeadTex=(()=>{let T=null;return ()=>T||(T=ctex(256,256,x=>{x.translate(128,140);x.lineJoin=x.lineCap='round';
+  const flame=(sx)=>{x.fillStyle='rgba(255,120,20,.85)';for(let i=0;i<4;i++){x.beginPath();x.moveTo(sx*22,40-i*14);x.quadraticCurveTo(sx*(60+i*10),30-i*16,sx*(80+i*8),50-i*10+i*6);x.quadraticCurveTo(sx*(52+i*6),48-i*14,sx*22,58-i*14);x.fill()}};flame(-1);flame(1);
+  x.strokeStyle='rgba(255,230,160,.95)';x.lineWidth=3;for(const sx of [-1,1]){x.beginPath();x.moveTo(sx*14,-52);x.bezierCurveTo(sx*60,-60,sx*84,-30,sx*100,-62);x.stroke();x.beginPath();x.moveTo(sx*12,-40);x.bezierCurveTo(sx*50,-40,sx*70,-12,sx*92,-18);x.stroke()}
+  x.fillStyle='#ffe9a8';for(const sx of [-1,1]){x.beginPath();x.moveTo(sx*24,-6);x.quadraticCurveTo(sx*50,-30,sx*40,-70);x.quadraticCurveTo(sx*38,-34,sx*14,-2);x.fill()}
+  const g=x.createLinearGradient(0,-80,0,70);g.addColorStop(0,'#ff9a30');g.addColorStop(.5,'#e8420c');g.addColorStop(1,'#a81804');x.fillStyle=g;
+  x.beginPath();x.moveTo(0,-84);x.quadraticCurveTo(26,-70,30,-34);x.quadraticCurveTo(46,-6,38,26);x.quadraticCurveTo(26,62,0,66);x.quadraticCurveTo(-26,62,-38,26);x.quadraticCurveTo(-46,-6,-30,-34);x.quadraticCurveTo(-26,-70,0,-84);x.fill();
+  x.strokeStyle='rgba(255,220,120,.9)';x.lineWidth=2.5;x.stroke();x.fillStyle='rgba(60,8,0,.9)';x.beginPath();x.ellipse(-11,-74,4,3,0,0,7);x.ellipse(11,-74,4,3,0,0,7);x.fill();
+  x.fillStyle='#fff6c8';for(const sx of [-1,1]){x.beginPath();x.ellipse(sx*20,-24,8,5,sx*.5,0,7);x.fill();x.fillStyle='#d01000';x.beginPath();x.ellipse(sx*20,-24,3,4,sx*.5,0,7);x.fill();x.fillStyle='#fff6c8'}
+  x.strokeStyle='rgba(255,200,100,.7)';x.lineWidth=2;x.beginPath();x.moveTo(0,-60);x.lineTo(0,50);x.stroke();for(let i=0;i<4;i++){x.beginPath();x.moveTo(-18,i*16);x.quadraticCurveTo(0,i*16+10,18,i*16);x.stroke()}}))})();
 function dragonCast(A){const lv=G.k.beamLv,L=SK.beam.range(),a0=Math.atan2(A.dir[0],A.dir[1]),n=EVc(DRAGON_N[lv],1),sp=DRAGON_SPREAD[lv],dmg=swordDmg()*6*G.k.beamD*[1,.9,.8,.7,.6][lv],hx=HERO.pos.x,hz=HERO.pos.z,hitN=new Map();
   SFX.play('beam');SFX.play('boom');shake=Math.max(shake,.2);
   for(let j=0;j<n;j++){const a=lv>=4?a0+j/n*Math.PI*2:n>1?fanA(a0,j,n,sp/(n-1)):a0,dx=Math.sin(a),dz=Math.cos(a),mine=new Set(),T=L/15;let trail=0;
-    // 真的火龍：龍頭（吻部、雙角、金眼、下顎）＋ 14 節鱗身（越後越細）＋ 火焰鬃毛，沿蛇形路徑游動
-    const NS=14,drg=new THREE.Group();drg.visible=false;scene.add(drg);const segs=[],pos=dd=>[hx+dx*dd+dz*Math.sin(dd*1.3+j)*.5,.8+Math.sin(dd*2.2)*.22,hz+dz*dd-dx*Math.sin(dd*1.3+j)*.5];
-    const bodyM=new THREE.MeshBasicMaterial({color:0xe03a0a,fog:false}),bellyM=new THREE.MeshBasicMaterial({color:0xff6a18,fog:false}),hornM=new THREE.MeshBasicMaterial({color:0xffd070}),eyeM=new THREE.MeshBasicMaterial({color:0xffffff});
-    const head=new THREE.Group();const sn=new THREE.Mesh(new THREE.ConeGeometry(.3,.9,6).rotateX(Math.PI/2).translate(0,0,.35),bodyM);sn.scale.set(1,.7,1);head.add(sn);
-    const jaw=new THREE.Mesh(new THREE.ConeGeometry(.2,.7,5).rotateX(Math.PI/2).translate(0,-.2,.25),bellyM);head.add(jaw);
-    for(const sx of [-1,1]){const h=new THREE.Mesh(new THREE.ConeGeometry(.07,.65,5).rotateX(-Math.PI/2.6),hornM);h.position.set(sx*.2,.3,-.15);head.add(h);const e=new THREE.Mesh(new THREE.SphereGeometry(.07,8,6),eyeM);e.position.set(sx*.2,.15,.3);head.add(e);
-      const wh=new THREE.Mesh(new THREE.ConeGeometry(.03,.9,4).rotateX(Math.PI/2).translate(0,0,.45),hornM);wh.position.set(sx*.14,-.02,.7);wh.rotation.y=sx*.35;head.add(wh)}
-    const hg=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex,color:0xff7a20,opacity:.3,blending:THREE.AdditiveBlending,depthWrite:false}));hg.scale.set(1.8,1.8,1);head.add(hg);head.scale.setScalar(1.25);drg.add(head);
-    for(let i=0;i<NS;i++){const r=.38*(1-i/NS*.7),m=new THREE.Mesh(new THREE.SphereGeometry(r,10,8),i%2?bodyM:bellyM);const g2=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex,color:i<5?0xff8a2a:0xff4a1a,opacity:.16,blending:THREE.AdditiveBlending,depthWrite:false}));g2.scale.set(r*3.4,r*3.4,1);m.add(g2);
-      const fin=new THREE.Mesh(new THREE.ConeGeometry(r*.28,r*1.0,4),hornM);fin.position.y=r*1.0;m.add(fin);drg.add(m);segs.push(m)}
-    act(T+.4,t=>{drg.visible=t<T+.3;const place=(o,tt)=>{const dd=Math.max(0,Math.min(L+1,tt/T*L)),p0=pos(dd),p1=pos(dd+.3);o.position.set(p0[0],p0[1],p0[2]);return Math.atan2(p1[0]-p0[0],p1[2]-p0[2])};
-        head.position.set(0,0,0);const hy=place(head,t);head.rotation.y=hy;head.rotation.x=-.08;head.scale.setScalar(1.25*(t<.12?t/.12:t>T?Math.max(0,1-(t-T)/.3):1));
-        segs.forEach((m,i)=>{const tt=t-(i+1)*.055;m.visible=tt>0&&tt<T+.25;if(m.visible){m.rotation.y=place(m,tt);const w=1+.1*Math.sin(t*20-i);m.scale.set(w,w,1.9)}});
-        if(!simming&&t<T&&Math.random()<.9){const pp=pos(t/T*L);fx({p:tmp.set(pp[0]+(Math.random()-.5)*.5,pp[1]+.3,pp[2]+(Math.random()-.5)*.5),col:Math.random()<.5?0xffd060:0xff5a1a,add:true,life:.5,s0:.9,s1:.2,op:.9,vy:1.4})}
+    // 火龍：一條連續的火焰緞帶身體（鱗紋＋參差火舌邊）＋手繪龍頭（雙角、龍鬚、金眼、火鬃），貼地蛇行
+    const NS=44,BL=6.5,drg=new THREE.Group();drg.visible=false;scene.add(drg);const pos=dd=>[hx+dx*dd+dz*Math.sin(dd*1.3+j)*.5,.9+Math.sin(dd*2.2)*.18,hz+dz*dd-dx*Math.sin(dd*1.3+j)*.5];
+    const pa=new Float32Array((NS+1)*2*3),ua=new Float32Array((NS+1)*2*2),ix=[];for(let i=0;i<=NS;i++){ua[i*4]=i/NS;ua[i*4+1]=0;ua[i*4+2]=i/NS;ua[i*4+3]=1;if(i<NS){const q=i*2;ix.push(q,q+1,q+2,q+1,q+3,q+2)}}
+    const gb=new THREE.BufferGeometry();gb.setAttribute('position',new THREE.BufferAttribute(pa,3));gb.setAttribute('uv',new THREE.BufferAttribute(ua,2));gb.setIndex(ix);
+    const BU={time:{value:0},fade:{value:1}};
+    const bodyMat=new THREE.ShaderMaterial({uniforms:BU,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,side:THREE.DoubleSide,vertexShader:'varying vec2 vUv;void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}',
+      fragmentShader:`uniform float time,fade;varying vec2 vUv;float h(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
+        float nz(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(h(i),h(i+vec2(1,0)),f.x),mix(h(i+vec2(0,1)),h(i+vec2(1,1)),f.x),f.y);}
+        void main(){float u=vUv.x,c=abs(vUv.y-.5)*2.;float n=nz(vec2(u*22.-time*6.,c*3.));float edge=1.-c*(.72+.5*n);float body=smoothstep(0.,.35,edge);
+          float scale=.55+.45*abs(sin((u*70.+c*5.)*1.2));float spine=smoothstep(.45,0.,c);float tail=1.-smoothstep(.45,1.,u);float head=smoothstep(0.,.05,u);
+          vec3 col=mix(vec3(.9,.12,.02),vec3(1.,.55,.1),spine);col=mix(col,vec3(1.,.9,.5),spine*spine*.8);float I=body*(.35+.65*scale)*tail*head*(.6+.5*n)*fade;gl_FragColor=vec4(col*I*1.1,clamp(I,0.,1.));}`});
+    const body=new THREE.Mesh(gb,bodyMat);body.frustumCulled=false;body.renderOrder=3;drg.add(body);
+    const headMat=new THREE.MeshBasicMaterial({map:dragonHeadTex(),transparent:true,depthWrite:false,side:THREE.DoubleSide}),head=new THREE.Mesh(new THREE.PlaneGeometry(2.6,2.6).rotateX(-Math.PI/2),headMat);head.renderOrder=4;drg.add(head);
+    act(T+.45,t=>{drg.visible=true;BU.time.value=t;const hd=Math.min(L,t/T*L),tl=t<T?Math.max(0,hd-BL):L-BL+Math.min(1,(t-T)/.4)*BL,hdd=t<T?hd:L;BU.fade.value=t<T?Math.min(1,t/.1):Math.max(0,1-(t-T)/.45);
+        for(let i=0;i<=NS;i++){const u=i/NS,dd=hdd+(tl-hdd)*u,p0=pos(Math.max(0,dd)),p1=pos(Math.max(0,dd)+.25),tx=p1[0]-p0[0],tz=p1[2]-p0[2],ln=Math.hypot(tx,tz)||1,w=(.1+.62*Math.pow(1-u,.6))*(u<.04?.5:1);
+          pa.set([p0[0]-tz/ln*w,p0[1],p0[2]+tx/ln*w,p0[0]+tz/ln*w,p0[1],p0[2]-tx/ln*w],i*6)}gb.attributes.position.needsUpdate=true;
+        const q0=pos(hdd),q1=pos(hdd+.25);head.position.set(q0[0],q0[1]+.05,q0[2]);head.rotation.y=Math.atan2(q1[0]-q0[0],q1[2]-q0[2])+Math.PI;headMat.opacity=BU.fade.value;head.scale.setScalar(t<.12?.5+t/.12*.5:1);
+        if(!simming&&t<T&&Math.random()<.9){fx({p:tmp.set(q0[0]+(Math.random()-.5)*.8,q0[1]+.3,q0[2]+(Math.random()-.5)*.8),col:Math.random()<.5?0xffd060:0xff5a1a,add:true,life:.5,s0:.9,s1:.2,op:.9,vy:1.4})}
         if(t>T)return;const dd=t/T*L,w=Math.sin(dd*1.3+j)*.5,x=hx+dx*dd+dz*w,z=hz+dz*dd-dx*w;
         if(!simming)while(trail<dd){trail+=1;fx({p:tmp.set(hx+dx*trail,.3,hz+dz*trail),col:0xff7a2a,add:true,life:1.5,s0:1,s1:.4,op:.7,vy:.3})}
         for(const en of enemies){if(en.dead||mine.has(en))continue;if((en.x-x)**2+(en.z-z)**2<(1+en.r)**2){mine.add(en);const c=hitN.get(en)||0;if(c>=2)continue;hitN.set(en,c+1);en.burn=3;en.burnD=dmg*.12;hurtEnemy(en,dmg,dx*.8,dz*.8,false,4.5)}}
         if(boss.alive&&!mine.has(boss)&&(boss.x-x)**2+(boss.z-z)**2<(1+boss.r)**2){mine.add(boss);const c=hitN.get(boss)||0;if(c<3){hitN.set(boss,c+1);hurtBoss(dmg)}}},
-      ()=>{scene.remove(drg);drg.traverse(o=>{if(o.geometry)o.geometry.dispose()});for(const m of [bodyM,bellyM,hornM,eyeM])m.dispose()})}}
+      ()=>{scene.remove(drg);gb.dispose();head.geometry.dispose();bodyMat.dispose();headMat.dispose()})}}
 // ---------- 太極氣旋（築基・黑白）----------
 const TAIJI_LV=['範圍 +30%','雙氣旋：同時捲兩團妖','爆開後定身 1.5 秒、傷害 +50%'];
 const taijiTex=ctex(256,256,x=>{x.translate(128,128);const R=116;x.fillStyle='rgba(240,238,228,.92)';x.beginPath();x.arc(0,0,R,0,7);x.fill();
