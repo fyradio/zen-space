@@ -167,8 +167,7 @@ const ASC=(()=>{let on=null;const FULL=13,SHORT_T0={zhuji:5.0,jiedan:4.6,yuanyin
   function stop(){if(!on)return;const o=on;on=null;root.position.y=o.y0;clear();ov.classList.remove('on','show','stamp','bars');ov.querySelector('.ascFlash').style.opacity='0'}
   // 結局蒙太奇：築基→結丹→元嬰各 5 秒精華（配字幕），最後接完整化神
   // 結局：回放築基→結丹→元嬰（各 5 秒、不放字）；化神另外用 play(18) 在天亮之後放
-  function montage(done){const seq=[9,12,15];let i=0;const next=()=>{if(i<seq.length)play(seq[i++],{short:true},next);else if(done)done()};next()}
-  return {play,step,cam,montage,tex:{rune,halo},get on(){return !!on},isMajor:r=>!!KIND[r]&&r!==18}})();
+  return {play,step,cam,tex:{rune,halo},get on(){return !!on},isMajor:r=>!!KIND[r]&&r!==18}})();
 window.__asc=ASC;
 // 突破後主角身上的境界氣息：身邊微微竄動的細小電弧（築基玉綠、結丹金、元嬰紫金），偶爾閃一下，加一層很淡的光
 const tierAura=(()=>{const g=new THREE.Group();root.add(g);const s=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex,transparent:true,opacity:.15,blending:THREE.AdditiveBlending,depthWrite:false}));s.scale.set(1.1,1.5,1);s.position.y=.55;g.add(s);

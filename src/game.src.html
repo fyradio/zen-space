@@ -825,7 +825,7 @@ function startTribulation(){if(!G||G.over||G.paused||G.breaking||!canBreak(true)
     ()=>{if(!G||G.over)return;G.breaking=false;realmUp();G.s.dmg*=1.1*1.2;G.maxhp=Math.round(150*realmMult());G.hp=G.maxhp;
       banner('突破成功！',REALMS[save.realm],true);SFX.play('gold');buzz(90);shake=Math.max(shake,.5);
       fx({p:tmp.set(HERO.pos.x,1,HERO.pos.z),col:0xffe08a,add:true,life:1,s0:1,s1:7,op:1,vy:1.5});
-      const t=skillTier();SHIELD.setTier(t);if(t!==G.tier){setSkills(G.tier=t);for(const k in G.cd)G.cd[k]=0;say(`${SKILL_SETS[t].name}新招：${SK.sweep.n}、${SK.beam.n}、${SK.thunder.n}！`,5)}else say('突破了！血補滿，這一夜傷害再 +20%',4);if(ASC.isMajor(save.realm))ASC.play(save.realm,{short:true})})}
+      const t=skillTier();SHIELD.setTier(t);if(t!==G.tier){setSkills(G.tier=t);for(const k in G.cd)G.cd[k]=0;say(`${SKILL_SETS[t].name}新招：${SK.sweep.n}、${SK.beam.n}、${SK.thunder.n}！`,5)}else say('突破了！血補滿，這一夜傷害再 +20%',4);if(ASC.isMajor(save.realm))ASC.play(save.realm,{})})}
 function checkBreak(){const b=$('#breakBtn');const can=!G.breaking&&canBreak(true);if(can&&b.hidden){b.hidden=false;if(!simming){SFX.play('ready');say('可以突破了！按左上「突破」引雷劫',4)}}else if(!can&&!b.hidden)b.hidden=true}
 function updSkillUI(){for(const k in SK){if(k==='blink')continue;const b=skBtn[k];let p,txt='';
     if(k==='ult'){p=Math.min(1,G.ult/G.k.ultNeed,G.ultLock>0?1-G.ultLock/G.k.ultCd:1);b.classList.toggle('ready',p>=1);b.style.setProperty('--p',(p*100).toFixed(1)+'%')}

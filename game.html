@@ -1798,7 +1798,7 @@ function startTribulation(){if(!G||G.over||G.paused||G.breaking||!canBreak(true)
     ()=>{if(!G||G.over)return;G.breaking=false;realmUp();G.s.dmg*=1.1*1.2;G.maxhp=Math.round(150*realmMult());G.hp=G.maxhp;
       banner('突破成功！',REALMS[save.realm],true);SFX.play('gold');buzz(90);shake=Math.max(shake,.5);
       fx({p:tmp.set(HERO.pos.x,1,HERO.pos.z),col:0xffe08a,add:true,life:1,s0:1,s1:7,op:1,vy:1.5});
-      const t=skillTier();SHIELD.setTier(t);if(t!==G.tier){setSkills(G.tier=t);for(const k in G.cd)G.cd[k]=0;say(`${SKILL_SETS[t].name}新招：${SK.sweep.n}、${SK.beam.n}、${SK.thunder.n}！`,5)}else say('突破了！血補滿，這一夜傷害再 +20%',4);if(ASC.isMajor(save.realm))ASC.play(save.realm,{short:true})})}
+      const t=skillTier();SHIELD.setTier(t);if(t!==G.tier){setSkills(G.tier=t);for(const k in G.cd)G.cd[k]=0;say(`${SKILL_SETS[t].name}新招：${SK.sweep.n}、${SK.beam.n}、${SK.thunder.n}！`,5)}else say('突破了！血補滿，這一夜傷害再 +20%',4);if(ASC.isMajor(save.realm))ASC.play(save.realm,{})})}
 function checkBreak(){const b=$('#breakBtn');const can=!G.breaking&&canBreak(true);if(can&&b.hidden){b.hidden=false;if(!simming){SFX.play('ready');say('可以突破了！按左上「突破」引雷劫',4)}}else if(!can&&!b.hidden)b.hidden=true}
 function updSkillUI(){for(const k in SK){if(k==='blink')continue;const b=skBtn[k];let p,txt='';
     if(k==='ult'){p=Math.min(1,G.ult/G.k.ultNeed,G.ultLock>0?1-G.ultLock/G.k.ultCd:1);b.classList.toggle('ready',p>=1);b.style.setProperty('--p',(p*100).toFixed(1)+'%')}
@@ -4401,8 +4401,7 @@ const ASC=(()=>{let on=null;const FULL=13,SHORT_T0={zhuji:5.0,jiedan:4.6,yuanyin
   function stop(){if(!on)return;const o=on;on=null;root.position.y=o.y0;clear();ov.classList.remove('on','show','stamp','bars');ov.querySelector('.ascFlash').style.opacity='0'}
   // 結局蒙太奇：築基→結丹→元嬰各 5 秒精華（配字幕），最後接完整化神
   // 結局：回放築基→結丹→元嬰（各 5 秒、不放字）；化神另外用 play(18) 在天亮之後放
-  function montage(done){const seq=[9,12,15];let i=0;const next=()=>{if(i<seq.length)play(seq[i++],{short:true},next);else if(done)done()};next()}
-  return {play,step,cam,montage,tex:{rune,halo},get on(){return !!on},isMajor:r=>!!KIND[r]&&r!==18}})();
+  return {play,step,cam,tex:{rune,halo},get on(){return !!on},isMajor:r=>!!KIND[r]&&r!==18}})();
 window.__asc=ASC;
 // 突破後主角身上的境界氣息：身邊微微竄動的細小電弧（築基玉綠、結丹金、元嬰紫金），偶爾閃一下，加一層很淡的光
 const tierAura=(()=>{const g=new THREE.Group();root.add(g);const s=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex,transparent:true,opacity:.15,blending:THREE.AdditiveBlending,depthWrite:false}));s.scale.set(1.1,1.5,1);s.position.y=.55;g.add(s);
