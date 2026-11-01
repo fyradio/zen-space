@@ -997,12 +997,12 @@ function bossDown(){boss.alive=false;G.bossKilled=true;TALK.ev('kill');G.bossN=(
   for(let i=0;i<30;i++)dropSoul(boss.x+(Math.random()-.5)*3,boss.z+(Math.random()-.5)*3,2);boss.g.visible=false;$('#bossBox').classList.remove('on');banner(`${boss.def.name}伏誅！`,boss.fled?'元嬰也斬了・全勝':'群妖潰散・殺氣 +5%');shake=.9}
 function beginFlee(){boss.fled=true;boss.fleeT=0;boss.hp=boss.max*.12;boss.allow=boss.max;boss.stun=0;boss.dash=0;boss.m.g.visible=false;boss.souls=boss.souls||{};const sk=bossKey(G);if(!boss.souls[sk]){const c=boss.m.g.clone(true),SM=new THREE.MeshBasicMaterial({color:boss.def.col||0xffe9a0,transparent:true,opacity:.55,blending:THREE.AdditiveBlending,depthWrite:false});c.traverse(o=>{if(o.isMesh)o.material=SM;if(o.isLight)o.visible=false});c.visible=true;c.scale.setScalar(.42);c.userData.M=SM;const gl=new THREE.Sprite(new THREE.SpriteMaterial({map:soulGlowTex(),color:boss.def.col||0xffe0a0,transparent:true,opacity:.5,blending:THREE.AdditiveBlending,depthWrite:false}));gl.scale.set(5,6,1);gl.position.y=2.4;c.add(gl);boss.g.add(c);boss.souls[sk]=c}for(const k in boss.souls)boss.souls[k].visible=false;boss.soul=boss.souls[sk];boss.soul.visible=true;clearHZ();G.clash=null;banner('元嬰出竅','肉身毀了！追上去，斬了牠的元嬰！');SFX.play('boss');shake=.8;
   for(let i=0;i<16;i++)fx({p:tmp.set(boss.x+(Math.random()-.5),1+Math.random()*2,boss.z+(Math.random()-.5)),col:0xffe9a0,add:true,life:.7,s0:.8,s1:2,op:.9,vy:1})}
-function hurtBoss(dmg,crit=false){if(!boss.alive)return;if(boss.markT>0)dmg*=2;const d0=Math.min(dmg,boss.allow);if(d0<=0)return;if(boss.def.noHit){showNum(boss.x,3.2,boss.z,0,'b');return}boss.allow-=d0;let d=d0;boss.flash=.08;
+function hurtBoss(dmg,crit=false){if(!boss.alive||!(dmg>0))return;if(boss.def.duel&&!boss.def.noHit)dmg*=1.5;if(!Number.isFinite(boss.allow))boss.allow=boss.max/30;if(boss.markT>0)dmg*=2;const d0=Math.min(dmg,boss.allow);if(d0<=0)return;if(boss.def.noHit){showNum(boss.x,3.2,boss.z,0,'b');return}boss.allow-=d0;let d=d0;boss.flash=.08;
   if(boss.shield>0){const sh=Math.min(boss.shield,d);boss.shield-=sh;d-=sh;showNum(boss.x,3.2,boss.z,sh,'c');if(boss.shield<=0)banner('護體靈光破了！','');if(d<=0)return}
   boss.hp-=d;showNum(boss.x,3.2,boss.z,d,crit?'c':'b');
   if(boss.hp<=0){if(boss.def.duel&&!boss.fled){beginFlee();return}bossDown()}}
-function launchVolley(){const n=effCount(),used=new Set();const bossSeen=boss.alive&&bossOnScreen();const from=tmp2.copy(HERO.pos);from.y+=1.0;
-  for(let i=0;i<n;i++){const tg=(bossSeen&&i%2===0)?boss:nearest(HERO.pos.x,HERO.pos.z,G.s.range,used)||nearest(HERO.pos.x,HERO.pos.z,G.s.range);if(!tg)return;used.add(tg);
+function launchVolley(){const n=effCount(),used=new Set();const bossSeen=boss.alive&&bossOnScreen(),duelT=boss.alive&&boss.def&&boss.def.duel&&Math.hypot(boss.x-HERO.pos.x,boss.z-HERO.pos.z)<G.s.range*1.6;const from=tmp2.copy(HERO.pos);from.y+=1.0;
+  for(let i=0;i<n;i++){const tg=(duelT&&i%3!==2)||(bossSeen&&i%2===0)?boss:nearest(HERO.pos.x,HERO.pos.z,G.s.range,used)||nearest(HERO.pos.x,HERO.pos.z,G.s.range);if(!tg)return;used.add(tg);
     const sw=swords.find(s=>!s.on);if(!sw)return;if(i===0)SFX.play('swing');sw.on=true;sw.g.visible=true;sw.g.scale.setScalar(G.s.size);sw.tgt=tg;sw.life=1.4;sw.pierce=G.s.pierce;sw.hit.clear();sw.tr.pts.length=0;
     const a=(i-(n-1)/2)*.5;sw.pos.copy(from).add(tmp3.set(Math.sin(a)*.4,.2,Math.cos(a)*.4));sw.vel.set(Math.sin(a)*3,4,Math.cos(a)*3)}}
 function stepSwords(dt){const spd=15+G.s.pierce*1.5;
@@ -1014,7 +1014,7 @@ function stepSwords(dt){const spd=15+G.s.pierce*1.5;
     // hits
     const hr=.55*G.s.size;const check=e=>{if(e.dead||sw.hit.has(e))return;const rr=(e===boss?boss.r:e.r)+hr*.5;if((e.x-sw.pos.x)**2+(e.z-sw.pos.z)**2<rr*rr){sw.hit.add(e);
       const k=.18/Math.max(.2,Math.hypot(sw.vel.x,sw.vel.z)),cr=Math.random()<G.s.crit,dm=swordDmg()*(cr?2.5:1);if(e===boss)hurtBoss(dm,cr);else hurtEnemy(e,dm,sw.vel.x*k,sw.vel.z*k,cr);
-      fx({p:sw.pos,col:0xbffff0,add:true,life:.18,s0:.5,s1:1,op:.9,vy:0});if(--sw.pierce<0)sw.life=0;else sw.tgt=null}};
+      fx({p:sw.pos,col:0xbffff0,add:true,life:.18,s0:.5,s1:1,op:.9,vy:0});if(e!==boss&&sw.tgt===boss&&boss.alive&&boss.def.duel)return;if(--sw.pierce<0)sw.life=0;else sw.tgt=null}};// 鬥法：衝向魔王的飛劍穿過小妖，不被擋下
     for(const e of enemies)check(e);if(boss.alive)check(boss);
     if(sw.life<=0){sw.on=false;sw.g.visible=false}}}
 function stepSkills(dt){

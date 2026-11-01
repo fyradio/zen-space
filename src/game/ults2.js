@@ -27,7 +27,7 @@ function swordFormUlt(){const T=4,dmg=swordDmg()*7;ultStart('九霄御劍');G.me
       for(const e of enemies){if(e.dead||hit.has(e))continue;if((e.x-x)**2+(e.z-z)**2<(1.6+e.r)**2){hit.add(e);hurtEnemy(e,dmg,dx/d,dz/d,true,6)}}if(boss.alive&&!hit.has(boss)&&Math.hypot(boss.x-x,boss.z-z)<1.6+boss.r){hit.add(boss);ultBoss(dmg*3)}},
     ()=>{scene.remove(sw);M.dispose();gl.material.dispose();tr.build(0);scene.remove(tr.mesh);body.visible=true;G.medit=0;fx({p:tmp.set(HERO.pos.x,1,HERO.pos.z),col:0x8fffe0,add:true,life:.4,s0:1,s1:4,op:.9,vy:0})})}
 // 星河倒懸：天河的水從天倒灌，大範圍沖刷＋緩速
-function galaxyUlt(A){const [x,z]=A.pt,R=SK.ult.r(),dmg=swordDmg()*4.2,T=2.2;ultStart('星河倒懸');let tk=0;
+function galaxyUlt(A){const [x,z]=A.pt,R=SK.ult.r(),dmg=swordDmg()*7,T=2.2;ultStart('星河倒懸');let tk=0;
   const sheet=new THREE.Mesh(new THREE.CircleGeometry(R,48).rotateX(-Math.PI/2),new THREE.MeshBasicMaterial({color:0x4a8aff,transparent:true,opacity:0,blending:THREE.AdditiveBlending,depthWrite:false}));sheet.position.set(x,.06,z);scene.add(sheet);
   act(T+.6,(t,dt)=>{sheet.material.opacity=.35*Math.min(1,t/.3,(T+.6-t)/.5);if(!simming&&t<T)for(let i=0;i<4;i++){const a=Math.random()*6.28,r=Math.sqrt(Math.random())*R;const px=x+Math.sin(a)*r,pz=z+Math.cos(a)*r;fx({p:tmp.set(px,6+Math.random()*3,pz),col:Math.random()<.3?0xffffff:0x6ab4ff,add:true,life:.5,s0:.5,s1:.2,op:1,vy:-14})}
       tk-=dt;if(tk>0||t>T)return;tk=.3;ultAoe(x,z,R,dmg,{slow:3,kb:.4},.22)},

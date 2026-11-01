@@ -24,7 +24,7 @@ function shot(o){const s=spr(o.col,o.size||.8,o.tex);let x=o.x,z=o.z,vx=o.dx,vz=
       const sp=o.spdF?o.spdF(t):o.spd;x+=vx*sp*dt;z+=vz*sp*dt;s.position.set(x,o.y??.8,z);if(o.spin)s.material.rotation+=dt*o.spin;if(o.trail&&!simming&&Math.random()<.5)fx({p:tmp.set(x,o.y??.8,z),col:o.col,add:true,life:.3,s0:(o.size||.8)*.7,s1:.1,op:.7,vy:0});
       const end=()=>{done=true;s.visible=false;if(o.end)o.end(x,z)};
       for(const e of enemies){if(e.dead||hit.has(e))continue;if((e.x-x)**2+(e.z-z)**2<(o.r+e.r)**2){hit.add(e);if(o.onHit)o.onHit(e,x,z,vx,vz);else hurtEnemy(e,o.dmg,vx*.6,vz*.6,false,3);if(--n<=0){end();return}}}
-      if(boss.alive&&!hit.has(boss)&&(boss.x-x)**2+(boss.z-z)**2<(o.r+boss.r)**2){hit.add(boss);hurtBoss(o.bossDmg??o.dmg);if(--n<=0){end();return}}
+      if(boss.alive&&!hit.has(boss)&&(boss.x-x)**2+(boss.z-z)**2<(o.r+boss.r)**2){hit.add(boss);const bd=o.bossDmg??o.dmg;if(bd===undefined){if(o.onHit)o.onHit(boss,x,z,vx,vz)}else hurtBoss(bd);if(--n<=0){end();return}}
       if(t>=o.life-.03){end()}},()=>{if(!done&&o.end)o.end(x,z);unspr(s)})}
 const ringFx=(x,z,R,col,life=.45)=>{BRUSH.circle(x,z,R,col,null,.2);fx({p:tmp.set(x,.35,z),col,add:true,life:life*.7,s0:1,s1:R*1.6,op:.4,vy:0})};// 爆開＝一筆水墨圓＋淡淡一圈光
 const aimD=A=>Math.atan2(A.dir[0],A.dir[1]);
@@ -130,12 +130,18 @@ function mirrorCast(A){const st=bs(),n=EVc([1,2,3,5][st],1),a0=aimD(A),L=SK.beam
     for(const e of enemies)if(!e.dead&&inLine(e.x,e.z,hx,hz,a,L,W,e.r)){e.markT=mk;hurtEnemy(e,dmg,0,0,true,0);if(!simming)fx({p:tmp.set(e.x,1.2,e.z),col:0xffe9a0,add:true,life:.5,s0:.8,s1:.2,op:.9,vy:.5})}
     if(boss.alive&&inLine(boss.x,boss.z,hx,hz,a,L,W,boss.r)){boss.markT=mk;hurtBoss(dmg)}}}
 // 縛妖索：金繩串起沿路的妖，綁住精英或魔王並拉近
-function ropeCast(A){const st=bs(),n=EVc([1,1,2,3][st],1),a0=aimD(A),L=SK.beam.range()*1.1,W=1.1*EVm(st>=1?1.6/1.1:1),dmg=swordDmg()*3.4*G.k.beamD,hold=st>=2?2.2:1.4;SFX.play('beam');
+const ROPE_W=()=>1.7*EVm([1,1.45,1.75,2.05][bs()]);// 縛妖索：越升越粗、越長，綁住的妖持續被勒
+function ropeCast(A){const st=bs(),n=EVc([1,1,2,3][st],1),a0=aimD(A),L=SK.beam.range(),W=ROPE_W(),dmg=swordDmg()*4.2*G.k.beamD,hold=st>=2?2.6:1.8;SFX.play('beam');
+  const tied=new Set();
   for(let j=0;j<n;j++){const a=n>1?fanA(a0,j,n,.4):a0,hx=HERO.pos.x,hz=HERO.pos.z,dx=Math.sin(a),dz=Math.cos(a);
     const pts=[];for(let i=0;i<=16;i++)pts.push(new THREE.Vector3());const line=new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),new THREE.LineBasicMaterial({color:0xffd86a,transparent:true}));scene.add(line);
-    act(.7,t=>{const k=Math.min(1,t/.2);for(let i=0;i<=16;i++){const d=L*k*i/16;pts[i].set(hx+dx*d+Math.sin(i+t*20)*.08,.8,hz+dz*d)}line.geometry.setFromPoints(pts);line.material.opacity=t>.5?(.7-t)/.2:1},()=>{scene.remove(line);line.geometry.dispose();line.material.dispose()});
-    for(const e of enemies)if(!e.dead&&inLine(e.x,e.z,hx,hz,a,L,W,e.r)){e.stun=Math.max(e.stun||0,hold);if(e.elite){e.x+=(hx-e.x)*.5;e.z+=(hz-e.z)*.5}hurtEnemy(e,dmg,0,0,false,0)}
-    if(boss.alive&&inLine(boss.x,boss.z,hx,hz,a,L,W,boss.r)){boss.stun=Math.max(boss.stun||0,hold*.6);boss.x+=(hx-boss.x)*.35;boss.z+=(hz-boss.z)*.35;hurtBoss(dmg)}}}
+    const beads=simming?[]:Array.from({length:9},()=>spr(0xffd86a,.32+W*.22));
+    act(.8,t=>{const k=Math.min(1,t/.2);for(let i=0;i<=16;i++){const d=L*k*i/16;pts[i].set(hx+dx*d+Math.sin(i+t*20)*.08,.8,hz+dz*d)}line.geometry.setFromPoints(pts);const op=t>.55?(.8-t)/.25:1;line.material.opacity=op;
+        beads.forEach((b,i)=>{const d=L*k*(i+.5)/9,w=Math.sin(i*1.7+t*14)*W*.25;b.position.set(hx+dx*d+dz*w,.8+Math.sin(i+t*9)*.1,hz+dz*d-dx*w);b.material.opacity=op*.85})},
+      ()=>{scene.remove(line);line.geometry.dispose();line.material.dispose();beads.forEach(unspr)});
+    for(const e of enemies)if(!e.dead&&inLine(e.x,e.z,hx,hz,a,L,W,e.r)){e.stun=Math.max(e.stun||0,hold);if(e.elite){e.x+=(hx-e.x)*.5;e.z+=(hz-e.z)*.5}tied.add(e);hurtEnemy(e,dmg,0,0,false,0)}
+    if(boss.alive&&inLine(boss.x,boss.z,hx,hz,a,L,W,boss.r)){boss.stun=Math.max(boss.stun||0,hold*.6);boss.x+=(hx-boss.x)*.35;boss.z+=(hz-boss.z)*.35;tied.add(boss);hurtBoss(dmg)}}
+  let tk=0;act(hold,(t,dt)=>{tk-=dt;if(tk>0)return;tk=.5;for(const e of tied){if(e===boss){if(boss.alive)hurtBoss(dmg*.3)}else if(!e.dead){hurtEnemy(e,dmg*.3,0,0,false,0);if(!simming&&Math.random()<.5)fx({p:tmp.set(e.x,.9,e.z),col:0xffd86a,add:true,life:.35,s0:.9,s1:.3,op:.7,vy:0})}}})}
 // 五行珠：五色光珠輪流射出，各帶效果（金暴擊、木定身、水緩速、火燃燒、土暈）
 const WUXING=[[0xffe08a,{crit:1}],[0x6aff7a,{stun:1.2}],[0x6ac8ff,{slow:3}],[0xff6a2a,{burn:3}],[0xc8a06a,{stun:.8,kb:1}]];
 function orbCast(){const lv=TL(),n=EVc([5,8,8,12][lv],5),R=1.3*EVm(lv>=2?1.8/1.3:1),dmg=swordDmg()*2.6*G.k.thD,used=new Set();let cnt=0;
@@ -263,7 +269,7 @@ const NEW=[
  ['sweep',2,'qkring',{n:'乾坤圈',ic:'圈',col:0xffd86a,shape:'self',range:()=>4*G.k.sweepR,cd:()=>7*G.k.sweepCd,lv:['範圍 +30%','兩個圈','打中暈 1 秒'],d:'金圈擴出去再收回，打兩次',cast:ringCast}],
  ['sweep',2,'turtle',{n:'玄龜震',ic:'龜',col:0x5ad8a0,shape:'self',range:()=>4*G.k.sweepR,cd:()=>7.5*G.k.sweepCd,lv:['範圍 +30%','擋兩下','震暈 1.2 秒'],d:'龜殼震地，擋一下傷害並擊退',cast:turtleCast}],
  ['beam',2,'mirror',{n:'照妖鏡光',ic:'鏡',col:0xffe9a0,shape:'line',w:2.4,range:()=>11,cd:()=>6*G.k.beamCd,lv3:['兩道光','三道光','五道光、照 5 秒'],d:'被照到的妖 3 秒內受傷加倍',cast:mirrorCast}],
- ['beam',2,'rope',{n:'縛妖索',ic:'索',col:0xffd86a,shape:'line',w:1.2,range:()=>11,cd:()=>6*G.k.beamCd,lv3:['繩子變粗','兩條繩、綁更久','三條繩'],d:'金繩串起沿路的妖，綁住精英或魔王並拉近',cast:ropeCast}],
+ ['beam',2,'rope',{n:'縛妖索',ic:'索',col:0xffd86a,shape:'line',get w(){return ROPE_W()},range:()=>11*[1,1.15,1.3,1.45][bs()],spread:()=>[0,0,.4,.8][bs()],cd:()=>6*G.k.beamCd,lv3:['繩子更粗更長','兩條繩、綁更久','三條繩、最粗最長'],d:'金繩串起沿路的妖，綁住後持續勒傷；精英或魔王會被拉近',cast:ropeCast}],
  ['thunder',2,'wuxing',{n:'五行珠',ic:'珠',col:0xffe08a,shape:'auto',range:()=>9,cd:()=>9,lv:['八顆','爆炸變大','十二顆'],d:'五色光珠輪流射出，各帶效果',cast:orbCast}],
  ['thunder',2,'gourd',{n:'聚魂瓶',ic:'瓶',col:0x7affd0,shape:'auto',range:()=>9,cd:()=>10,lv:['範圍 +25%','兩個瓶','爆炸 +40%'],d:'把妖吸到一點再爆開',cast:gourdCast}],
  ['sweep',3,'zhoutian',{n:'周天劍陣',ic:'陣',col:0xbff8ff,shape:'self',range:R_SW,cd:()=>7*G.k.sweepCd,lv:['範圍 +30%','轉兩輪','七十二把劍'],d:'36 把飛劍列陣旋轉，收攏絞殺再向外爆射',cast:zhoutianCast},1],
