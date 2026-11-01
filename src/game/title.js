@@ -41,6 +41,7 @@ function slotPicker(mode,done){const rows=[];if(mode==='load'){const a=autoSave(
       if(mode==='save'){const doSave=()=>{writeSave();try{localStorage.setItem(k,JSON.stringify({t:Date.now(),save}))}catch(e){}SFX.play('gold');close();banner('存檔完成',r.n);if(done)done()};
         if(r.d)confirmBox(`${r.n}已經有存檔：<br>${slotInfo(r.d)}<br>要蓋掉嗎？`,[{t:'蓋掉',go:1,f:doSave},{t:'取消',f:()=>slotPicker(mode,done)}]);else doSave()}
       else{close();loadSlot(k)}})})}
+try{if(matchMedia('(display-mode: standalone)').matches||navigator.standalone){const e=document.getElementById('ttlAdd');if(e)e.style.display='none'}}catch(e){}
 function bootTo(h){try{location.hash=h}catch(e){}location.reload()}
 function loadSlot(k){if(k==='auto'){TITLE.hide();$('#startOv').classList.add('on');DF.render();return}const d=readSlot(k);if(!d)return;try{localStorage.setItem(SAVE_KEY,JSON.stringify(d.save))}catch(e){}bootTo('home')}
 function newGame(){const go=()=>{try{localStorage.removeItem(SAVE_KEY)}catch(e){}bootTo('new')};
