@@ -168,7 +168,7 @@ const ASC=(()=>{let on=null;const FULL=13,SHORT0=7,SHORT1=12.2;
   // 結局蒙太奇：築基→結丹→元嬰各 5 秒精華（配字幕），最後接完整化神
   function montage(done){const seq=[[9,'那一夜，你在雷雲下築基'],[12,'師父長眠的那一夜，你結成金丹'],[15,'九道天雷之下，元嬰出世']];let i=0;
     const next=()=>{if(i<seq.length){const [r,c]=seq[i++];play(r,{short:true,caption:c},next)}else play(18,{caption:'千年子時・鬼門合上'},done)};next()}
-  return {play,step,cam,montage,get on(){return !!on},isMajor:r=>!!KIND[r]&&r!==18}})();
+  return {play,step,cam,montage,tex:{rune,halo},get on(){return !!on},isMajor:r=>!!KIND[r]&&r!==18}})();
 window.__asc=ASC;
 // 突破後主角身上的境界光暈：築基玉綠、結丹金、元嬰紫金（化神另有腳下法相光環 hsAura）
 const tierAura=(()=>{const g=new THREE.Group();root.add(g);const s=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex,transparent:true,opacity:.35,blending:THREE.AdditiveBlending,depthWrite:false}));s.scale.set(1.8,2.6,1);s.position.y=.9;g.add(s);

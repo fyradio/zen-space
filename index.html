@@ -1440,14 +1440,25 @@ const SHIELD=(()=>{const add=(c,op)=>new THREE.MeshBasicMaterial({color:c,transp
     forms.push({n:'八卦玉璧罩',g,col:0x7fffd0,update(fr,crit,t,dt){if(!bagua&&typeof runeTex==='function'){bagua=new THREE.Mesh(new THREE.PlaneGeometry(2.6,2.6).rotateX(-Math.PI/2),new THREE.MeshBasicMaterial({map:runeTex('#9fffd0'),transparent:true,opacity:.5,blending:THREE.AdditiveBlending,depthWrite:false}));bagua.position.y=.04;g.add(bagua)}
       if(bagua)bagua.rotation.y-=dt*.6;jades.forEach((d,i)=>{const a=t*1.2+i/8*6.28;d.position.set(Math.sin(a)*1.3,.9+Math.sin(t*2+i)*.12,Math.cos(a)*1.3);d.rotation.y=a});
       const c=fr>.5?0x7fffd0:fr>.2?0xff9a3a:0xff3a2a;J.color.set(c);J.opacity=crit?.2+Math.abs(Math.sin(t*14))*.18:.2+Math.sin(t*3)*.04;cr.material.opacity=fr>.5?0:fr>.2?.35:.7;cr.material.color.set(c);if(bagua)bagua.material.color.set(c)}})}
-  // 3 蓮花護體
-  {const g=new THREE.Group(),P=new THREE.MeshBasicMaterial({color:0xf0a0b8,transparent:true,opacity:.5,depthWrite:false,side:THREE.DoubleSide}),petals=[];const pg=new THREE.SphereGeometry(1,14,10);
-    for(let i=0;i<10;i++){const holder=new THREE.Group();holder.rotation.y=i/10*6.28;g.add(holder);const p=new THREE.Mesh(pg,P);p.scale.set(.2,.6,.06);p.position.set(0,.5,.56);holder.add(p);petals.push(p)}
-    const inner=new THREE.Mesh(new THREE.CircleGeometry(.9,32).rotateX(-Math.PI/2),add(0xffe08a,.3));inner.position.y=.05;g.add(inner);
-    const halo=new THREE.Mesh(new THREE.TorusGeometry(.42,.03,6,40),add(0xffe08a,.8));halo.position.set(0,1.75,-.28);g.add(halo);
-    const rays=new THREE.Mesh(new THREE.RingGeometry(.45,.75,40),add(0xffe9b0,.25));rays.position.copy(halo.position);g.add(rays);
-    forms.push({n:'蓮花護體',g,col:0xf0a0b8,update(fr,crit,t,dt){const open=.35+.12*Math.sin(t*2);petals.forEach((p,i)=>{p.rotation.x=-open-(i%2)*.12});halo.rotation.z+=dt;
-      const c=fr>.5?0xf0a0b8:fr>.2?0xff8a3a:0xff3a2a;P.color.set(c);P.opacity=crit?.3+Math.abs(Math.sin(t*14))*.3:.5;halo.material.color.set(fr>.5?0xffe08a:c);halo.lookAt&&0}})}
+  // 3 蓮花護體（重製）：腳下金色陣圖、兩層半透明金蓮（內八外十二）托住全身、腦後細紋光輪、六片小蓮瓣繞身飄；
+  //   血越少蓮瓣越往外垂、顏色 金粉→橘→紅，剩兩成時閃爍。蓮瓣、陣圖、光輪貼圖第一次顯示才建（那時其他檔案都載入了）。
+  {const g=new THREE.Group();let built=null;
+    function build(){const PM=c=>new THREE.MeshBasicMaterial({color:LC(c),vertexColors:true,transparent:true,opacity:.62,depthWrite:false,side:THREE.DoubleSide});
+      const inM=PM(0xffe6c8),outM=PM(0xffc8d8),rows=[];
+      [[8,.42,.62,inM,.32],[12,.6,.95,outM,.62]].forEach(([n,w,h,M,base])=>{const row=[];for(let i=0;i<n;i++){const hol=new THREE.Group();hol.rotation.y=i/n*6.283+(n===8?.2:0);g.add(hol);const m=new THREE.Mesh(LOTUS_PETAL,M);m.scale.set(w,h,1);m.position.set(0,.02,.18);hol.add(m);row.push(m)}rows.push({row,base})});
+      const tex=typeof ASC!=='undefined'&&ASC.tex?ASC.tex:null;
+      const disc=new THREE.Mesh(new THREE.PlaneGeometry(2.6,2.6).rotateX(-Math.PI/2),new THREE.MeshBasicMaterial({map:tex?tex.rune():null,color:LC(0xe8b860),transparent:true,opacity:.55,blending:THREE.AdditiveBlending,depthWrite:false}));disc.position.y=.04;g.add(disc);
+      const halo=new THREE.Mesh(new THREE.PlaneGeometry(.95,.95),new THREE.MeshBasicMaterial({map:tex?tex.halo():null,color:LC(0xffd890),transparent:true,opacity:.8,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide}));halo.position.set(0,1.62,-.32);g.add(halo);
+      const glow=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex,color:LC(0xffb0c8),transparent:true,opacity:.3,blending:THREE.AdditiveBlending,depthWrite:false}));glow.scale.set(2.4,2.8,1);glow.position.y=.9;g.add(glow);
+      const motes=[];for(let i=0;i<6;i++){const m=new THREE.Mesh(LOTUS_PETAL,outM);m.scale.set(.16,.22,1);g.add(m);motes.push(m)}
+      built={rows,inM,outM,disc,halo,glow,motes}}
+    forms.push({n:'蓮花護體',g,col:0xf0a0b8,update(fr,crit,t,dt){if(!built){if(typeof LOTUS_PETAL==='undefined')return;build()}const B=built;
+      const droop=(1-Math.max(0,Math.min(1,fr)))*.55,br=.06*Math.sin(t*2);B.rows.forEach(({row,base},ri)=>row.forEach((m,i)=>{m.rotation.x=-(base+droop*(ri?1:.6)+br+(i%2)*.05)}));
+      const c=fr>.5?null:fr>.2?0xff9a4a:0xff4a3a,flick=crit?.45+Math.abs(Math.sin(t*14))*.5:1;
+      B.inM.color.set(c?LC(c):LC(0xffe6c8));B.outM.color.set(c?LC(c):LC(0xffc8d8));B.inM.opacity=.62*flick;B.outM.opacity=.55*flick;
+      B.disc.rotation.y=t*.4;B.disc.material.color.set(LC(c||0xe8b860));B.halo.position.set(-HERO.fwd.x*.32,1.62,-HERO.fwd.z*.32);B.halo.rotation.set(0,Math.atan2(HERO.fwd.x,HERO.fwd.z),-t*.5);B.halo.material.color.set(LC(c||0xffd890));B.halo.material.opacity=.55*flick;
+      B.glow.material.color.set(LC(c||0xffb0c8));B.glow.material.opacity=.22+.08*Math.sin(t*3);
+      B.motes.forEach((m,i)=>{const a=t*.9+i/6*6.283;m.position.set(Math.sin(a)*1.05,.5+((t*.25+i/6)%1)*1.6,Math.cos(a)*1.05);m.rotation.set(-.6,a,0)})}})}
   const root=new THREE.Group();root.visible=false;scene.add(root);forms.forEach(f=>{f.g.visible=false;root.add(f.g)});
   let cur=forms[1];
   return {get color(){return cur.col},setTier(t){forms.forEach(f=>f.g.visible=false);cur=forms[Math.max(0,Math.min(3,t))];cur.g.visible=true},
@@ -4207,7 +4218,7 @@ const ASC=(()=>{let on=null;const FULL=13,SHORT0=7,SHORT1=12.2;
   // 結局蒙太奇：築基→結丹→元嬰各 5 秒精華（配字幕），最後接完整化神
   function montage(done){const seq=[[9,'那一夜，你在雷雲下築基'],[12,'師父長眠的那一夜，你結成金丹'],[15,'九道天雷之下，元嬰出世']];let i=0;
     const next=()=>{if(i<seq.length){const [r,c]=seq[i++];play(r,{short:true,caption:c},next)}else play(18,{caption:'千年子時・鬼門合上'},done)};next()}
-  return {play,step,cam,montage,get on(){return !!on},isMajor:r=>!!KIND[r]&&r!==18}})();
+  return {play,step,cam,montage,tex:{rune,halo},get on(){return !!on},isMajor:r=>!!KIND[r]&&r!==18}})();
 window.__asc=ASC;
 // 突破後主角身上的境界光暈：築基玉綠、結丹金、元嬰紫金（化神另有腳下法相光環 hsAura）
 const tierAura=(()=>{const g=new THREE.Group();root.add(g);const s=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex,transparent:true,opacity:.35,blending:THREE.AdditiveBlending,depthWrite:false}));s.scale.set(1.8,2.6,1);s.position.y=.9;g.add(s);
@@ -4432,7 +4443,8 @@ function startBoss(){const key=bossKey(G),D=BOSSES[key];boss.def=D;setTimeout(()
   Object.assign(boss,{seed:Math.random()*6.28,cd:3,sum:5,t:0,rage:false,ring:4,k:0,swing:0,stun:0,cl:16,dm:14,rd:0,done:false,tele:2,dash:0,fled:false,fleeT:0,shield:D.duel?boss.max*.3:0});if(D.noHit)boss.allow=boss.max;boss.g.visible=true;boss.g.position.set(boss.x,0,boss.z);
   $('#bossName').textContent=D.name;G.clash=null;$('#bossBox').classList.add('on');banner(D.line,'頭目');shake=.8;act(3.8,null,()=>{if(G&&!G.over)say(D.tip,5)})}
 function stepBoss(dt){if(!boss.alive)return;const D=boss.def,M=boss.m;boss.t+=dt;if(boss.markT>0)boss.markT-=dt;boss.allow=Math.min(boss.max/30*1.5,boss.allow+boss.max/30*dt);
-  const dx=HERO.pos.x-boss.x,dz=HERO.pos.z-boss.z,d=Math.hypot(dx,dz)||1;let sp=d>4?D.spd:.6;if(D.keep&&d<D.keep)sp=-D.spd*.7;if(G.sky){boss.x+=G.vx*dt;boss.z+=G.vz*dt;sp=0;if(!D.skyAI&&!(boss.stun>0)){const f=G.head,o=Math.sin(boss.t*.45)*4,tx=HERO.pos.x+Math.sin(f)*8+Math.cos(f)*o,tz=HERO.pos.z+Math.cos(f)*8-Math.sin(f)*o,k=Math.min(1,dt*1);boss.x+=(tx-boss.x)*k;boss.z+=(tz-boss.z)*k}}// 天上鬥法：魔王在主角前方飛、左右游移，追尾鏡頭看得到
+  const dx=HERO.pos.x-boss.x,dz=HERO.pos.z-boss.z,d=Math.hypot(dx,dz)||1;let sp=d>4?D.spd:.6;if(D.keep&&d<D.keep)sp=-D.spd*.7;if(!G.sky&&!arenaOn()&&!(D.keep&&d<D.keep)){/* 陸地無邊界：魔王不能被甩掉——離太遠就加速追，再遠就瞬移到你前方 */if(d>15&&!(boss.stun>0)){const a=Math.atan2(HERO.vel.x||dx,HERO.vel.z||dz),r=7;if(!simming)fx({p:tmp.set(boss.x,1.2,boss.z),col:0xc8b8ff,add:true,life:.4,s0:1,s1:3,op:.8,vy:0});boss.x=HERO.pos.x+Math.sin(a)*r;boss.z=HERO.pos.z+Math.cos(a)*r}else if(d>7)sp=Math.max(sp,D.spd*2.6+1)}
+  if(G.sky){boss.x+=G.vx*dt;boss.z+=G.vz*dt;sp=0;if(!D.skyAI&&!(boss.stun>0)){const f=G.head,o=Math.sin(boss.t*.45)*4,tx=HERO.pos.x+Math.sin(f)*8+Math.cos(f)*o,tz=HERO.pos.z+Math.cos(f)*8-Math.sin(f)*o,k=Math.min(1,dt*1);boss.x+=(tx-boss.x)*k;boss.z+=(tz-boss.z)*k}}// 天上鬥法：魔王在主角前方飛、左右游移，追尾鏡頭看得到
   if(!(boss.stun>0)){boss.x+=dx/d*sp*dt;boss.z+=dz/d*sp*dt}else boss.stun-=dt;
   if(arenaOn()){const rr=Math.hypot(boss.x,boss.z);if(rr>ARENA){boss.x*=ARENA/rr;boss.z*=ARENA/rr}}
   boss.g.position.set(boss.x,(D.y||0)+(D.bob?Math.sin(boss.t*D.bob)*.25:0),boss.z);boss.g.rotation.y=Math.atan2(dx,dz);if(M.spin)M.spin(boss);
