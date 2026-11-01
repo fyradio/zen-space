@@ -21,20 +21,30 @@ function chainCast(){const lv=G.k.thLv,hops=G.k.thN+(lv>=1?Math.max(1,Math.floor
 // ---------- 寒霜劍輪（築基・冰藍）----------
 const FROST_LV=['範圍 +30%、傷害 +30%','雙輪：飛出去再收回來，砍兩次','冰封：砍到的妖直接凍住 1.5 秒'];
 const iceMat=new THREE.MeshBasicMaterial({color:0xc8f6ff,transparent:true,opacity:.95,blending:THREE.AdditiveBlending,depthWrite:false});
+const iceCore=new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:.95,blending:THREE.AdditiveBlending,depthWrite:false});
+// 六角雪花符陣（畫在地上，隨劍輪旋轉）
+const snowTex=ctex(256,256,x=>{x.translate(128,128);x.strokeStyle='rgba(190,245,255,.95)';x.lineCap='round';
+  for(let i=0;i<6;i++){x.save();x.rotate(i*Math.PI/3);x.lineWidth=5;x.beginPath();x.moveTo(0,0);x.lineTo(0,-118);x.stroke();x.lineWidth=3;for(const [y,l] of [[-40,22],[-70,30],[-96,16]]){x.beginPath();x.moveTo(0,y);x.lineTo(-l,y-l*.9);x.moveTo(0,y);x.lineTo(l,y-l*.9);x.stroke()}x.restore()}
+  x.lineWidth=3;x.beginPath();for(let i=0;i<6;i++){const a=i*Math.PI/3;x.lineTo(Math.sin(a)*50,-Math.cos(a)*50)}x.closePath();x.stroke();x.lineWidth=2;x.beginPath();x.arc(0,0,122,0,7);x.stroke();
+  const g=x.createRadialGradient(0,0,0,0,0,120);g.addColorStop(0,'rgba(140,230,255,.35)');g.addColorStop(1,'rgba(140,230,255,0)');x.fillStyle=g;x.beginPath();x.arc(0,0,120,0,7);x.fill()});
 const frostRing=(()=>{const g=new THREE.Group();g.visible=false;scene.add(g);const blades=[];
-  for(let i=0;i<12;i++){const b=new THREE.Group();g.add(b);part(new THREE.BoxGeometry(.11,.025,.95),iceMat,b,{ol:false});const tp=new THREE.ConeGeometry(.075,.26,4);tp.rotateX(Math.PI/2);part(tp,iceMat,b,{p:[0,0,.6],ol:false});
-    const s=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex,color:0x8fe8ff,opacity:.6,blending:THREE.AdditiveBlending,depthWrite:false}));s.scale.set(1.2,1.2,1);b.add(s);blades.push(b)}
-  const disc=new THREE.Mesh(new THREE.RingGeometry(.9,1,64).rotateX(-Math.PI/2),new THREE.MeshBasicMaterial({color:0x8fe8ff,transparent:true,opacity:.6,blending:THREE.AdditiveBlending,depthWrite:false}));disc.visible=false;scene.add(disc);
+  // 冰劍：四稜細長劍身＋亮白劍脊＋晶護手
+  const bl=new THREE.ConeGeometry(.1,1.15,4);bl.rotateX(Math.PI/2);bl.translate(0,0,.35);bl.scale(1,.38,1);const sp=new THREE.ConeGeometry(.035,1.0,4);sp.rotateX(Math.PI/2);sp.translate(0,0,.33);sp.scale(1,.5,1);
+  const gd=new THREE.OctahedronGeometry(.1);gd.scale(1.5,.5,.8);
+  for(let i=0;i<12;i++){const b=new THREE.Group();g.add(b);b.add(new THREE.Mesh(bl,iceMat));b.add(new THREE.Mesh(sp,iceCore));const gm=new THREE.Mesh(gd,iceMat);gm.position.z=-.2;b.add(gm);
+    const s=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex,color:0x8fe8ff,opacity:.55,blending:THREE.AdditiveBlending,depthWrite:false}));s.scale.set(1.3,1.3,1);b.add(s);blades.push(b)}
+  const disc=new THREE.Mesh(new THREE.PlaneGeometry(2,2).rotateX(-Math.PI/2),new THREE.MeshBasicMaterial({map:snowTex,transparent:true,opacity:.85,blending:THREE.AdditiveBlending,depthWrite:false}));disc.visible=false;scene.add(disc);
+  const rim=new THREE.Mesh(new THREE.RingGeometry(.94,1,64).rotateX(-Math.PI/2),new THREE.MeshBasicMaterial({color:0xbff4ff,transparent:true,opacity:.7,blending:THREE.AdditiveBlending,depthWrite:false}));disc.add(rim);
   return {g,blades,disc}})();
 function frostCast(){const lv=G.k.sweepLv,R=SK.sweep.range(),dmg=swordDmg()*4.6*G.k.sweepD,passes=lv>=2?2:1,T=.42,life=passes*T+.25,hit=[new Set(),new Set()];
   SFX.play('sweep');SFX.play('bell');shake=Math.max(shake,.2);buzz(20);frostRing.g.visible=frostRing.disc.visible=true;
   act(life,t=>{const p=Math.min(passes-1,Math.floor(t/T)),k=Math.min(1,(t-p*T)/T),e=1-Math.pow(1-k,2),r=p===0?.4+(R-.4)*e:R-(R-.6)*e,hx=HERO.pos.x,hz=HERO.pos.z;
       frostRing.g.position.set(hx,.8,hz);frostRing.blades.forEach((b,i)=>{const a=i/12*Math.PI*2+t*9;b.position.set(Math.sin(a)*r,0,Math.cos(a)*r);b.rotation.y=a+Math.PI/2});
-      frostRing.disc.position.set(hx,.07,hz);frostRing.disc.scale.setScalar(Math.max(.05,r));frostRing.disc.material.opacity=.6*(t>life-.25?Math.max(0,(life-t)/.25):1);if(t>life-.25)frostRing.g.visible=false;
+      frostRing.disc.position.set(hx,.07,hz);frostRing.disc.rotation.y=-t*2.2;frostRing.disc.scale.setScalar(Math.max(.05,r));frostRing.disc.material.opacity=.85*(t>life-.25?Math.max(0,(life-t)/.25):1);if(!simming&&Math.random()<.7){const ba=Math.random()*6.283;fx({p:tmp.set(hx+Math.sin(ba)*r,.8,hz+Math.cos(ba)*r),col:Math.random()<.5?0xffffff:0x8fe8ff,add:true,life:.5,s0:.35,s1:.05,op:.9,vy:-.4})}if(t>life-.25)frostRing.g.visible=false;
       if(t>passes*T)return;const H=hit[p];let killed=0;
       for(const en of enemies){if(en.dead||H.has(en))continue;const dx=en.x-hx,dz=en.z-hz,d=Math.hypot(dx,dz);
         if(Math.abs(d-r)<.6+en.r||(p===0&&d<r)){H.add(en);en.slowT=3;if(lv>=3)en.stun=Math.max(en.stun||0,1.5);hurtEnemy(en,dmg,dx/(d||1)*.8,dz/(d||1)*.8,false,5);if(en.dead)killed++;
-          if(!simming)fx({p:tmp.set(en.x,.7,en.z),col:0xbff4ff,add:true,life:.3,s0:1,s1:.2,op:.9,vy:0})}}
+          if(!simming){fx({p:tmp.set(en.x,.7,en.z),col:0xbff4ff,add:true,life:.35,s0:1.6,s1:.2,op:.9,vy:0});for(let q=0;q<5;q++){const sa=Math.random()*6.283;fx({p:tmp.set(en.x,.5,en.z),col:0xe8fbff,add:true,life:.5,s0:.3,s1:.05,op:1,vx:Math.sin(sa)*3,vz:Math.cos(sa)*3,vy:2})}}}}
       if(boss.alive&&!H.has(boss)){const d=Math.hypot(boss.x-hx,boss.z-hz);if(Math.abs(d-r)<.6+boss.r||d<r){H.add(boss);hurtBoss(dmg)}}
       if(killed){G.slow=Math.max(G.slow,.06);shake=Math.max(shake,.3)}},
     ()=>{frostRing.g.visible=frostRing.disc.visible=false})}
@@ -44,14 +54,25 @@ const DRAGON_LV=['兩條火龍','三條火龍','五條火龍','八條火龍，�
 function dragonCast(A){const lv=G.k.beamLv,L=SK.beam.range(),a0=Math.atan2(A.dir[0],A.dir[1]),n=EVc(DRAGON_N[lv],1),sp=DRAGON_SPREAD[lv],dmg=swordDmg()*6*G.k.beamD*[1,.9,.8,.7,.6][lv],hx=HERO.pos.x,hz=HERO.pos.z,hitN=new Map();
   SFX.play('beam');SFX.play('boom');shake=Math.max(shake,.2);
   for(let j=0;j<n;j++){const a=lv>=4?a0+j/n*Math.PI*2:n>1?fanA(a0,j,n,sp/(n-1)):a0,dx=Math.sin(a),dz=Math.cos(a),mine=new Set(),T=L/15;let trail=0;
-    const segs=[];if(!simming)for(let i=0;i<7;i++){const s=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex,color:i===0?0xffe08a:i<3?0xff8a2a:0xff4a1a,opacity:.95,blending:THREE.AdditiveBlending,depthWrite:false}));
-      const sc=i===0?1.7:1.35-i*.12;s.scale.set(sc,sc,1);s.visible=false;scene.add(s);segs.push(s)}
-    act(T+.4,t=>{segs.forEach((s,i)=>{const tt=t-i*.05;if(tt<0||tt>T){s.visible=false;return}const dd=tt/T*L,w=Math.sin(dd*1.3+j)*.5;s.visible=true;s.position.set(hx+dx*dd+dz*w,.75+Math.sin(dd*2.2)*.2,hz+dz*dd-dx*w)});
+    // 真的火龍：龍頭（吻部、雙角、金眼、下顎）＋ 14 節鱗身（越後越細）＋ 火焰鬃毛，沿蛇形路徑游動
+    const NS=14,drg=new THREE.Group();drg.visible=false;scene.add(drg);const segs=[],pos=dd=>[hx+dx*dd+dz*Math.sin(dd*1.3+j)*.5,.8+Math.sin(dd*2.2)*.22,hz+dz*dd-dx*Math.sin(dd*1.3+j)*.5];
+    const bodyM=new THREE.MeshBasicMaterial({color:0xe03a0a,fog:false}),bellyM=new THREE.MeshBasicMaterial({color:0xff6a18,fog:false}),hornM=new THREE.MeshBasicMaterial({color:0xffd070}),eyeM=new THREE.MeshBasicMaterial({color:0xffffff});
+    const head=new THREE.Group();const sn=new THREE.Mesh(new THREE.ConeGeometry(.3,.9,6).rotateX(Math.PI/2).translate(0,0,.35),bodyM);sn.scale.set(1,.7,1);head.add(sn);
+    const jaw=new THREE.Mesh(new THREE.ConeGeometry(.2,.7,5).rotateX(Math.PI/2).translate(0,-.2,.25),bellyM);head.add(jaw);
+    for(const sx of [-1,1]){const h=new THREE.Mesh(new THREE.ConeGeometry(.07,.65,5).rotateX(-Math.PI/2.6),hornM);h.position.set(sx*.2,.3,-.15);head.add(h);const e=new THREE.Mesh(new THREE.SphereGeometry(.07,8,6),eyeM);e.position.set(sx*.2,.15,.3);head.add(e);
+      const wh=new THREE.Mesh(new THREE.ConeGeometry(.03,.9,4).rotateX(Math.PI/2).translate(0,0,.45),hornM);wh.position.set(sx*.14,-.02,.7);wh.rotation.y=sx*.35;head.add(wh)}
+    const hg=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex,color:0xff7a20,opacity:.3,blending:THREE.AdditiveBlending,depthWrite:false}));hg.scale.set(1.8,1.8,1);head.add(hg);head.scale.setScalar(1.25);drg.add(head);
+    for(let i=0;i<NS;i++){const r=.38*(1-i/NS*.7),m=new THREE.Mesh(new THREE.SphereGeometry(r,10,8),i%2?bodyM:bellyM);const g2=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex,color:i<5?0xff8a2a:0xff4a1a,opacity:.16,blending:THREE.AdditiveBlending,depthWrite:false}));g2.scale.set(r*3.4,r*3.4,1);m.add(g2);
+      const fin=new THREE.Mesh(new THREE.ConeGeometry(r*.28,r*1.0,4),hornM);fin.position.y=r*1.0;m.add(fin);drg.add(m);segs.push(m)}
+    act(T+.4,t=>{drg.visible=t<T+.3;const place=(o,tt)=>{const dd=Math.max(0,Math.min(L+1,tt/T*L)),p0=pos(dd),p1=pos(dd+.3);o.position.set(p0[0],p0[1],p0[2]);return Math.atan2(p1[0]-p0[0],p1[2]-p0[2])};
+        head.position.set(0,0,0);const hy=place(head,t);head.rotation.y=hy;head.rotation.x=-.08;head.scale.setScalar(1.25*(t<.12?t/.12:t>T?Math.max(0,1-(t-T)/.3):1));
+        segs.forEach((m,i)=>{const tt=t-(i+1)*.055;m.visible=tt>0&&tt<T+.25;if(m.visible){m.rotation.y=place(m,tt);const w=1+.1*Math.sin(t*20-i);m.scale.set(w,w,1.9)}});
+        if(!simming&&t<T&&Math.random()<.9){const pp=pos(t/T*L);fx({p:tmp.set(pp[0]+(Math.random()-.5)*.5,pp[1]+.3,pp[2]+(Math.random()-.5)*.5),col:Math.random()<.5?0xffd060:0xff5a1a,add:true,life:.5,s0:.9,s1:.2,op:.9,vy:1.4})}
         if(t>T)return;const dd=t/T*L,w=Math.sin(dd*1.3+j)*.5,x=hx+dx*dd+dz*w,z=hz+dz*dd-dx*w;
         if(!simming)while(trail<dd){trail+=1;fx({p:tmp.set(hx+dx*trail,.3,hz+dz*trail),col:0xff7a2a,add:true,life:1.5,s0:1,s1:.4,op:.7,vy:.3})}
         for(const en of enemies){if(en.dead||mine.has(en))continue;if((en.x-x)**2+(en.z-z)**2<(1+en.r)**2){mine.add(en);const c=hitN.get(en)||0;if(c>=2)continue;hitN.set(en,c+1);en.burn=3;en.burnD=dmg*.12;hurtEnemy(en,dmg,dx*.8,dz*.8,false,4.5)}}
         if(boss.alive&&!mine.has(boss)&&(boss.x-x)**2+(boss.z-z)**2<(1+boss.r)**2){mine.add(boss);const c=hitN.get(boss)||0;if(c<3){hitN.set(boss,c+1);hurtBoss(dmg)}}},
-      ()=>{segs.forEach(s=>{scene.remove(s);s.material.dispose()})})}}
+      ()=>{scene.remove(drg);drg.traverse(o=>{if(o.geometry)o.geometry.dispose()});for(const m of [bodyM,bellyM,hornM,eyeM])m.dispose()})}}
 // ---------- 太極氣旋（築基・黑白）----------
 const TAIJI_LV=['範圍 +30%','雙氣旋：同時捲兩團妖','爆開後定身 1.5 秒、傷害 +50%'];
 const taijiTex=ctex(256,256,x=>{x.translate(128,128);const R=116;x.fillStyle='rgba(240,238,228,.92)';x.beginPath();x.arc(0,0,R,0,7);x.fill();
