@@ -255,10 +255,13 @@ function fireCast(A){const S=SK.ult,ang=S.ang,R=S.range(),a0=Math.atan2(A.dir[0]
   m.renderOrder=3;m.position.set(hx,.06,hz);m.rotation.y=a0;m.scale.setScalar(R);scene.add(m);let hit=false;
   // 腳下一圈火焰符印（三昧＝三簇火）
   const ring=new THREE.Mesh(new THREE.RingGeometry(.55,.68,40).rotateX(-Math.PI/2),new THREE.MeshBasicMaterial({color:0xffb050,transparent:true,opacity:0,blending:THREE.AdditiveBlending,depthWrite:false}));ring.position.set(hx,.07,hz);scene.add(ring);
-  act(2.2,(t)=>{const k=Math.min(1,t/.5);FU.time.value=t;FU.prog.value=1-Math.pow(1-k,3);FU.fade.value=t<1.6?1:Math.max(0,1-(t-1.6)/.6);ring.material.opacity=.7*FU.fade.value;ring.rotation.y=t*2;ring.scale.setScalar(1+.15*Math.sin(t*9));
+  const L=5.2;let tk=.8;act(L,(t)=>{const k=Math.min(1,t/.5);FU.time.value=t;FU.prog.value=1-Math.pow(1-k,3);FU.fade.value=t<L-.7?1:Math.max(0,1-(t-(L-.7))/.7);ring.material.opacity=.7*FU.fade.value;ring.rotation.y=t*2;ring.scale.setScalar(1+.15*Math.sin(t*9));
       for(let q=0;q<2;q++)if(Math.random()<.8){const a=a0+(Math.random()-.5)*ang*.95,r=(.25+Math.random()*.75)*R*k;fx({p:tmp.set(hx+Math.sin(a)*r,.3,hz+Math.cos(a)*r),col:Math.random()<.4?0xff5a1a:Math.random()<.5?0xff9a2a:0xffe080,add:true,life:.5+Math.random()*.4,s0:.9+Math.random()*.9,s1:.2,op:.9,vy:2.5+Math.random()*2})}
-      if(!hit&&t>=.3){hit=true;for(const e of enemies){if(e.dead)continue;const dx=e.x-hx,dz=e.z-hz,d=Math.hypot(dx,dz);if(d<R+e.r&&Math.abs(angDiff(Math.atan2(dx,dz),a0))<=ang/2+.1){e.burn=3.5;e.burnD=dmg*.15;hurtEnemy(e,dmg,dx/(d||1)*1.2,dz/(d||1)*1.2,false,4)}}
-        if(boss.alive){const dx=boss.x-hx,dz=boss.z-hz,d=Math.hypot(dx,dz);if(d<R+boss.r&&Math.abs(angDiff(Math.atan2(dx,dz),a0))<=ang/2+.3){const room=boss.max*.22;boss.allow+=Math.min(room,dmg*3);hurtBoss(Math.min(room,dmg*3),true)}}}},
+      if(!hit&&t>=.3){hit=true;for(const e of enemies){if(e.dead)continue;const dx=e.x-hx,dz=e.z-hz,d=Math.hypot(dx,dz);if(d<R+e.r&&Math.abs(angDiff(Math.atan2(dx,dz),a0))<=ang/2+.1){e.burn=8;e.burnD=dmg*.2;hurtEnemy(e,dmg,dx/(d||1)*1.2,dz/(d||1)*1.2,false,4)}}
+        if(boss.alive){const dx=boss.x-hx,dz=boss.z-hz,d=Math.hypot(dx,dz);if(d<R+boss.r&&Math.abs(angDiff(Math.atan2(dx,dz),a0))<=ang/2+.3){const room=boss.max*.22;boss.allow+=Math.min(room,dmg*3);hurtBoss(Math.min(room,dmg*3),true)}}}
+      // 火海持續燒：每 0.6 秒再燒一輪（小妖＋魔王），魔王每輪吃總血量約 3%
+      if(t>=tk&&t<L-.7){tk+=.6;for(const e of enemies){if(e.dead)continue;const dx=e.x-hx,dz=e.z-hz,d=Math.hypot(dx,dz);if(d<R+e.r&&Math.abs(angDiff(Math.atan2(dx,dz),a0))<=ang/2+.1){e.burn=Math.max(e.burn||0,8);hurtEnemy(e,dmg*.18,0,0,false,2)}}
+        if(boss.alive){const dx=boss.x-hx,dz=boss.z-hz,d=Math.hypot(dx,dz);if(d<R+boss.r&&Math.abs(angDiff(Math.atan2(dx,dz),a0))<=ang/2+.3){const v=Math.min(boss.max*.03,dmg*1.2);boss.allow+=v;hurtBoss(v,true)}}}},
     ()=>{scene.remove(m);m.material.dispose();scene.remove(ring);ring.material.dispose();ring.geometry.dispose()})}
 // 九天神雷: a huge circle of purple-gold thunder, everything inside stunned (the boss too, briefly)
 const thForm=(()=>{const t=ctex(512,512,x=>{x.translate(256,256);x.strokeStyle=x.fillStyle='#d8b0ff';x.lineWidth=7;x.beginPath();x.arc(0,0,244,0,7);x.stroke();x.lineWidth=3;x.beginPath();x.arc(0,0,196,0,7);x.stroke();
