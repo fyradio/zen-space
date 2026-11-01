@@ -33,11 +33,15 @@ const SL=()=>G.k.sweepLv,TL=()=>G.k.thLv;
 
 /* ================= 煉氣 ================= */
 // 桃木三刺：扇形連刺，擊退
+// 桃木三刺：暗緋色的劍光（不是木頭色），每一刺灑出幾朵桃花
+let peachTex=null;function peachBloom(){if(!peachTex)peachTex=ctex(64,64,(x,w,h)=>{x.translate(32,32);for(let i=0;i<5;i++){x.rotate(Math.PI*2/5);x.fillStyle='#ffb6cc';x.beginPath();x.ellipse(0,-13,8,13,0,0,7);x.fill();x.fillStyle='rgba(255,120,160,.55)';x.beginPath();x.ellipse(0,-9,3,7,0,0,7);x.fill()}x.fillStyle='#fff0a8';x.beginPath();x.arc(0,0,4,0,7);x.fill()});return peachTex}
 function peachCast(A){const lv=SL(),a0=aimD(A),R=SK.sweep.range(),n=EVc(lv>=2?5:3,3),dmg=swordDmg()*2.2*G.k.sweepD;
   for(let i=0;i<n;i++)act(i*.11,null,()=>{const a=a0+(i%2?.25:-.25)*(i?1:0),hx=HERO.pos.x,hz=HERO.pos.z;SFX.play('sweep');
-    const m=new THREE.Mesh(fanGeo(1),new THREE.MeshBasicMaterial({color:0xe0a060,transparent:true,opacity:.75,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide}));m.position.set(hx,.12,hz);m.rotation.y=a;m.scale.setScalar(R);scene.add(m);
-    const sw=new THREE.Mesh(new THREE.BoxGeometry(.12,.06,R).translate(0,0,R/2),new THREE.MeshBasicMaterial({color:0xffc890,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false}));sw.position.set(hx,.9,hz);sw.rotation.y=a;scene.add(sw);
-    act(.22,t=>{m.material.opacity=.75*(1-t/.22);sw.scale.z=.4+t/.22*.8;sw.material.opacity=1-t/.22},()=>{scene.remove(m,sw);m.material.dispose();sw.geometry.dispose();sw.material.dispose()});
+    const m=new THREE.Mesh(fanGeo(1),new THREE.MeshBasicMaterial({color:0x5a1028,transparent:true,opacity:.45,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide}));m.position.set(hx,.12,hz);m.rotation.y=a;m.scale.setScalar(R);scene.add(m);
+    const sw=new THREE.Mesh(new THREE.BoxGeometry(.12,.06,R).translate(0,0,R/2),new THREE.MeshBasicMaterial({color:0x9a3058,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false}));sw.position.set(hx,.9,hz);sw.rotation.y=a;scene.add(sw);
+    if(!simming){const pt=peachBloom();for(let k=0;k<5;k++){const s=new THREE.Sprite(new THREE.SpriteMaterial({map:pt,transparent:true,depthWrite:false,rotation:Math.random()*6.28}));const d=R*(.3+Math.random()*.7),aa=a+(Math.random()-.5)*.9,x0=hx+Math.sin(aa)*d,z0=hz+Math.cos(aa)*d,y0=.6+Math.random()*.7,vx=(Math.random()-.5)*.8,vz=(Math.random()-.5)*.8,sc=.22+Math.random()*.16;s.scale.set(sc,sc,1);s.position.set(x0,y0,z0);scene.add(s);
+      act(.9,t=>{s.position.set(x0+vx*t,y0-t*.55,z0+vz*t);s.material.rotation+=.05;s.material.opacity=t<.6?1:1-(t-.6)/.3},()=>{scene.remove(s);s.material.dispose()})}}
+    act(.22,t=>{m.material.opacity=.45*(1-t/.22);sw.scale.z=.4+t/.22*.8;sw.material.opacity=1-t/.22},()=>{scene.remove(m,sw);m.material.dispose();sw.geometry.dispose();sw.material.dispose()});
     const last=i===n-1;for(const e of enemies){if(e.dead)continue;const dx=e.x-hx,dz=e.z-hz,d=Math.hypot(dx,dz);if(d<R+e.r&&Math.abs(angDiff(Math.atan2(dx,dz),a))<.55){if(last&&lv>=3)e.stun=Math.max(e.stun||0,1);hurtEnemy(e,dmg,dx/(d||1)*(last?2:.7),dz/(d||1)*(last?2:.7),false,last?6:0)}}
     if(boss.alive){const dx=boss.x-hx,dz=boss.z-hz;if(Math.hypot(dx,dz)<R+boss.r&&Math.abs(angDiff(Math.atan2(dx,dz),a))<.6)hurtBoss(dmg)}})}
 // 金剛符陣：身邊炸開一圈符紙
@@ -244,7 +248,7 @@ const DESC={sweep0:'綠色竹劍扇形橫掃',beam0:'紅色劍氣直線，升級
 for(const slot in SKILL_LIB)for(const s of SKILL_LIB[slot])if(DESC[s.id])s.d=DESC[s.id];
 // 新招
 const NEW=[
- ['sweep',0,'peach',{n:'桃木三刺',ic:'桃',col:0xe0a060,shape:'fan',ang:1.2,range:R_SW,cd:()=>6.5*G.k.sweepCd,lv:['範圍 +30%','五連刺','最後一刺震暈 1 秒'],d:'扇形連刺三下、擊退',cast:peachCast}],
+ ['sweep',0,'peach',{n:'桃木三刺',ic:'桃',col:0xe06090,shape:'fan',ang:1.2,range:R_SW,cd:()=>6.5*G.k.sweepCd,lv:['範圍 +30%','五連刺','最後一刺震暈 1 秒'],d:'扇形連刺三下、擊退',cast:peachCast}],
  ['sweep',0,'vajra',{n:'金剛符陣',ic:'符',col:0xffd86a,shape:'self',range:()=>4*G.k.sweepR,cd:()=>7*G.k.sweepCd,lv:['範圍 +30%','炸兩圈','暈 1.5 秒'],d:'身邊炸開一圈符紙，暈 0.5 秒',cast:vajraCast}],
  ['beam',0,'seek',{n:'追魂符',ic:'追',col:0xffd86a,shape:'line',w:1,range:()=>9,cd:()=>5.5*G.k.beamCd,lv3:['五張，爆炸帶火','八張，爆炸變大','十二張，爆開再分裂'],d:'三張符飛出、轉彎追妖、碰到就爆',cast:talisSeekCast}],
  ['beam',0,'coin',{n:'銅錢鏢',ic:'錢',col:0xffd86a,shape:'line',w:.8,range:()=>9,cd:()=>5*G.k.beamCd,spread:()=>[0,.5,.9,2.4][bs()],lv3:['三串','五串','八串，打中暈 0.5 秒'],d:'一串銅錢穿透，飛到底再回旋',cast:coinCast}],

@@ -2,8 +2,8 @@
    CHC[ch] = { map, fog, ground, mobs:[[種類,權重,從第幾分鐘起]], elite, boss, cut }
    難度：妖血 ×1.1^推薦境界×(1+0.08×章)；魔王血 ×1.1^推薦境界×(1+0.15×章)。 */
 const chRec=ch=>ch===12?save.realm:CH[ch]?CH[ch].rec:0;// 12＝鬥法台：對手跟著你的境界
-const chDmg=ch=>Math.pow(1.06,chRec(ch))*(1+.12*Math.min(4,Math.max(0,ch-1)));// monsters hit harder as the recommended realm (and your own HP) grows
-const chHp=ch=>Math.pow(1.1,chRec(ch))*(1+.16*ch),chBoss=ch=>Math.pow(1.1,chRec(ch))*(1+.04*ch);
+const chDmg=ch=>Math.pow(1.06,chRec(ch))*(1+.12*Math.min(4,Math.max(0,ch-1)))*(chRec(ch)>=9&&chRec(ch)<12?.8:1);/* 築基章（第四、五章）妖傷害 ×0.8：頓悟進化在築基只有一半效果 */// monsters hit harder as the recommended realm (and your own HP) grows
+const chHp=ch=>Math.pow(1.1,chRec(ch))*(1+.16*ch),chBoss=ch=>Math.pow(1.1,chRec(ch))*(1+.04*ch)*(chRec(ch)>=9&&chRec(ch)<12?.8:1);
 /* ---------- 地圖 ---------- */
 function clearMap(){while(mapG.children.length){const o=mapG.children.pop();o.traverse(n=>{if(n.geometry)n.geometry.dispose()})}HOUSES.length=0}
 const MAPS={

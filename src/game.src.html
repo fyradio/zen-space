@@ -892,7 +892,21 @@ const swordDmg=()=>10*G.s.dmg*killMult()*(G.skMulNow||1);// skMulNow：放技能
 const fmt=n=>n>=1e8?(n/1e8).toFixed(2)+'億':n>=1e4?(n/1e4).toFixed(n>=1e5?1:2)+'萬':String(Math.round(n));
 
 /* ================= 頓悟卡 ================= */
-// v(r): effect at rarity r (0 凡品, 1 靈品, 2 仙品). Every card should be something you can SEE change on screen.
+// v(r): effect at rarity r (0 凡品, 1 仙品, 2 神品). Every card should be something you can SEE change on screen.
+// 三張技能進化卡（第一格、第二格、第三格）共用：凡品升一級；仙品升一級＋仙品加成；神品連升兩級（只剩一級時改給神品加成）。
+// 升滿（進化三次）之後還會出「圓滿」卡：把之前沒拿到的仙品／神品加成一次補齊，讓這招最大化。
+function EVO_CARDS(){const mk=(k,slot,get,set,lvText,bon)=>({k,get ic(){return SK[slot].ic},get n(){return SK[slot].n+(get()>=3?'・圓滿':'・進化')},up:1,
+    d:r=>{const l=get(),B=G.k[k+'B']||(G.k[k+'B']={});if(l>=3)return `補齊這招沒拿到的加成：${[!B[1]&&bon[1].t,!B[2]&&bon[2].t].filter(Boolean).join('、')}`;
+      return r===2&&l<2?`連升兩級：${lvText(l)} → ${lvText(l+1)}`:`${lvText(l)}${r?`；${RAR[r]}：${bon[r].t}`:''}`},
+    f:r=>{const B=G.k[k+'B']||(G.k[k+'B']={}),l=get(),give=n=>{if(!B[n]){B[n]=1;bon[n].f()}};
+      if(l>=3){give(1);give(2);return}set();if(r===2&&l<2)set();else if(r)give(r)},
+    max:()=>{const B=G.k[k+'B']||{};return get()>=3&&B[1]&&B[2]}});
+  return [mk('sweepUp','sweep',()=>G.k.sweepLv,()=>{G.k.sweepLv=Math.min(3,G.k.sweepLv+1);G.k.sweepD*=EVm(1.3);if(G.k.sweepLv===1)G.k.sweepR=EVm(1.3)},i=>evText(SK.sweep,SK.sweep.lv[i]),
+      {1:{t:'冷卻 -10%',f:()=>{G.k.sweepCd*=.9}},2:{t:'冷卻 -20%、傷害 +20%',f:()=>{G.k.sweepCd*=.8;G.k.sweepD*=1.2}}}),
+    mk('beamUp','beam',()=>G.k.beamStep,()=>{G.k.beamStep=Math.min(3,G.k.beamStep+1);G.k.beamLv=BEAM_MAP[G.k.beamStep]},i=>beamText(SK.beam,i),
+      {1:{t:'傷害 +20%',f:()=>{G.k.beamD*=1.2}},2:{t:'傷害 +40%、冷卻 -10%',f:()=>{G.k.beamD*=1.4;G.k.beamCd*=.9}}}),
+    mk('thUp','thunder',()=>G.k.thLv,()=>{G.k.thLv=Math.min(3,G.k.thLv+1);G.k.thN+=Math.max(1,Math.round(2*evQ()));G.k.thD*=EVm(1.15)},i=>evText(SK.thunder,SK.thunder.lv[i]),
+      {1:{t:'傷害 +15%',f:()=>{G.k.thD*=1.15}},2:{t:'傷害 +30%',f:()=>{G.k.thD*=1.3}}})]}
 const CARDS=[
   {k:'count',ic:'劍',n:'分光劍',d:r=>`飛劍 +${[1,2,3][r]} 把`,f:r=>{G.s.count=Math.min(12,G.s.count+[1,2,3][r])},max:()=>G.s.count>=12},
   {k:'dmg',ic:'鋒',n:'劍氣凝鋒',d:r=>`飛劍傷害 +${[40,60,100][r]}%，劍身變大`,f:r=>{G.s.dmg*=1+[.4,.6,1][r];G.s.size=Math.min(2.2,G.s.size+[.15,.25,.4][r])}},
@@ -903,24 +917,25 @@ const CARDS=[
   {k:'orbit',ic:'陣',n:'劍陣',skill:1,d:r=>G.s.orbit?`劍陣 +${[1,2,3][r]} 把，轉得更快`:`新招：${[3,4,5][r]} 把飛劍繞身斬妖`,f:r=>{G.s.orbit=Math.min(8,G.s.orbit+(G.s.orbit?[1,2,3][r]:[3,4,5][r]))},max:()=>G.s.orbit>=8},
   {k:'bell',get ic(){return {玄鐵盾:'盾',金鐘罩:'鐘',八卦玉璧罩:'璧',蓮花護體:'蓮'}[SHIELD.name]||'鐘'},get n(){return SHIELD.name},skill:1,d:r=>`護體罩擋 ${[10,20,30][r]} 下傷害，破了之後 ${[10,7,5][r]} 秒重新罩上${G.s.bell?'（取較好的）':''}，破的時候震開周圍的妖`,f:r=>{G.bellR=Math.max(G.bellR??-1,r);G.bellMax=Math.max(G.bellMax||0,[10,20,30][r]);G.s.bell=Math.min(G.s.bell||99,[10,7,5][r]);G.bellT=G.s.bell;G.bellOn=false},minR:()=>(G.bellR??-1)+1,max:()=>G.bellR>=2},
   // upgrades for the four right-hand skills
-  {k:'sweepUp',get ic(){return SK.sweep.ic},get n(){return SK.sweep.n+'・進化'},up:1,d:r=>`${evText(SK.sweep,SK.sweep.lv[G.k.sweepLv])}${['','；靈品：冷卻 -10%','；仙品：冷卻 -20%、傷害 +20%'][r]}`,f:r=>{G.k.sweepLv=Math.min(3,G.k.sweepLv+1);G.k.sweepD*=EVm(1.3);if(G.k.sweepLv===1)G.k.sweepR=EVm(1.3);G.k.sweepCd*=[1,.9,.8][r];G.k.sweepD*=[1,1,1.2][r]},max:()=>G.k.sweepLv>=3},
-  {k:'beamUp',get ic(){return SK.beam.ic},get n(){return SK.beam.n+'・進化'},up:1,d:r=>`${beamText(SK.beam,G.k.beamStep)}${['','；靈品：傷害 +20%','；仙品：傷害 +40%、冷卻 -10%'][r]}`,f:r=>{G.k.beamStep=Math.min(3,G.k.beamStep+1);G.k.beamLv=BEAM_MAP[G.k.beamStep];G.k.beamD*=[1,1.2,1.4][r];G.k.beamCd*=[1,1,.9][r]},max:()=>G.k.beamStep>=3},
-  {k:'thUp',get ic(){return SK.thunder.ic},get n(){return SK.thunder.n+'・進化'},up:1,d:r=>`${evText(SK.thunder,SK.thunder.lv[G.k.thLv])}${['','；靈品：傷害 +15%','；仙品：傷害 +30%'][r]}${r&&['thunder0','thunder2','thunder3'].includes(SK.thunder.id)?`、${SK.thunder.id==='thunder3'?'劍影':SK.thunder.id==='thunder2'?'落雷':'連跳'} +${r}`:''}`,f:r=>{G.k.thLv=Math.min(3,G.k.thLv+1);G.k.thN+=Math.max(1,Math.round(2*evQ()))+r;G.k.thD*=EVm(1.15)*[1,1.15,1.3][r]},max:()=>G.k.thLv>=3},
+  // 技能進化（凡品升一級／仙品升一級＋加成／神品連升兩級；升滿後出「圓滿」卡補齊加成），見 EVO_CARDS
+  ...EVO_CARDS(),
   {k:'ultUp',ic:'絕',n:'大絕・精進',up:1,d:r=>`大絕充能快 ${[20,30,45][r]}%、威力更大`,f:r=>{G.k.ultNeed=Math.max(Math.round(G.k.ultBase*.6),Math.round(G.k.ultNeed*(1-[.2,.3,.45][r])));G.k.ultCd=Math.max(12,G.k.ultCd-[2,3,4][r]);G.k.ultN=Math.min(1.6,G.k.ultN+.2)},max:()=>G.k.ultNeed<=Math.round(G.k.ultBase*.6)&&G.k.ultCd<=12}];
-const RAR=['凡品','靈品','仙品'];
+const RAR=['凡品','仙品','神品'];
 let offer=[];
-// gold = 仙緣頓悟 after an elite or the boss: every card is 靈品 or better
+// 每次頓悟三張卡一定是凡品、仙品、神品各一（神品的技能進化卡＝連升兩級）
 function openCards(gold){if(!G||G.over)return;cancelAim();resetJoy();if($('#cardOv').classList.contains('on')){G.pendingGold=(G.pendingGold||0)+(gold?1:0);return}
   G.paused=true;const pool=CARDS.filter(c=>(!c.when||c.when())&&!(c.max&&c.max()));offer=[];
-  const rar=c=>Math.max(c.minR?c.minR():0,c.evo?2:gold?(Math.random()<.5?2:1):(()=>{const y=Math.random();return y<.08?2:y<.36?1:0})());// 「數值取較好」的卡只出比手上更高的品階
-  const take=c=>{pool.splice(pool.indexOf(c),1);offer.push({c,r:rar(c)})};
+  const take=c=>{pool.splice(pool.indexOf(c),1);offer.push({c,r:0})};
   // the evolution, when it unlocks, is always offered first
   const evo=pool.find(c=>c.evo&&!G.s[c.k]);if(evo)take(evo);
   // keep it varied: while fewer than 3 techniques are known, one card is always a technique not learned yet
   const known=['orbit','bell'].filter(k=>G.s[k]).length,fresh=pool.filter(c=>c.skill&&!c.evo&&!G.s[c.k]);
   if(known<2&&fresh.length)take(fresh[Math.floor(Math.random()*fresh.length)]);
   while(offer.length<3&&pool.length){const w=pool.map(c=>c.skill||c.up?2:1),tot=w.reduce((a,b)=>a+b,0);let x=Math.random()*tot,i=0;while(x>w[i]){x-=w[i];i++}take(pool[i])}
-  $('#cardTitle').textContent=gold?'仙緣頓悟':'頓悟';$('#cardSub').textContent=gold?'斬了強敵，福至心靈':'三選一，只在這一夜有效';
+  {const rs=[0,1,2].sort(()=>Math.random()-.5);offer.forEach((o,i)=>o.r=rs[i]);// 「數值取較好」的卡（護體罩）要比手上的高：跟品階較高的那張換
+    for(const o of offer){const m=o.c.minR?o.c.minR():0;if(o.r<m){const t=offer.find(q=>q!==o&&q.r>=m&&!(q.c.minR&&q.c.minR()>o.r));if(t){const x=t.r;t.r=o.r;o.r=x}else o.r=Math.min(2,m)}}
+    offer.sort((a,b)=>a.r-b.r)}
+  $('#cardTitle').textContent=gold?'仙緣頓悟':'頓悟';$('#cardSub').textContent=(gold?'斬了強敵，福至心靈・':'')+'凡品、仙品、神品三選一，只在這一夜有效';
   const box=$('#cards');box.innerHTML='';
   offer.forEach((o,i)=>{const b=document.createElement('button');b.className='card r'+o.r;b.innerHTML=`<span class="ic">${o.c.ic}</span><b>${o.c.n}<em>${RAR[o.r]}</em></b><span>${o.c.d(o.r)}</span>`;
     b.onclick=()=>pickCard(i);box.appendChild(b)});
@@ -1111,7 +1126,9 @@ function pickChar(c){if(c!==who){saveFace();useChar(c);applyFace({g:1,x:1});appl
 $$('[data-who]').forEach(b=>b.onclick=()=>pickChar(+b.dataset.who));pickChar(who);
 if(save.pal)applyPal(save.pal);
 const curC=()=>(G&&G.C)||CHC[G.ch]||CHC[0];
-function startNight(len,opt={}){BGM.play('night');bannerT=0;$('#banner').classList.remove('on');$('#breakBtn').hidden=true;SFX.resume();tryLandscape();leaveSky();if((opt.ch||0)===11)endlessPick();const skyN=(opt.ch||0)===10&&(opt.nt||0)===2&&!window.__noSky10,mapCh=skyN?13:opt.ch||0;buildMap(mapCh);setUlt(save.ult);resetWorld();cancelAim();G=newNight(len);G.C=skyN?CHC[13]:null;G.sky=!!(CHC[mapCh]&&CHC[mapCh].sky);G.camAuto=false;G.skyCam=0;G.head=0;G.vx=G.vz=0;$('#flyBtn').style.display=opt.ch===11?'':'none';$('#flyBtn').textContent='飛';setSkills(G.tier=skillTier());setBlink();if(save.newBlink)setTimeout(blinkTip,4500);resetJoy();WARM.redo();SHIELD.setTier(skillTier());hsAura.visible=save.realm>=18;G.ch=opt.ch||0;G.nt=opt.nt||0;G.endless=G.ch===11;if(G.ch===12)G.endBoss=['yinshi','xuanbing','jinjia','shenhan','xuehe'][Math.floor(Math.random()*5)];G.replay=G.ch<=10&&[0,1,2].some(n=>save.won[`${G.ch}-${n}`]);// 破過一次再玩：照境界的斬妖目標（煉氣 3300、築基 4500、結丹 6000、元嬰 8000），魔王死了也不會提早天亮
+// 夜長看章節的大境界：煉氣章 3:00、築基章 3:30、結丹章 4:00、元嬰章 4:30（鬥法台另給長度）
+const nightLen=ch=>{const r=(CH[ch]||CH[0]).rec||0;return NIGHT+30*(r>=15?3:r>=12?2:r>=9?1:0)};
+function startNight(len,opt={}){if(len===NIGHT&&(opt.ch||0)<=10)len=nightLen(opt.ch||0);BGM.play('night');bannerT=0;$('#banner').classList.remove('on');$('#breakBtn').hidden=true;SFX.resume();tryLandscape();leaveSky();if((opt.ch||0)===11)endlessPick();const skyN=(opt.ch||0)===10&&(opt.nt||0)===2&&!window.__noSky10,mapCh=skyN?13:opt.ch||0;buildMap(mapCh);setUlt(save.ult);resetWorld();cancelAim();G=newNight(len);G.C=skyN?CHC[13]:null;G.sky=!!(CHC[mapCh]&&CHC[mapCh].sky);G.camAuto=false;G.skyCam=0;G.head=0;G.vx=G.vz=0;$('#flyBtn').style.display=opt.ch===11?'':'none';$('#flyBtn').textContent='飛';setSkills(G.tier=skillTier());setBlink();if(save.newBlink)setTimeout(blinkTip,4500);resetJoy();WARM.redo();SHIELD.setTier(skillTier());hsAura.visible=save.realm>=18;G.ch=opt.ch||0;G.nt=opt.nt||0;G.endless=G.ch===11;if(G.ch===12)G.endBoss=['yinshi','xuanbing','jinjia','shenhan','xuehe'][Math.floor(Math.random()*5)];G.replay=G.ch<=10&&[0,1,2].some(n=>save.won[`${G.ch}-${n}`]);// 破過一次再玩：照境界的斬妖目標（煉氣 3300、築基 4500、結丹 6000、元嬰 8000），魔王死了也不會提早天亮
   G.k.ultBase=G.k.ultNeed;G.clearT=[3300,3300,3300,3300,4500,4500,6000,6000,6000,8000,8000][G.ch]||0;G.clearK=G.replay?Math.round(G.clearT*[1,1.3,1.15][G.nt]/50)*50:G.ch<=8?Math.round([2200,3100,2650][G.nt]*(G.sky?.88:1)*1.5/50)*50:0;G.showClear=G.clearK&&(G.replay||save.realm>chRec(G.ch));$('#bossMark').hidden=G.endless;G.mod=[{spawn:1,boss:1,elite2:0},{spawn:1.4,boss:1,elite2:1},{spawn:1.2,boss:1.5,elite2:0}][G.nt];G.paused=false;$('#pillBtn').hidden=!(save.inv.pill.hui>0);$('#pillN').textContent=save.inv.pill.hui;$('#skills').hidden=$('#joy').hidden=false;drawJoy();$('#startOv').classList.remove('on');$('#endOv').classList.remove('on');$('#hud').hidden=false;
   $('#bossMark').style.left=(BOSS_AT*100)+'%';if(G.ch!==12)spawnRing('ghost',8,7.5);// an opening ring so the first monsters are seen walking in
   renderBuffs();tipShown=false;say('左手走路，右手放技能！按住技能拖曳可以瞄準',6);
