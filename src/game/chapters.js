@@ -239,12 +239,27 @@ Object.assign(CUTS,{
 // 三昧真火: a fan of fire that rolls outward and keeps burning what it touched
 function fireCast(A){const S=SK.ult,ang=S.ang,R=S.range(),a0=Math.atan2(A.dir[0],A.dir[1]),hx=HERO.pos.x,hz=HERO.pos.z,dmg=swordDmg()*50;
   G.slow=.4;shake=Math.max(shake,.4);SFX.play('ult');buzz(50);const u=$('#ultFx');u.classList.remove('on');void u.offsetWidth;u.classList.add('on');banner('三昧真火','大絕',true);
-  const m=new THREE.Mesh(fanGeo(ang),new THREE.MeshBasicMaterial({color:0xff6a1a,transparent:true,opacity:0,blending:THREE.AdditiveBlending,depthWrite:false}));m.position.set(hx,.06,hz);m.rotation.y=a0;scene.add(m);let hit=false;
-  act(2.2,(t)=>{const k=Math.min(1,t/.5);m.scale.setScalar(R*k);m.material.opacity=t<1.6?.55+.15*Math.sin(t*20):Math.max(0,.6*(1-(t-1.6)/.6));
-      if(Math.random()<.7){const a=a0+(Math.random()-.5)*ang,r=Math.random()*R*k;fx({p:tmp.set(hx+Math.sin(a)*r,.4,hz+Math.cos(a)*r),col:Math.random()<.5?0xff8a2a:0xffd060,add:true,life:.6,s0:1.2,s1:.3,op:1,vy:2})}
+  const FU={time:{value:0},prog:{value:0},fade:{value:0}};
+  const m=new THREE.Mesh(BRUSH.sectorGeo(ang),new THREE.ShaderMaterial({uniforms:FU,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,side:THREE.DoubleSide,
+    vertexShader:'varying vec2 vUv;void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}',
+    fragmentShader:`uniform float time,prog,fade;varying vec2 vUv;
+      float h(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
+      float nz(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(h(i),h(i+vec2(1,0)),f.x),mix(h(i+vec2(0,1)),h(i+vec2(1,1)),f.x),f.y);}
+      void main(){float u=vUv.x,v=vUv.y;float n1=nz(vec2(u*13.,v*3.-time*2.4)),n2=nz(vec2(u*31.,v*7.-time*5.));
+        float edge=prog*(.7+.3*n1);float body=smoothstep(edge,edge-.3,v);
+        float side=smoothstep(0.,.1+.1*n1,u)*smoothstep(1.,.9-.1*n1,u);
+        float heat=clamp(1.-v/max(edge,.05),0.,1.);float I=body*side*(.35+.9*n1*n2+.5*heat);
+        float rim=smoothstep(.06,0.,abs(v-edge*.94))*side*prog*.9*(.5+n2);
+        vec3 col=mix(vec3(.85,.1,.02),vec3(1.,.5,.08),smoothstep(0.,.55,heat));col=mix(col,vec3(1.,.93,.6),smoothstep(.6,1.,heat));
+        float a=clamp((I+rim)*fade,0.,1.);gl_FragColor=vec4(col*(I+rim*1.2)*fade,a);}`}));
+  m.renderOrder=3;m.position.set(hx,.06,hz);m.rotation.y=a0;m.scale.setScalar(R);scene.add(m);let hit=false;
+  // 腳下一圈火焰符印（三昧＝三簇火）
+  const ring=new THREE.Mesh(new THREE.RingGeometry(.55,.68,40).rotateX(-Math.PI/2),new THREE.MeshBasicMaterial({color:0xffb050,transparent:true,opacity:0,blending:THREE.AdditiveBlending,depthWrite:false}));ring.position.set(hx,.07,hz);scene.add(ring);
+  act(2.2,(t)=>{const k=Math.min(1,t/.5);FU.time.value=t;FU.prog.value=1-Math.pow(1-k,3);FU.fade.value=t<1.6?1:Math.max(0,1-(t-1.6)/.6);ring.material.opacity=.7*FU.fade.value;ring.rotation.y=t*2;ring.scale.setScalar(1+.15*Math.sin(t*9));
+      for(let q=0;q<2;q++)if(Math.random()<.8){const a=a0+(Math.random()-.5)*ang*.95,r=(.25+Math.random()*.75)*R*k;fx({p:tmp.set(hx+Math.sin(a)*r,.3,hz+Math.cos(a)*r),col:Math.random()<.4?0xff5a1a:Math.random()<.5?0xff9a2a:0xffe080,add:true,life:.5+Math.random()*.4,s0:.9+Math.random()*.9,s1:.2,op:.9,vy:2.5+Math.random()*2})}
       if(!hit&&t>=.3){hit=true;for(const e of enemies){if(e.dead)continue;const dx=e.x-hx,dz=e.z-hz,d=Math.hypot(dx,dz);if(d<R+e.r&&Math.abs(angDiff(Math.atan2(dx,dz),a0))<=ang/2+.1){e.burn=3.5;e.burnD=dmg*.15;hurtEnemy(e,dmg,dx/(d||1)*1.2,dz/(d||1)*1.2,false,4)}}
         if(boss.alive){const dx=boss.x-hx,dz=boss.z-hz,d=Math.hypot(dx,dz);if(d<R+boss.r&&Math.abs(angDiff(Math.atan2(dx,dz),a0))<=ang/2+.3){const room=boss.max*.22;boss.allow+=Math.min(room,dmg*3);hurtBoss(Math.min(room,dmg*3),true)}}}},
-    ()=>{scene.remove(m);m.material.dispose()})}
+    ()=>{scene.remove(m);m.material.dispose();scene.remove(ring);ring.material.dispose();ring.geometry.dispose()})}
 // 九天神雷: a huge circle of purple-gold thunder, everything inside stunned (the boss too, briefly)
 const thForm=(()=>{const t=ctex(512,512,x=>{x.translate(256,256);x.strokeStyle=x.fillStyle='#d8b0ff';x.lineWidth=7;x.beginPath();x.arc(0,0,244,0,7);x.stroke();x.lineWidth=3;x.beginPath();x.arc(0,0,196,0,7);x.stroke();
     for(let i=0;i<8;i++){x.save();x.rotate(i/8*Math.PI*2);for(let j=0;j<3;j++){const bro=(i>>j)&1;if(bro){x.fillRect(-16,-168+j*16,12,8);x.fillRect(4,-168+j*16,12,8)}else x.fillRect(-16,-168+j*16,32,8)}x.restore()}
