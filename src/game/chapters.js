@@ -49,7 +49,42 @@ const MAPS={
       part(new THREE.BoxGeometry(.4,.8,.4),stone,g,{p:[0,.4,0]});part(new THREE.BoxGeometry(.6,.4,.6),stone,g,{p:[0,1,0]});part(new THREE.ConeGeometry(.5,.35,4),stone,g,{p:[0,1.38,0],r:[0,Math.PI/4,0]});HOUSES.push({x:g.position.x,z:g.position.z,r:.4})}
     for(let i=0;i<8;i++){const a=rnd()*Math.PI*2,r=20+rnd()*8;bareTree(Math.sin(a)*r,Math.cos(a)*r,1.1+rnd()*.5)}}};
 let curMap=-1;
-function buildMap(ch){const c=CHC[ch]||CHC[0],mk=c.map??ch,key=mk+'/'+ch;if(curMap===key)return;clearMap();(MAPS[mk]||MAPS[0])();curMap=key;
+/* ---------- 陸地無邊界：地標留在原處，散景（房子、樹、竹、稻草人…）跟著主角循環；地面花紋跟著延伸 ----------
+   每張圖把 mapG 的物件分類：lm＝地標不動；both＝兩個方向循環；x／z＝只沿那一軸循環（溪邊、街道）；fx／fz＝整條跟著主角（河面、路面）。
+   第九、十章的鬥法場、鬥法台（第十二章）照舊有邊界（arenaOn）。 */
+const WRAP={0:{W:48,cls:o=>o.userData.fill?'both':Math.hypot(o.position.x,o.position.z)<12?'lm':'both'},1:{W:44,cls:()=>'both'},
+  2:{W:44,Wz:40,cls:o=>Math.abs(o.position.x)<1.3?'z':'both'},3:{W:50,cls:o=>o.userData.fill?'both':Math.hypot(o.position.x,o.position.z)<16.5?'lm':'both'},
+  4:{W:50,Wz:54,cls:o=>o.userData.fill?'both':o.userData.street?'fz':Math.abs(o.position.x)<9?'z':'both'},5:{W:46,Wx:44,cls:o=>o.userData.fill?'both':o.userData.river?'fx':'x'}};
+let wrapSet=null;
+// 散景補充：古寺、鬼市、黃泉渡口原本散景少，走遠了會空空的，補一些會循環的小擺設（userData.fill＝兩個方向循環）
+function fillScatter(mk){const R=()=>(rnd()-.5)*48,ok=(x,z)=>Math.hypot(x,z)>14,add=(g,x,z,r)=>{g.position.set(x,0,z);g.userData.fill=1;mapG.add(g);if(r)HOUSES.push({x,z,r})};
+  const stone=toon(0x3a3d38,{roughness:1}),pine=toon(0x1e3424),wood=toon(0x2a1c14),red=toon(0xc8221c,{emissive:0x5a0806});
+  const pineT=()=>{const g=new THREE.Group();part(new THREE.CylinderGeometry(.12,.16,1.4,6),wood,g,{p:[0,.7,0]});for(let i=0;i<3;i++)part(new THREE.ConeGeometry(1.1-i*.28,1.3,7),pine,g,{p:[0,1.5+i*.75,0]});return g};
+  const sLamp=()=>{const g=new THREE.Group();part(new THREE.BoxGeometry(.4,.8,.4),stone,g,{p:[0,.4,0]});part(new THREE.BoxGeometry(.6,.4,.6),stone,g,{p:[0,1,0]});part(new THREE.ConeGeometry(.5,.35,4),stone,g,{p:[0,1.38,0],r:[0,Math.PI/4,0]});return g};
+  const pole=(col)=>{const g=new THREE.Group();part(new THREE.CylinderGeometry(.06,.08,2.6,6),wood,g,{p:[0,1.3,0]});const l=new THREE.Mesh(new THREE.SphereGeometry(.22,10,8),new THREE.MeshBasicMaterial({color:col}));l.position.set(0,2.5,0);l.scale.y=1.2;g.add(l);
+    const s=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex,color:col,opacity:.5,blending:THREE.AdditiveBlending,depthWrite:false}));s.scale.set(2,2,1);s.position.copy(l.position);g.add(s);return g};
+  const lily=()=>{const g=new THREE.Group();for(let k=0;k<5;k++){const a=k/5*6.28;part(new THREE.ConeGeometry(.04,.5,4),red,g,{p:[Math.sin(a)*.12,.25,Math.cos(a)*.12],r:[Math.cos(a)*.5,0,-Math.sin(a)*.5],ol:false})}return g};
+  const n=(cnt,mk2)=>{for(let i=0;i<cnt;i++){let x=R(),z=R(),t=0;while(!ok(x,z)&&t++<9){x=R();z=R()}mk2(x,z)}};
+  if(mk===3){n(14,(x,z)=>add(pineT(),x,z,.5));n(8,(x,z)=>add(sLamp(),x,z,.4))}
+  if(mk===4){n(10,(x,z)=>add(pole(0xff5a2a),x,z,.25));n(6,(x,z)=>{const g=new THREE.Group();part(new THREE.BoxGeometry(2.2,.8,.8),wood,g,{p:[0,.4,0]});part(new THREE.BoxGeometry(2.6,.1,1.4),toon(0x5a1c18),g,{p:[0,1.9,0],r:[.2,0,0]});[-1,1].forEach(a=>part(new THREE.CylinderGeometry(.05,.05,1.9,6),wood,g,{p:[a*1.1,.95,0]}));g.rotation.y=rnd()*6;add(g,x,z,1.1)})}
+  if(mk===5){n(36,(x,z)=>{if(z>-15&&z<-3)z+=14;add(lily(),x,z)});n(6,(x,z)=>add(pole(0x6affc8),x,z,.25))}}
+function setupWrap(mk){wrapSet=null;const w=WRAP[mk];if(!w)return;const items=[];
+  for(const o of mapG.children){const mode=w.cls(o);if(mode==='lm')continue;const it={o,mode,hs:[],p0:o.position.clone()};items.push(it)}
+  for(const h of HOUSES){let best=null,bd=2.5;for(const it of items){const d=Math.hypot(it.o.position.x-h.x,it.o.position.z-h.z);if(d<bd){bd=d;best=it}}if(best)best.hs.push(h)}
+  wrapSet={items,W:w.W,Wx:w.Wx||w.W,Wz:w.Wz||w.W}}
+// 回洞府／開新的一夜時，散景與碰撞圈放回原位
+function resetWrap(){if(!wrapSet)return;for(const it of wrapSet.items){const dx=it.p0.x-it.o.position.x,dz=it.p0.z-it.o.position.z;it.o.position.copy(it.p0);for(const h of it.hs){h.x+=dx;h.z+=dz}}}
+const arenaOn=()=>!!G&&!G.sky&&(G.ch===9||G.ch===10||G.ch===12);
+const groundSn=160/22;
+function stepGround(){if(!wrapSet||!G||G.sky||arenaOn())return;const hx=HERO.pos.x,hz=HERO.pos.z;
+  ground.position.set(Math.round(hx/groundSn)*groundSn,0,Math.round(hz/groundSn)*groundSn);
+  fogs.forEach((m,i)=>{m.position.x=hx+fogP0[i].x;m.position.z=hz+fogP0[i].z});moon.position.set(hx+moonP0.x,moonP0.y,hz+moonP0.z);
+  for(const it of wrapSet.items){const p=it.o.position;let dx=0,dz=0;
+    if(it.mode==='fx'){p.x=hx;continue}if(it.mode==='fz'){p.z=hz;continue}
+    if(it.mode!=='z'){const W=wrapSet.Wx,h=W/2;if(p.x<hx-h)dx=W;else if(p.x>hx+h)dx=-W}
+    if(it.mode!=='x'){const W=wrapSet.Wz,h=W/2;if(p.z<hz-h)dz=W;else if(p.z>hz+h)dz=-W}
+    if(dx||dz){p.x+=dx;p.z+=dz;for(const hh of it.hs){hh.x+=dx;hh.z+=dz}}}}
+function buildMap(ch){const c=CHC[ch]||CHC[0],mk=c.map??ch,key=mk+'/'+ch;if(curMap===key)return;clearMap();(MAPS[mk]||MAPS[0])();curMap=key;fillScatter(mk);setupWrap(mk);
   ground.material.color.set(c.ground||0xffffff);NIGHT_FOG.copy(LC(c.fog||FOGHEX));FOG.copy(NIGHT_FOG);sky.material.uniforms.bot.value.copy(NIGHT_FOG);scene.fog.color.copy(NIGHT_FOG);scene.background.copy(NIGHT_FOG)}
 /* ---------- 新妖怪 ---------- */
 const scareGeo=(()=>{const S='#a8894a',W='#6a4a2e',C='#5a4a3a',K='#141210',R='#8a2a20';

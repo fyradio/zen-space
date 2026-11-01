@@ -90,7 +90,7 @@ const skillTier=()=>Math.min(SKILL_SETS.length-1,save.realm>=15?3:save.realm>=12
 // ---------- 閃現／風雷翼 ----------
 function setBlink(){const b=skBtn.blink,on=save.realm>=12,wing=save.realm>=15;b.hidden=!on;SK.blink.n=wing?'風雷翼':'閃現';SK.blink.ic=wing?'翼':'閃';b.querySelector('.ic').textContent=SK.blink.ic;b.querySelector('em').textContent=SK.blink.n;G.blink2=false}
 function blinkSpot(){const hx=HERO.pos.x,hz=HERO.pos.z;let best=null,bs=1e9;
-  for(let i=0;i<20;i++){const a=i/20*6.28,r=i%2?4:3;let x=hx+Math.sin(a)*r,z=hz+Math.cos(a)*r;if(!G.sky&&Math.hypot(x,z)>ARENA-1)continue;let s=0;
+  for(let i=0;i<20;i++){const a=i/20*6.28,r=i%2?4:3;let x=hx+Math.sin(a)*r,z=hz+Math.cos(a)*r;if(arenaOn()&&Math.hypot(x,z)>ARENA-1)continue;let s=0;
     for(const e of enemies){if(e.dead)continue;const d=Math.hypot(e.x-x,e.z-z);if(d<3.5)s+=(3.5-d)}
     for(const w of warnPool)if(w.on&&Math.hypot(w.x-x,w.z-z)<w.r+.8)s+=40;for(const h of HZ)if(h.k!=='wave'&&Math.hypot(h.x-x,h.z-z)<(h.r||h.len||h.R||3))s+=20;
     if(boss.alive&&Math.hypot(boss.x-x,boss.z-z)<boss.r+2)s+=30;s+=Math.random()*.3;if(s<bs){bs=s;best=[x,z]}}

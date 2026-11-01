@@ -3,15 +3,15 @@
 Object.assign(MAPS,{
   4:()=>{pave.visible=false;// 鬼市: two rows of stalls with red lanterns along a street
     const wood=toon(0x2a1c14),cloth=[toon(0x7a1c18),toon(0x1c3a5a),toon(0x5a4a1c),toon(0x3a1c5a)],lan=new THREE.MeshBasicMaterial({color:0xff5a2a}),road=toon(0x1c1a18,{roughness:1});
-    const st=new THREE.Mesh(new THREE.BoxGeometry(7,.04,60),road);st.position.y=.02;mapG.add(st);
+    const st=new THREE.Mesh(new THREE.BoxGeometry(7,.04,120),road);st.position.y=.02;st.userData.street=1;mapG.add(st);
     for(let side=-1;side<=1;side+=2)for(let i=0;i<9;i++){const z=-24+i*6+rnd()*1.5,x=side*(6.5+rnd()*1.2),g=new THREE.Group();g.position.set(x,0,z);g.rotation.y=side>0?-Math.PI/2:Math.PI/2;mapG.add(g);
       [-1,1].forEach(a=>part(new THREE.CylinderGeometry(.06,.06,2.1,6),wood,g,{p:[a*1.2,1.05,0]}));part(new THREE.BoxGeometry(2.8,.1,1.6),cloth[i%4],g,{p:[0,2.1,0],r:[.25,0,0]});part(new THREE.BoxGeometry(2.4,.8,.8),wood,g,{p:[0,.4,-.2]});
       const l=new THREE.Mesh(new THREE.SphereGeometry(.2,10,8),lan);l.position.set(1.0,1.8,.6);l.scale.y=1.25;g.add(l);const s=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex,color:0xff7a3a,opacity:.55,blending:THREE.AdditiveBlending,depthWrite:false}));s.scale.set(2,2,1);s.position.copy(l.position);g.add(s);
       HOUSES.push({x,z,r:1.3})}
     for(let i=0;i<6;i++){const a=rnd()*Math.PI*2,r=19+rnd()*8;bareTree(Math.sin(a)*r,Math.cos(a)*r,1+rnd()*.5)}},
   5:()=>{pave.visible=false;// 黃泉渡口: a black river with a ferry, red spider lilies on the bank
-    const water=new THREE.Mesh(new THREE.PlaneGeometry(70,9),new THREE.MeshBasicMaterial({color:0x0a1626,transparent:true,opacity:.92}));water.rotation.x=-Math.PI/2;water.position.set(0,.03,-9);mapG.add(water);
-    const rip=new THREE.Mesh(new THREE.PlaneGeometry(70,9),new THREE.MeshBasicMaterial({map:glowTex,color:0x2a4a7a,transparent:true,opacity:.25,blending:THREE.AdditiveBlending,depthWrite:false}));rip.rotation.x=-Math.PI/2;rip.position.set(0,.05,-9);mapG.add(rip);
+    const water=new THREE.Mesh(new THREE.PlaneGeometry(160,9),new THREE.MeshBasicMaterial({color:0x0a1626,transparent:true,opacity:.92}));water.rotation.x=-Math.PI/2;water.position.set(0,.03,-9);water.userData.river=1;mapG.add(water);
+    const rip=new THREE.Mesh(new THREE.PlaneGeometry(160,9),new THREE.MeshBasicMaterial({map:glowTex,color:0x2a4a7a,transparent:true,opacity:.25,blending:THREE.AdditiveBlending,depthWrite:false}));rip.rotation.x=-Math.PI/2;rip.position.set(0,.05,-9);rip.userData.river=1;mapG.add(rip);
     const wood=toon(0x2a1c14),red=toon(0xc8221c,{emissive:0x5a0806});
     const boat=new THREE.Group();boat.position.set(7,0,-9);boat.rotation.y=.3;mapG.add(boat);part(new THREE.BoxGeometry(5,.5,1.6),wood,boat,{p:[0,.25,0]});part(new THREE.BoxGeometry(1.4,1.2,1.2),wood,boat,{p:[-.8,1,0]});part(new THREE.ConeGeometry(1.1,.6,4),toon(0x15181c),boat,{p:[-.8,1.9,0],r:[0,Math.PI/4,0]});HOUSES.push({x:7,z:-9,r:1.8});
     for(let i=0;i<5;i++){const x=-18+i*8+rnd()*3;part(new THREE.CylinderGeometry(.07,.09,3,6),wood,mapG,{p:[x,1.5,-4.6]});const l=new THREE.Mesh(new THREE.SphereGeometry(.25,10,8),new THREE.MeshBasicMaterial({color:0x6affc8}));l.position.set(x,3,-4.6);mapG.add(l);

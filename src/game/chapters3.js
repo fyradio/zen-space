@@ -16,19 +16,36 @@ function skyMap(o){pave.visible=false;const puffs=[];ground.material.map=cloudTe
   for(let i=0;i<14;i++){const g=new THREE.Group(),h=10+rnd()*22,w=3+rnd()*5;part(new THREE.ConeGeometry(w,h,7),R,g,{p:[0,h/2-6,0]});part(new THREE.ConeGeometry(w*.34,h*.34,7),SN,g,{p:[0,h-6-h*.17+.05,0]});
     if(rnd()<.5)part(new THREE.ConeGeometry(w*.6,h*.6,6),R,g,{p:[w*.9,h*.3-6,w*.3]});const a=rnd()*6.28,r=30+rnd()*28;g.position.set(Math.sin(a)*r,0,Math.cos(a)*r);g.userData.peak=1;mapG.add(g);puffs.push(g)}
   mapG.userData.puffs=puffs;mapG.userData.stormy=!!o.stormy}
-MAPS[6]=()=>skyMap({key:6,base:'#b8c8d8',hi:'rgba(255,255,255,A)',deep:'rgba(140,160,190,A)',puff:0xffffff,rock:0x5a6a7a,snow:0xf0f4f8});
-MAPS[7]=()=>skyMap({key:7,base:'#3a3450',hi:'rgba(120,100,160,A)',deep:'rgba(20,14,36,A)',puff:0x6a5a8a,rock:0x2a2436,snow:0x8a7ab0,stormy:1});
-MAPS[8]=()=>{skyMap({key:8,base:'#2a3a6a',hi:'rgba(120,160,255,A)',deep:'rgba(10,16,40,A)',spark:'#dfe8ff',puff:0x8ab0ff,rock:0x1e2848,snow:0xa8c0ff});
+// 第六章・星潮海：夜海上御劍——深藍黑的海、慢慢流動的浪紋、月光倒影、黑色礁島與薄霧
+function seaTex(){if(cloudTexCache.sea)return cloudTexCache.sea;const c=document.createElement('canvas');c.width=c.height=512;const x=c.getContext('2d');x.fillStyle='#0a1422';x.fillRect(0,0,512,512);
+  for(let i=0;i<60;i++){const cx=Math.random()*512,cy=Math.random()*512,r=40+Math.random()*90;for(const ox of [-512,0,512])for(const oy of [-512,0,512]){const g=x.createRadialGradient(cx+ox,cy+oy,0,cx+ox,cy+oy,r);g.addColorStop(0,'rgba(18,40,66,.5)');g.addColorStop(1,'rgba(18,40,66,0)');x.fillStyle=g;x.fillRect(cx+ox-r,cy+oy-r,r*2,r*2)}}
+  x.lineCap='round';for(let i=0;i<260;i++){const px=Math.random()*512,py=Math.random()*512,l=10+Math.random()*34,a=.08+Math.random()*.22;x.strokeStyle=`rgba(120,170,210,${a})`;x.lineWidth=1+Math.random()*1.6;x.beginPath();x.moveTo(px,py);x.quadraticCurveTo(px+l/2,py-3,px+l,py);x.stroke()}
+  for(let i=0;i<120;i++){x.fillStyle=`rgba(200,225,255,${.2+Math.random()*.5})`;x.fillRect(Math.random()*512,Math.random()*512,1.5,1.5)}
+  const t=new THREE.CanvasTexture(c);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(6,6);return cloudTexCache.sea=t}
+MAPS[6]=()=>{pave.visible=false;ground.material.map=seaTex();ground.material.needsUpdate=true;const puffs=[];
+  const mist=new THREE.MeshLambertMaterial({color:0x2a3a52,transparent:true,opacity:.28,depthWrite:false}),g0=new THREE.IcosahedronGeometry(1,1);
+  for(let i=0;i<18;i++){const p=new THREE.Mesh(g0,mist);const s=1+rnd()*2;p.scale.set(s*2.4,s*.25,s*1.4);p.position.set((rnd()-.5)*70,.4+rnd()*.5,(rnd()-.5)*70);mapG.add(p);puffs.push(p)}
+  const R=toon(0x0e1218,{roughness:1}),R2=toon(0x1a222c,{roughness:1}),foam=new THREE.MeshBasicMaterial({color:LC(0x5a7a9a),transparent:true,opacity:.35,depthWrite:false});
+  for(let i=0;i<16;i++){const g=new THREE.Group(),h=2+rnd()*9,w=2+rnd()*5;part(new THREE.ConeGeometry(w,h,6),i%2?R:R2,g,{p:[0,h/2-.6,0],r:[0,rnd()*3,(rnd()-.5)*.2]});
+    if(rnd()<.6)part(new THREE.DodecahedronGeometry(w*.5,0),R,g,{p:[w*.8,.2,w*.2]});part(new THREE.RingGeometry(w*.95,w*1.25,20).rotateX(-Math.PI/2),foam,g,{p:[0,.05,0],ol:false});
+    const a=rnd()*6.28,r=28+rnd()*30;g.position.set(Math.sin(a)*r,0,Math.cos(a)*r);g.userData.peak=1;mapG.add(g);puffs.push(g)}
+  // 月光倒影：一條碎光帶，跟著月亮的方向
+  const glint=new THREE.Mesh(new THREE.PlaneGeometry(6,60).rotateX(-Math.PI/2),new THREE.MeshBasicMaterial({map:glowTex,color:LC(0x8ab0d0),transparent:true,opacity:.35,blending:THREE.AdditiveBlending,depthWrite:false}));glint.position.y=.06;mapG.add(glint);mapG.userData.glint=glint;
+  mapG.userData.puffs=puffs};
+
+MAPS[7]=()=>skyMap({key:7,base:'#221e30',hi:'rgba(84,70,116,A)',deep:'rgba(12,8,22,A)',puff:0x3a3256,rock:0x1a1622,snow:0x56487a,stormy:1});
+MAPS[8]=()=>{skyMap({key:8,base:'#16203e',hi:'rgba(70,96,160,A)',deep:'rgba(6,10,26,A)',spark:'#b8c8ee',puff:0x3a5080,rock:0x121a32,snow:0x6a80b0});
   const st=new THREE.Points(new THREE.BufferGeometry().setAttribute('position',new THREE.Float32BufferAttribute(Array.from({length:600},(_,i)=>i%3===1?3+rnd()*30:(rnd()-.5)*140),3)),new THREE.PointsMaterial({color:0xcfe0ff,size:.3,sizeAttenuation:true,fog:false}));mapG.add(st);mapG.userData.stars=st};
 const fogP0=fogs.map(m=>m.position.clone()),moonP0=moon.position.clone();
-function stepSky(dt){const hx=HERO.pos.x,hz=HERO.pos.z,P=mapG.userData.puffs||[],T=ground.material.map,sn=160/T.repeat.x;
+function stepSky(dt){fogs.forEach(m=>{m.material.opacity=.06});// 天上：地面薄霧壓淡（不然整片發白）
+const hx=HERO.pos.x,hz=HERO.pos.z,P=mapG.userData.puffs||[],T=ground.material.map,sn=160/T.repeat.x;
   ground.position.set(Math.round(hx/sn)*sn,0,Math.round(hz/sn)*sn);T.offset.x+=dt*.006;T.offset.y+=dt*.002;
   for(const p of P){const W=p.userData.peak?160:70,h=W/2;if(p.position.z<hz-h)p.position.z+=W;else if(p.position.z>hz+h)p.position.z-=W;if(p.position.x<hx-h)p.position.x+=W;else if(p.position.x>hx+h)p.position.x-=W;
     if(p.userData.peak){const d=Math.hypot(p.position.x-hx,p.position.z-hz);if(d<26){const k=26/(d||1);p.position.x=hx+(p.position.x-hx)*k;p.position.z=hz+(p.position.z-hz)*k}}}
-  if(mapG.userData.stars)mapG.userData.stars.position.set(hx,0,hz);
+  if(mapG.userData.stars)mapG.userData.stars.position.set(hx,0,hz);if(mapG.userData.glint){const gl=mapG.userData.glint,ma=Math.atan2(moonP0.x,moonP0.z);gl.position.set(hx+Math.sin(ma)*30,.06,hz+Math.cos(ma)*30);gl.rotation.y=ma;gl.material.opacity=.28+.08*Math.sin(performance.now()/700)}
   fogs.forEach((m,i)=>{m.position.x=hx+fogP0[i].x;m.position.z=hz+fogP0[i].z});moon.position.set(hx+moonP0.x,moonP0.y,hz+moonP0.z);
   if(mapG.userData.stormy&&!simming&&Math.random()<dt*.6){const a=Math.random()*6.28,rr=14+Math.random()*30,x=hx+Math.sin(a)*rr,z=hz+Math.cos(a)*rr;boltAt(x,z,0,0,0xc8b8ff,.12,16);hemi.intensity=1.1;act(.12,null,()=>{hemi.intensity=.55})}}
-function leaveSky(){root.rotation.z=0;ground.position.set(0,0,0);if(ground.material.map!==groundTex){ground.material.map=groundTex;ground.material.needsUpdate=true}fogs.forEach((m,i)=>m.position.copy(fogP0[i]));moon.position.copy(moonP0);root.position.y=0}
+function leaveSky(){root.rotation.z=0;resetWrap();fogs.forEach(m=>{m.material.opacity=.2});ground.position.set(0,0,0);if(ground.material.map!==groundTex){ground.material.map=groundTex;ground.material.needsUpdate=true}fogs.forEach((m,i)=>m.position.copy(fogP0[i]));moon.position.copy(moonP0);root.position.y=0}
 // 自動運鏡：每 8 秒換一個角度；有預警或魔王出招時拉高看清楚
 const SKYSHOTS=[{n:'側面',yaw:Math.PI/2,P:.26,D:7.2},{n:'追尾',yaw:Math.PI,P:.34,D:6.8},{n:'斜前',yaw:Math.PI*.22,P:.4,D:7.6},{n:'高空',yaw:null,P:.9,D:12},{n:'另側',yaw:-Math.PI/2,P:.3,D:7.4}];
 function skyShot(dt){const g=G;g.shotT=(g.shotT||0)+dt;if(g.shotT>8){g.shotT=0;g.shot=((g.shot||0)+1)%SKYSHOTS.length}
@@ -38,7 +55,7 @@ const SKYCAMS=[{n:'追尾',yaw:Math.PI,P:.4,D:7.2},{n:'側面',yaw:Math.PI/2,P:.
 function skyFixed(){const S=SKYCAMS[G.skyCam||0];return {P:S.P,D:S.D,yaw:root.rotation.y+S.yaw}}
 function cycleCam(){if(G&&G.sky){if(G.camAuto){G.camAuto=false;G.skyCam=0}else if(G.skyCam===SKYCAMS.length-1)G.camAuto=true;else G.skyCam++;if(!G.over)banner(G.camAuto?'自動運鏡':SKYCAMS[G.skyCam].n,'視角')}else setCam(camIdx+1)}
 // 御劍操控：一直往前飛；搖桿的方向＝相對於目前航向要轉去的方向（往左推就一直左轉，往下推就迴轉）
-function skySteer(g,dt,inp,moving){let want=g.head;if(moving)want=g.auto?Math.atan2(inp.x,inp.y):g.head+Math.atan2(inp.x,-inp.y);
+function skySteer(g,dt,inp,moving){let want=g.head;if(moving)want=g.auto?Math.atan2(inp.x,inp.y):g.head-Math.atan2(inp.x,-inp.y);/* 鏡頭在背後時螢幕右邊＝航向減少的方向 */
   const prev=g.head;g.head=angLerp(g.head,want,1-Math.exp(-dt*2.2));const turn=(g.head-prev+Math.PI*3)%(Math.PI*2)-Math.PI;
   const sp=g.s.move*(.85+.35*(moving?inp.l:0))*(g.slowT>0?.5:1)*(g.rootT>0?.35:1)*(g.medit>0?.3:1);g.vx=Math.sin(g.head)*sp;g.vz=Math.cos(g.head)*sp;
   root.position.x+=g.vx*dt;root.position.z+=g.vz*dt;root.rotation.y=g.head;root.rotation.z=angLerp(root.rotation.z,Math.max(-.35,Math.min(.35,dt>0?-turn/dt*.12:0)),1-Math.exp(-dt*5));
@@ -56,6 +73,14 @@ const tmqGeo=merged([{g:B0,c:'#2a2a3a',p:[0,.6,0],s:[.3,.3,.7]},{g:B0,c:'#2a2a3a
 function addFly(k,def){def.fly=1;addMob(k,def)}
 addFly('bird',{n:'飛天妖鳥',geo:birdGeo,cap:90,hp:24,spd:3,r:.3,dmg:8,soul:1,sc:.75,glow:.35,mat:{side:THREE.DoubleSide},
   ai:(e,dt,d,ux,uz)=>{e.y=1.1+Math.sin(e.ph*3)*.3;const w=Math.sin(e.ph*2.4)*.7,c=Math.cos(w),s=Math.sin(w);return {v:e.t.spd*(d<4?1.5:1),x:ux*c-uz*s,z:ux*s+uz*c}}});
+// 星潮海的海上飛妖
+const seahawkGeo=merged(wingBody('#2a3442','#41546a','#d8a83a',1.25));
+const flyfishGeo=merged([{g:S0,c:'#5a7a9a',p:[0,.7,0],s:[.14,.13,.42]},{g:S0,c:'#c8dce8',p:[0,.64,.05],s:[.1,.06,.34]},{g:cone(.13,.005,.3,4),c:'#3a5a7a',p:[0,.7,-.45],r:[-Math.PI/2,0,0],s:[1,.3,1]},
+  {g:B0,c:'#7ab0d8',p:[-.3,.74,.08],s:[.5,.02,.22],r:[0,.3,.35]},{g:B0,c:'#7ab0d8',p:[.3,.74,.08],s:[.5,.02,.22],r:[0,-.3,-.35]},{g:S0,c:'#ffe060',p:[-.07,.74,.3],s:[.03,.03,.02]},{g:S0,c:'#ffe060',p:[.07,.74,.3],s:[.03,.03,.02]}]);
+addFly('seahawk',{n:'海鷹妖',geo:seahawkGeo,cap:90,hp:26,spd:3.1,r:.3,dmg:8,soul:1,sc:.8,glow:.3,mat:{side:THREE.DoubleSide},
+  ai:(e,dt,d,ux,uz)=>{e.y=1.2+Math.sin(e.ph*2.6)*.3;const w=Math.sin(e.ph*2)*.6,c=Math.cos(w),s=Math.sin(w);if((e.special||e.elite)&&d<4.5&&(e.cd2=(e.cd2??1.5)-dt)<=0){e.cd2=2.6;return {v:e.t.spd*2.4,x:ux,z:uz}}return {v:e.t.spd,x:ux*c-uz*s,z:ux*s+uz*c}}});
+addFly('flyfish',{n:'飛魚精',geo:flyfishGeo,cap:90,hp:20,spd:3.4,r:.28,dmg:7,soul:1,sc:.85,glow:.35,mat:{side:THREE.DoubleSide},
+  ai:(e,dt,d,ux,uz)=>{e.y=.5+Math.abs(Math.sin(e.ph*2.2))*1.3;return {v:e.t.spd*(.7+.6*Math.abs(Math.cos(e.ph*2.2))),x:ux,z:uz}}});
 addFly('crow',{n:'雷鴉',geo:crowGeo,cap:90,hp:22,spd:3.2,r:.3,dmg:9,soul:1,sc:.75,glow:.4,mat:{side:THREE.DoubleSide},
   ai:(e,dt,d,ux,uz)=>{e.y=1.2+Math.sin(e.ph*3)*.25;if((e.special||e.elite)&&(e.cd2=(e.cd2??2+Math.random()*2)-dt)<=0&&d<9){e.cd2=3.5;warn(HERO.pos.x+HERO.vel.x*.4,HERO.pos.z+HERO.vel.z*.4+.5,1.2,.9,e.dmg*1.3,null,0xb784ff)}return {v:e.t.spd,x:ux,z:uz}}});
 addFly('cloud',{n:'雷雲',geo:cloudGeo,cap:60,hp:44,spd:1.3,r:.42,dmg:9,soul:2,sc:.95,glow:.35,mat:{},
@@ -99,13 +124,13 @@ Object.assign(BOSSES,{
         else if(b.k%3===2){b.cd=3;const a0=Math.atan2(HERO.pos.x-b.x,HERO.pos.z-b.z)+Math.PI;warnFan(b.x,b.z,a0,2.8,6,1,22)}
         else{b.cd=3.2;const a0=Math.atan2(HERO.pos.x-b.x,HERO.pos.z-b.z);b.dx=Math.sin(a0);b.dz=Math.cos(a0);warnLine(b.x,b.z,a0,15,2.2,1,22);act(1,null,()=>{b.dash=.85})}}
       b.sum-=dt;if(b.sum<=0){b.sum=7;for(let i=0;i<5;i++)spawn('jiaoling',b.x+(Math.random()-.5)*6,b.z+(Math.random()-.5)*3)}}}});
-CHC[6]={map:6,sky:1,fog:0x7a94b4,ground:0x9aa6b8,mobs:[['bird',2.4,0],['crow',1.6,.5],['ghost',.8,0],['cloud',1,3]],elite:'crow',boss:'nine'};
-CHC[7]={map:7,sky:1,fog:0x2a2840,ground:0x5a5272,mobs:[['crow',2.6,0],['cloud',1.8,.5],['bird',1.2,0],['tmq',.8,4]],elite:'cloud',boss:'kui'};
-CHC[8]={map:8,sky:1,fog:0x1a2a54,ground:0x55658f,mobs:[['jiaoling',2.4,0],['tmq',1.8,.5],['bird',1.2,0],['crow',1,3]],elite:'tmq',boss:'dragon'};
+CHC[6]={map:6,sky:1,fog:0x0b1422,ground:0x2a3442,mobs:[['seahawk',2.4,0],['flyfish',1.8,.5],['jiaoling',.8,3]],elite:'seahawk',boss:'nine'};
+CHC[7]={map:7,sky:1,fog:0x15131f,ground:0x24202e,mobs:[['crow',2.6,0],['cloud',1.8,.5],['bird',1.2,0],['tmq',.8,4]],elite:'cloud',boss:'kui'};
+CHC[8]={map:8,sky:1,fog:0x0c1428,ground:0x1e2438,mobs:[['jiaoling',2.4,0],['tmq',1.8,.5],['bird',1.2,0],['crow',1,3]],elite:'tmq',boss:'dragon'};
 ['nine','kui','dragon'].forEach(k=>{BOSSES[k].skyAI=1});// 天空篇魔王自己會繞著主角盤旋
 // 第十章夜三：渡劫長征最後一段飛上劫雲，在天上跟老祖鬥法（章節還是 10，只是地圖和小妖換成天上的）
-MAPS[13]=()=>skyMap({key:13,base:'#4a2a3a',hi:'rgba(230,150,110,A)',deep:'rgba(30,8,20,A)',spark:'#ffd8a0',puff:0xc87a6a,rock:0x2a1622,snow:0xe0a080,stormy:1});
-CHC[13]={map:13,sky:1,fog:0x3a1a28,ground:0x9a6a70,rate:.3,noElite:1,mobs:[['crow',2,0],['cloud',1.2,0],['tmq',1,0]],elite:'tmq'};
+MAPS[13]=()=>skyMap({key:13,base:'#2a1622',hi:'rgba(150,90,70,A)',deep:'rgba(16,4,10,A)',spark:'#c8a080',puff:0x6a4040,rock:0x2a1622,snow:0xe0a080,stormy:1});
+CHC[13]={map:13,sky:1,fog:0x1e0e16,ground:0x2e2024,rate:.3,noElite:1,mobs:[['crow',2,0],['cloud',1.2,0],['tmq',1,0]],elite:'tmq'};
 // ---------- 劍氣貫日（第七章大絕）：全畫面的巨大劍氣長虹 ----------
 function sunCast(A){const a0=Math.atan2(A.dir[0],A.dir[1]),hx=HERO.pos.x,hz=HERO.pos.z,L=18,W=5,dmg=swordDmg()*95,dx=Math.sin(a0),dz=Math.cos(a0);G.ultBoss=0;G.slow=.5;shake=Math.max(shake,.7);SFX.play('ult');buzz(70);
   const u=$('#ultFx');u.classList.remove('on');void u.offsetWidth;u.classList.add('on');banner('劍氣貫日','大絕',true);

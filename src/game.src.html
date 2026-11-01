@@ -626,13 +626,13 @@ function stepEnemyShots(dt){for(let i=ebs.length-1;i>=0;i--){const b=ebs[i];b.t+
     if(b.home&&b.t<2.4){const want=Math.atan2(HERO.pos.x-b.x,HERO.pos.z-b.z),cur=Math.atan2(b.vx,b.vz),na=cur+Math.max(-b.home*dt,Math.min(b.home*dt,angDiff(want,cur)));b.vx=Math.sin(na)*b.spd;b.vz=Math.cos(na)*b.spd}
     b.x+=b.vx*dt;b.z+=b.vz*dt;
     if((b.x-HERO.pos.x)**2+(b.z-HERO.pos.z)**2<.16){hurtHero(b.dmg,0,0,'火球');fx({p:tmp.set(b.x,b.y,b.z),col:0xff6a2a,add:true,life:.3,s0:.4,s1:1,op:.9,vy:0});ebs.splice(i,1);continue}
-    if(b.t>4||(G.sky?Math.hypot(b.x-HERO.pos.x,b.z-HERO.pos.z)>30:Math.hypot(b.x,b.z)>ARENA+4))ebs.splice(i,1)}}
+    if(b.t>4||(!arenaOn()?Math.hypot(b.x-HERO.pos.x,b.z-HERO.pos.z)>30:Math.hypot(b.x,b.z)>ARENA+4))ebs.splice(i,1)}}
 const dashPool=[];function dashLine(e,on){let L=dashPool.find(l=>l.e===e);if(!on){if(L){L.e=null;L.m.visible=false}return}
   if(!L){L=dashPool.find(l=>!l.e);if(!L){L={m:new THREE.Mesh(new THREE.PlaneGeometry(1,1).rotateX(-Math.PI/2).translate(0,0,.5),new THREE.MeshBasicMaterial({color:0xff3b2a,transparent:true,opacity:.35,depthWrite:false}))};scene.add(L.m);dashPool.push(L)}}
   L.e=e;L.m.visible=true;L.m.position.set(e.x,.03,e.z);L.m.rotation.y=Math.atan2(e.dx,e.dz);L.m.scale.set(.5,1,3.4)}
 // 回春丹: a red gourd that drops at 67, 167, 267... kills and heals 20%
 const pills=[];const pillGeo=merged([{g:S0,c:'#c8322a',p:[0,.13,0],s:[.13,.13,.13]},{g:S0,c:'#c8322a',p:[0,.3,0],s:[.085,.085,.085]},{g:C0,c:'#e8c35a',p:[0,.215,0],s:[.06,.03,.06]},{g:C0,c:'#5a3a20',p:[0,.4,0],s:[.025,.05,.025]}]);
-function dropPill(x,z){const r=Math.hypot(x,z),R=ARENA-.8;if(r>R&&!G.sky){x*=R/r;z*=R/r}
+function dropPill(x,z){const r=Math.hypot(x,z),R=ARENA-.8;if(r>R&&arenaOn()){x*=R/r;z*=R/r}
   const g=new THREE.Group();const m=new THREE.Mesh(pillGeo,ET.ghost.mesh.material.clone());m.material.transparent=false;m.material.opacity=1;g.add(m);
   const gl=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex,color:0xffd27a,opacity:.8,blending:THREE.AdditiveBlending,depthWrite:false}));gl.scale.set(1.1,1.1,1);gl.position.y=.25;g.add(gl);
   g.position.set(x,0,z);g.scale.setScalar(1.6);scene.add(g);pills.push({g,x,z,t:0})}
@@ -976,7 +976,7 @@ function killEnemy(e,kx=0,kz=0,fly=0){if(e.t.revive&&!e.revived&&!fly){e.revived
   dropSoul(e.x,e.z,e.t.soul);if(e.elite){G.eliteKilled=true;for(let i=0;i<14;i++)dropSoul(e.x+(Math.random()-.5)*2,e.z+(Math.random()-.5)*2,1);banner('精英伏誅','殺氣大漲・仙緣頓悟');SFX.play('boss');setTimeout(()=>openCards(true),700)}
   $('#power').classList.add('pop')}
 function dropSoul(x,z,v){if(souls.length>=SOULCAP){souls[0].v+=v;return}
-  const r=Math.hypot(x,z),R=ARENA-.6;if(r>R&&!G.sky){x*=R/r;z*=R/r}// never outside the village
+  const r=Math.hypot(x,z),R=ARENA-.6;if(r>R&&arenaOn()){x*=R/r;z*=R/r}// 鬥法場才有邊界
   for(const h of HOUSES){const dx=x-h.x,dz=z-h.z,d=Math.hypot(dx,dz),rr=h.r+.35;if(d<rr&&d>1e-4){x=h.x+dx/d*rr;z=h.z+dz/d*rr}}
   souls.push({x,z,y:.3,v,t:0,pull:false})}
 // only what the player can see: inside the range AND on screen (so nothing dies off-screen)
@@ -1057,7 +1057,7 @@ function startBoss(){const key=bossKey(G),D=BOSSES[key];boss.def=D;setTimeout(()
 function stepBoss(dt){if(!boss.alive)return;const D=boss.def,M=boss.m;boss.t+=dt;if(boss.markT>0)boss.markT-=dt;boss.allow=Math.min(boss.max/30*1.5,boss.allow+boss.max/30*dt);
   const dx=HERO.pos.x-boss.x,dz=HERO.pos.z-boss.z,d=Math.hypot(dx,dz)||1;let sp=d>4?D.spd:.6;if(D.keep&&d<D.keep)sp=-D.spd*.7;if(G.sky){boss.x+=G.vx*dt;boss.z+=G.vz*dt;sp=0;if(!D.skyAI&&!(boss.stun>0)){const f=G.head,o=Math.sin(boss.t*.45)*4,tx=HERO.pos.x+Math.sin(f)*8+Math.cos(f)*o,tz=HERO.pos.z+Math.cos(f)*8-Math.sin(f)*o,k=Math.min(1,dt*1);boss.x+=(tx-boss.x)*k;boss.z+=(tz-boss.z)*k}}// 天上鬥法：魔王在主角前方飛、左右游移，追尾鏡頭看得到
   if(!(boss.stun>0)){boss.x+=dx/d*sp*dt;boss.z+=dz/d*sp*dt}else boss.stun-=dt;
-  if(!G.sky){const rr=Math.hypot(boss.x,boss.z);if(rr>ARENA){boss.x*=ARENA/rr;boss.z*=ARENA/rr}}
+  if(arenaOn()){const rr=Math.hypot(boss.x,boss.z);if(rr>ARENA){boss.x*=ARENA/rr;boss.z*=ARENA/rr}}
   boss.g.position.set(boss.x,(D.y||0)+(D.bob?Math.sin(boss.t*D.bob)*.25:0),boss.z);boss.g.rotation.y=Math.atan2(dx,dz);if(M.spin)M.spin(boss);
   if(M.body&&M.body.material)M.body.material.emissiveIntensity=.8+(boss.flash>0?2:0)+Math.sin(boss.t*6)*.1;else M.g.scale.setScalar(boss.flash>0?1.06:1);
   boss.flash-=dt;if(M.L)M.L.intensity=(M.Li||2.2)+Math.sin(boss.t*9)*.3;
@@ -1068,7 +1068,7 @@ function stepBoss(dt){if(!boss.alive)return;const D=boss.def,M=boss.m;boss.t+=dt
   $('#bossHp').style.width=(100*Math.max(0,boss.hp/boss.max))+'%';$('#bossSh').style.width=D.duel?(100*Math.max(0,boss.shield/(boss.max*.3)))+'%':'0'}
 function stepFlee(dt,dx,dz,d){boss.fleeT+=dt;if(G.sky){boss.x+=G.vx*dt;boss.z+=G.vz*dt}boss.tele=(boss.tele??2)-dt;let sp=d<6?5:2.5;boss.x-=dx/d*sp*dt;boss.z-=dz/d*sp*dt;
   if(boss.tele<=0){boss.tele=2.2;const a=Math.random()*6.28;fx({p:tmp.set(boss.x,1,boss.z),col:0xffe9a0,add:true,life:.4,s0:1,s1:2.5,op:.9,vy:0});boss.x=HERO.pos.x+Math.sin(a)*(5+Math.random()*3);boss.z=HERO.pos.z+Math.cos(a)*(5+Math.random()*3)}
-  const rr=Math.hypot(boss.x,boss.z);if(!G.sky&&rr>ARENA-1){boss.x*=(ARENA-1)/rr;boss.z*=(ARENA-1)/rr}
+  const rr=Math.hypot(boss.x,boss.z);if(arenaOn()&&rr>ARENA-1){boss.x*=(ARENA-1)/rr;boss.z*=(ARENA-1)/rr}
   boss.g.position.set(boss.x,.4+Math.sin(boss.t*9)*.15,boss.z);boss.g.rotation.y=Math.atan2(-dx,-dz);boss.flash-=dt;if(!simming&&(boss.ai2=(boss.ai2||0)-dt)<=0){boss.ai2=.12;fx({p:tmp.set(boss.x,1,boss.z),col:boss.def.col||0xffe9a0,add:true,life:.5,s0:1.2,s1:.4,op:.6,vy:.2})}if(boss.soul&&boss.soul.userData.M)boss.soul.userData.M.opacity=.45+.15*Math.sin(boss.t*12);
   $('#bossHp').style.width=(100*Math.max(0,boss.hp/boss.max))+'%';$('#bossSh').style.width='0';
   if(boss.fleeT>14){boss.alive=false;boss.g.visible=false;$('#bossBox').classList.remove('on');banner('元嬰遁走了','肉身已毀，但沒能斬草除根');G.slow=.5}}
@@ -1218,7 +1218,7 @@ function stepGame(dt){const g=G;TALK.step(dt);
   if(g.sky)skySteer(g,dt,inp,moving);else if(moving){const sp=g.s.move*inp.l*(g.slowT>0?.5:1);g.walked+=sp*dt;if(g.walked>=2.4){g.walked=0;qiBurst()}root.position.x+=inp.x*sp*dt;root.position.z+=inp.y*sp*dt;root.rotation.y=angLerp(root.rotation.y,Math.atan2(inp.x,inp.y),1-Math.exp(-dt*(g.sky?6:12)));
     walkPh+=dt*(4+3*inp.l);mode='walk';g.stand=0}else{mode='cast';g.stand+=dt;g.standQi=(g.standQi||0)+dt;if(g.standQi>=1.8){g.standQi=0;qiBurst()}}
   if(g.sky){root.position.y=1.15;mode='fly';stepSky(dt)}// 御劍：一直往前飛，搖桿轉向，雲海跟著主角無限延伸
-  else{const rr=Math.hypot(root.position.x,root.position.z);if(rr>ARENA){root.position.x*=ARENA/rr;root.position.z*=ARENA/rr}}
+  else if(arenaOn()){const rr=Math.hypot(root.position.x,root.position.z);if(rr>ARENA){root.position.x*=ARENA/rr;root.position.z*=ARENA/rr}}else stepGround();
   for(const h of HOUSES){const dx=root.position.x-h.x,dz=root.position.z-h.z,d=Math.hypot(dx,dz),r=h.r+.3;if(d<r&&d>1e-4){root.position.x=h.x+dx/d*r;root.position.z=h.z+dz/d*r}}
   // timeline
   const p=g.t/g.len;

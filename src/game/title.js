@@ -60,4 +60,4 @@ $('#tNew').onclick=()=>{SFX.resume();newGame()};$('#tLoad').onclick=()=>{SFX.res
 // 開機：#home＝直接進洞府，#new＝新的一局（直接播序章開頭），其他＝標題
 {let h='';try{h=location.hash.slice(1);if(h)history.replaceState(null,'',location.pathname+location.search)}catch(e){}
   if(h==='home'){DF.render()}else if(h==='new'){$('#startOv').classList.add('on');DF.render();setTimeout(()=>DF.go(0,0),300)}else TITLE.show()}
-window.__title={dbg:()=>({cam:camera.position.toArray().map(v=>+v.toFixed(2)),fov:camera.fov,rv:root.visible,bv:body.visible,lan:lantern.position.toArray().map(v=>+v.toFixed(2)),rs:root.scale.x,hero:root.position.toArray(),ry:root.rotation.y,titleOn}),show:()=>TITLE.show(),scene:()=>scene,mapG:()=>mapG,ground:()=>ground};
+window.__title={dbg:()=>({cam:camera.position.toArray().map(v=>+v.toFixed(2)),fov:camera.fov,rv:root.visible,bv:body.visible,lan:lantern.position.toArray().map(v=>+v.toFixed(2)),rs:root.scale.x,hero:root.position.toArray(),ry:root.rotation.y,titleOn}),show:()=>TITLE.show(),scene:()=>scene,mapG:()=>mapG,ground:()=>ground,tp:(x,z)=>root.position.set(x,root.position.y,z)};

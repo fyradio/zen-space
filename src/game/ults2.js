@@ -36,21 +36,22 @@ function galaxyUlt(A){const [x,z]=A.pt,R=SK.ult.r(),dmg=swordDmg()*4.2,T=2.2;ult
 function jieUlt(){const dmg=swordDmg()*3.4;ultStart('天劫引');for(let r=0;r<9;r++)act(r*.3,null,()=>{const e=enemies.filter(e=>!e.dead&&onScreen(e.x,.4,e.z)).sort(()=>Math.random()-.5).slice(0,8);SFX.play('thunder');shake=Math.max(shake,.35);
     for(const t of e){boltAt(t.x,t.z,0,0,0xd8c8ff,.12,16);ultAoe(t.x,t.z,1.6,dmg,{stun:.6},.22)}if(boss.alive&&bossOnScreen()){boltAt(boss.x,boss.z,0,0,0xffffff,.2,18);ultBoss(dmg*2.2)}
     if(r===8){const x=HERO.pos.x,z=HERO.pos.z;boltAt(x+3,z+3,0,0,0xffffff,.5,22);fx({p:tmp.set(x,.5,z),col:0xe0d0ff,add:true,life:.6,s0:1,s1:20,op:1,vy:0});ultAoe(x,z,11,dmg*2,{stun:1.5},.22)}})}
-// 七星燈陣（參悟）：七盞大紅燈籠從天而降排成北斗七星，燈與燈拉出金色火線，地上水墨符文圈；陣內冒火星、妖著火、你回血；結束七燈齊爆
+// 七星燈陣（參悟）：七團金黃火球（七盞明燈）從天而降懸在空中排成北斗七星，燈與燈拉出金色火線，地上水墨符文圈；陣內冒火星、妖著火、你回血；結束七燈齊爆
 const DIPPER=(()=>{const P=[[0,0],[0,-.5],[.62,-.62],[.72,-.1],[1.25,.05],[1.72,.18],[2.2,-.08]],cx=P.reduce((a,p)=>a+p[0],0)/7,cz=P.reduce((a,p)=>a+p[1],0)/7;return P.map(([x,z])=>[(x-cx)/1.15,(z-cz)/1.15])})();
-const LANT=(()=>{const pts=[[.05,-.32],[.22,-.26],[.3,-.1],[.31,.06],[.25,.22],[.1,.3]].map(p=>new THREE.Vector2(p[0],p[1]));return {geo:new THREE.LatheGeometry(pts,16),body:toon(0xc8302a,{emissive:0x7a1408}),cap:toon(0x2a1a12),capG:new THREE.CylinderGeometry(.13,.15,.08,12)}})();
+const LANT={geo:new THREE.SphereGeometry(.3,16,12),body:new THREE.MeshBasicMaterial({color:LC(0xffc850)})};// 火球的白熱核心
 const fireLineM=new THREE.MeshBasicMaterial({color:0xffb040,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false});
 function lampArrayUlt(A){const [x,z]=A.pt,R=SK.ult.r(),dmg=swordDmg()*2.6,T=6;ultStart('七星燈陣');
   const rot=Math.random()*6.28,ls=DIPPER.map(([px,pz],i)=>{const a=Math.atan2(px,pz)+rot,d=Math.hypot(px,pz)*R,g=new THREE.Group();const b=new THREE.Mesh(LANT.geo,LANT.body.clone());b.material.transparent=true;g.add(b);
-      const c1=new THREE.Mesh(LANT.capG,LANT.cap);c1.position.y=.32;g.add(c1);const c2=c1.clone();c2.position.y=-.34;g.add(c2);const gl=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex,color:0xff7a2a,transparent:true,opacity:.7,blending:THREE.AdditiveBlending,depthWrite:false}));gl.scale.set(1.6,1.6,1);g.add(gl);
-      g.scale.setScalar(1.4);const tx=x+Math.sin(a)*d,tz=z+Math.cos(a)*d;g.position.set(tx,14,tz);scene.add(g);return {g,b,gl,tx,tz,land:.25+i*.09,boom:false}});
+      const gl=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex,color:LC(0xe08a20),transparent:true,opacity:.7,blending:THREE.AdditiveBlending,depthWrite:false}));gl.scale.set(1.5,1.7,1);g.add(gl);
+      const g2=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex,color:LC(0xc04a08),transparent:true,opacity:.4,blending:THREE.AdditiveBlending,depthWrite:false}));g2.scale.set(3.2,3.2,1);g.add(g2);g.userData.g2=g2;
+      g.scale.setScalar(1.2);const tx=x+Math.sin(a)*d,tz=z+Math.cos(a)*d;g.position.set(tx,14,tz);scene.add(g);return {g,b,gl,tx,tz,land:.25+i*.09,boom:false}});
   // 地上：水墨符文圈＋金色火線（北斗）
   const rune=new THREE.Mesh(new THREE.CircleGeometry(R*1.2,48).rotateX(-Math.PI/2),new THREE.MeshBasicMaterial({map:(LANT.rt=LANT.rt||(typeof runeTex==='function'?runeTex('#c89040'):null)),color:0xb8803a,transparent:true,opacity:0,depthWrite:false}));rune.position.set(x,.04,z);scene.add(rune);
   if(!simming)BRUSH.circle(x,z,R*1.2,0xffb35a,null,.5);
   const lines=[];[[0,1],[1,2],[2,3],[3,0],[3,4],[4,5],[5,6]].forEach(([i,j])=>{const m=new THREE.Mesh(new THREE.PlaneGeometry(1,1).rotateX(-Math.PI/2).translate(0,0,.5),fireLineM.clone());m.material.opacity=0;scene.add(m);lines.push({m,i,j})});
   let tk=0,spark=0;
   act(T+.5,(t,dt)=>{rune.rotation.y+=dt*.25;rune.material.opacity=.55*Math.min(1,t/.6)*Math.min(1,(T-t)/.4+1e-3);
-      ls.forEach((l,i)=>{const k=Math.min(1,t/l.land),y=t<l.land?14-(14-1.5)*k*k:1.5+Math.sin(t*3+i)*.12;l.g.position.set(l.tx,y,l.tz);l.g.rotation.y+=dt;
+      ls.forEach((l,i)=>{const k=Math.min(1,t/l.land),y=t<l.land?14-(14-1.8)*k*k:1.8+Math.sin(t*3+i)*.12;l.g.position.set(l.tx,y,l.tz);const fl=1+.12*Math.sin(t*17+i*2)+.06*Math.sin(t*31+i);l.gl.scale.set(1.5*fl,1.75*fl,1);l.g.userData.g2.material.opacity=.4+.12*Math.sin(t*9+i);if(!simming&&Math.random()<dt*8)fx({p:tmp.set(l.tx+(Math.random()-.5)*.3,y+.3,l.tz+(Math.random()-.5)*.3),col:0xffa040,add:true,life:.45,s0:.35,s1:.08,op:.9,vy:1.4});
         if(t>=l.land&&!l.hit){l.hit=1;if(!simming){fx({p:tmp.set(l.tx,.3,l.tz),col:0xffa040,add:true,life:.4,s0:.6,s1:2.4,op:.7,vy:0});shake=Math.max(shake,.15)}}
         if(t>T&&!l.boom){l.boom=true;l.g.visible=false;if(!simming)fx({p:tmp.set(l.tx,1.2,l.tz),col:0xff8a2a,add:true,life:.5,s0:1,s1:4.5,op:.9,vy:0});ultAoe(l.tx,l.tz,2.4,dmg*3,{burn:2,kb:1.2},.04)}});
       const lit=Math.min(1,Math.max(0,(t-1)/.5));lines.forEach(L=>{const a=ls[L.i],b=ls[L.j],dx=b.tx-a.tx,dz=b.tz-a.tz,len=Math.hypot(dx,dz);L.m.position.set(a.tx,.08,a.tz);L.m.rotation.y=Math.atan2(dx,dz);L.m.scale.set(.18+.06*Math.sin(t*12),1,len*lit);L.m.material.opacity=t>T?0:.85});
@@ -58,7 +59,7 @@ function lampArrayUlt(A){const [x,z]=A.pt,R=SK.ult.r(),dmg=swordDmg()*2.6,T=6;ul
       if(Math.hypot(HERO.pos.x-x,HERO.pos.z-z)<R*1.2)G.hp=Math.min(G.maxhp,G.hp+G.maxhp*.03*dt);
       if(!simming&&(spark-=dt)<=0){spark=.05;const a=Math.random()*6.28,r=Math.sqrt(Math.random())*R*1.1;fx({p:tmp.set(x+Math.sin(a)*r,.2,z+Math.cos(a)*r),col:Math.random()<.5?0xffb040:0xff6a2a,add:true,life:.6,s0:.25,s1:.05,op:.9,vy:1.6})}
       tk-=dt;if(tk>0)return;tk=.35;ultAoe(x,z,R*1.2,dmg,{burn:2},.22)},
-    ()=>{ls.forEach(l=>{scene.remove(l.g);l.b.material.dispose();l.gl.material.dispose()});scene.remove(rune);rune.geometry.dispose();rune.material.dispose();lines.forEach(L=>{scene.remove(L.m);L.m.geometry.dispose();L.m.material.dispose()})})}
+    ()=>{ls.forEach(l=>{scene.remove(l.g);l.b.material.dispose();l.gl.material.dispose();l.g.userData.g2.material.dispose()});scene.remove(rune);rune.geometry.dispose();rune.material.dispose();lines.forEach(L=>{scene.remove(L.m);L.m.geometry.dispose();L.m.material.dispose()})})}
 // 光陰凝（參悟）：全場妖定住 3 秒（魔王也定住 2 秒），畫面褪色
 function timeStopUlt(){ultStart('光陰凝');const T=3;for(const e of enemies)if(!e.dead)e.stun=Math.max(e.stun||0,T);if(boss.alive)boss.stun=Math.max(boss.stun||0,2);for(const b of ebs)b.t=99;
   const cv=renderer.domElement;cv.style.transition='filter .3s';cv.style.filter='grayscale(.85) sepia(.25)';fx({p:tmp.set(HERO.pos.x,1,HERO.pos.z),col:0xffffff,add:true,life:.6,s0:1,s1:24,op:.8,vy:0});
