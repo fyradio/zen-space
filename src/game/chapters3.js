@@ -50,13 +50,17 @@ function leaveSky(){root.rotation.z=0;resetWrap();fogs.forEach(m=>{m.material.op
 const SKYSHOTS=[{n:'側面',yaw:Math.PI/2,P:.26,D:7.2},{n:'追尾',yaw:Math.PI,P:.34,D:6.8},{n:'斜前',yaw:Math.PI*.22,P:.4,D:7.6},{n:'高空',yaw:null,P:.9,D:12},{n:'另側',yaw:-Math.PI/2,P:.3,D:7.4}];
 function skyShot(dt){const g=G;g.shotT=(g.shotT||0)+dt;if(g.shotT>8){g.shotT=0;g.shot=((g.shot||0)+1)%SKYSHOTS.length}
   const danger=warnPool.some(w=>w.on)||HZ.length>0;const S=danger?{yaw:null,P:.82,D:11.5}:SKYSHOTS[g.shot||0];
-  return {P:S.P,D:S.D,yaw:S.yaw===null?null:root.rotation.y+S.yaw}}
+  return {P:S.P,D:S.D,yaw:S.yaw===null?null:(G.camHead??root.rotation.y)+S.yaw}}
 const SKYCAMS=[{n:'追尾',yaw:Math.PI,P:.4,D:7.2},{n:'側面',yaw:Math.PI/2,P:.24,D:7},{n:'斜前',yaw:Math.PI*.24,P:.36,D:7.4},{n:'高空',yaw:Math.PI,P:.9,D:12}];
-function skyFixed(){const S=SKYCAMS[G.skyCam||0];return {P:S.P,D:S.D,yaw:root.rotation.y+S.yaw}}
+function skyFixed(){const S=SKYCAMS[G.skyCam||0];return {P:S.P,D:S.D,yaw:(G.camHead??root.rotation.y)+S.yaw}}
 function cycleCam(){if(G&&G.sky){if(G.camAuto){G.camAuto=false;G.skyCam=0}else if(G.skyCam===SKYCAMS.length-1)G.camAuto=true;else G.skyCam++;if(!G.over)banner(G.camAuto?'自動運鏡':SKYCAMS[G.skyCam].n,'視角')}else setCam(camIdx+1)}
 // 御劍操控：一直往前飛；搖桿的方向＝相對於目前航向要轉去的方向（往左推就一直左轉，往下推就迴轉）
-function skySteer(g,dt,inp,moving){let want=g.head;if(moving)want=g.auto?Math.atan2(inp.x,inp.y):g.head-Math.atan2(inp.x,-inp.y);/* 鏡頭在背後時螢幕右邊＝航向減少的方向 */
-  const prev=g.head;g.head=angLerp(g.head,want,1-Math.exp(-dt*2.2));const turn=(g.head-prev+Math.PI*3)%(Math.PI*2)-Math.PI;
+// 御劍操控（第三版）：搖桿推哪個方向，就往畫面上的那個方向飛（跟地面一樣直覺）；
+// 推著搖桿時鏡頭幾乎不轉（不會越轉越歪），放開搖桿後鏡頭才慢慢轉回主角背後。
+function skySteer(g,dt,inp,moving){if(g.camHead===undefined)g.camHead=g.head;let want=g.head;
+  if(moving)want=Math.atan2(inp.x,inp.y);// inputDir 已經依鏡頭方向把搖桿換成世界方向
+  g.camHead=angLerp(g.camHead,g.head,1-Math.exp(-dt*(moving?.12:.9)));
+  const prev=g.head;g.head=angLerp(g.head,want,1-Math.exp(-dt*4));const turn=(g.head-prev+Math.PI*3)%(Math.PI*2)-Math.PI;
   const sp=g.s.move*(.85+.35*(moving?inp.l:0))*(g.slowT>0?.5:1)*(g.rootT>0?.35:1)*(g.medit>0?.3:1);g.vx=Math.sin(g.head)*sp;g.vz=Math.cos(g.head)*sp;
   root.position.x+=g.vx*dt;root.position.z+=g.vz*dt;root.rotation.y=g.head;root.rotation.z=angLerp(root.rotation.z,Math.max(-.35,Math.min(.35,dt>0?-turn/dt*.12:0)),1-Math.exp(-dt*5));
   g.walked+=sp*dt;if(g.walked>=2.4){g.walked=0;qiBurst()}if(moving){g.stand=0}else{g.stand+=dt;g.standQi=(g.standQi||0)+dt;if(g.standQi>=1.8){g.standQi=0;qiBurst()}}}

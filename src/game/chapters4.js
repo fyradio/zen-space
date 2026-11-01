@@ -101,7 +101,7 @@ function endlessFly(){const g=G;if(!g||!g.endless||g.over||g.paused)return;if(bo
   if((g.flyCd||0)>g.t)return;g.flyCd=g.t+3;
   for(const e of enemies)if(!e.dead&&!e.elite){e.dead=true;if(!simming)fx({p:tmp.set(e.x,.6,e.z),col:0xcfe8ff,add:true,life:.4,s0:.4,s1:1.4,op:.7,vy:.5})}clearHZ();
   const up=!g.sky;fx({p:tmp.set(HERO.pos.x,1,HERO.pos.z),col:up?0x9fe8ff:0xffe9a0,add:true,life:.6,s0:1,s1:6,op:.9,vy:0});shake=Math.max(shake,.4);SFX.play('ult');
-  if(up){const m=6+Math.floor(Math.random()*3),src=CHC[m];Object.assign(CHC[14],{map:m,fog:src.fog,ground:src.ground,mobs:src.mobs,elite:src.elite});curMap=-1;buildMap(14);g.C=CHC[14];g.sky=true;g.head=root.rotation.y;g.skyCam=0;g.camAuto=false;banner('御劍升空','搖桿轉向，一直往前飛')}
+  if(up){const m=6+Math.floor(Math.random()*3),src=CHC[m];Object.assign(CHC[14],{map:m,fog:src.fog,ground:src.ground,mobs:src.mobs,elite:src.elite});curMap=-1;buildMap(14);g.C=CHC[14];g.sky=true;g.head=root.rotation.y;g.camHead=g.head;camYaw=g.head+Math.PI;g.skyCam=0;g.camAuto=false;banner('御劍升空','搖桿轉向，一直往前飛')}
   else{leaveSky();curMap=-1;buildMap(11);g.C=null;g.sky=false;g.vx=g.vz=0;root.position.set(0,0,0);banner('落地','回到地上')}
   $('#flyBtn').textContent=g.sky?'落':'飛';WARM.redo()}
 // ---------- 元嬰技能組 ----------
