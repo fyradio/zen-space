@@ -96,22 +96,26 @@ function blinkTick(dt){if(!G)return;const m=blinkMax();if(G.blinkMax===undefined
   if(G.blinkN<m){G.blinkT+=dt;if(G.blinkT>=BLINK_CD){G.blinkT=0;G.blinkN++;if(!simming)SFX.play('ready')}}else G.blinkT=0;
   const b=skBtn.blink;if(!b||b.hidden)return;b.style.setProperty('--p',((G.blinkN>=m?0:1-G.blinkT/BLINK_CD)*100).toFixed(1)+'%');
   const t2=G.blinkN<=0?String(Math.ceil(BLINK_CD-G.blinkT)):(m>1?'×'+G.blinkN:'');if(b._t!==t2){b._t=t2;b.querySelector('b').textContent=t2}}
-// 風雷翼：兩片翼（羽片＋雷弧）從背後展開，維持 2 秒再淡出
-let WING=null;const V3=new THREE.Vector3();
-function wingBuild(){const g=new THREE.Group(),sh=new THREE.Shape();sh.moveTo(0,0);sh.quadraticCurveTo(.13,.4,0,1);sh.quadraticCurveTo(-.13,.4,0,0);const geo=new THREE.ShapeGeometry(sh);
-  const MA=new THREE.MeshBasicMaterial({color:0x9fe8ff,transparent:true,opacity:0,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide}),MB=new THREE.MeshBasicMaterial({color:0xb46cff,transparent:true,opacity:0,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide});
-  const sides=[];for(const sd of [1,-1]){const w=new THREE.Group();w.position.set(sd*.16,0,0);g.add(w);const fe=[];
-    for(let i=0;i<8;i++){const f=new THREE.Mesh(geo,i%2?MB:MA);const L=(1.25+.55*Math.sin(i/7*Math.PI*.9))*1.25;f.scale.set(1.15,L,1);f.rotation.z=-sd*(.25+i*.2);f.renderOrder=6;w.add(f);fe.push(f)}
+// 風雷翼：兩片大羽翼（三排羽毛：長飛羽＋次級羽＋覆羽，深藍→青→金橙漸層）＋白色雷弧，從背後展開，維持 2 秒再淡出
+let WING=null;const V3=new THREE.Vector3(),WC=[new THREE.Color(0x060e3a),new THREE.Color(0x0a4aa8),new THREE.Color(0xe06a10)];
+function wingFeatherGeo(tip){const sh=new THREE.Shape();sh.moveTo(0,0);sh.quadraticCurveTo(.2,.35,.05,1);sh.quadraticCurveTo(-.2,.35,0,0);const g=new THREE.ShapeGeometry(sh,8),P=g.attributes.position,col=new Float32Array(P.count*3),c=new THREE.Color();
+  for(let i=0;i<P.count;i++){const y=Math.max(0,Math.min(1,P.getY(i)));if(y<.45)c.copy(WC[0]).lerp(WC[1],y/.45);else c.copy(WC[1]).lerp(tip?WC[2]:new THREE.Color(0x1a8ad8),(y-.45)/.55);col[i*3]=c.r;col[i*3+1]=c.g;col[i*3+2]=c.b}
+  g.setAttribute('color',new THREE.BufferAttribute(col,3));return g}
+function wingBuild(){const g=new THREE.Group(),G1=wingFeatherGeo(true),G2=wingFeatherGeo(true),G3=wingFeatherGeo(false);
+  const mk=(add)=>new THREE.MeshBasicMaterial({fog:false,vertexColors:true,transparent:true,opacity:0,blending:add?THREE.AdditiveBlending:THREE.NormalBlending,depthWrite:false,side:THREE.DoubleSide});
+  const mats=[mk(0),mk(0),mk(0)],ROWS=[{geo:G1,n:11,len:3.1,w:.62,a0:.2,a1:1.5,z:0,m:0},{geo:G2,n:9,len:2.2,w:.62,a0:.35,a1:1.35,z:.02,m:1},{geo:G3,n:12,len:1.2,w:.5,a0:.2,a1:1.55,z:.04,m:2}];
+  const sides=[];for(const sd of [1,-1]){const w=new THREE.Group();w.position.set(sd*.14,0,0);g.add(w);const fe=[];
+    ROWS.forEach((R,ri)=>{for(let i=0;i<R.n;i++){const u=i/(R.n-1),f=new THREE.Mesh(R.geo,mats[R.m]);const L=R.len*(.75+.25*Math.sin(u*Math.PI*.8+.4));f.scale.set(L*R.w,L,1);f.position.z=R.z;f.userData={a:R.a0+u*(R.a1-R.a0),ri};f.renderOrder=6+ri;w.add(f);fe.push(f)}});
     sides.push({w,sd,fe})}
-  const lg=[];for(let i=0;i<4;i++){const ln=new THREE.Line(new THREE.BufferGeometry().setFromPoints(Array.from({length:7},()=>new THREE.Vector3())),new THREE.LineBasicMaterial({color:0xf0f6ff,transparent:true,opacity:0,blending:THREE.AdditiveBlending,depthTest:false}));ln.renderOrder=7;g.add(ln);lg.push(ln)}
-  g.position.set(0,1.3,-.25);g.rotation.x=-.75;g.scale.setScalar(.8);root.add(g);return WING={g,MA,MB,sides,lg,t:99,tj:0}}
+  const lg=[];for(let i=0;i<5;i++){const ln=new THREE.Line(new THREE.BufferGeometry().setFromPoints(Array.from({length:8},()=>new THREE.Vector3())),new THREE.LineBasicMaterial({color:0xf0f6ff,transparent:true,opacity:0,blending:THREE.AdditiveBlending,depthTest:false}));ln.renderOrder=9;g.add(ln);lg.push(ln)}
+  g.position.set(0,.85,-.14);g.rotation.x=-.5;g.scale.setScalar(.29);root.add(g);return WING={g,mats,sides,lg,t:99,tj:0}}
 function wingsShow(){if(simming)return;const W=WING||wingBuild();W.t=0;W.g.visible=true;W.on=true}
-function wingsStep(dt){const W=WING;if(!W||!W.on)return;W.t+=dt;const t=W.t,a=Math.min(1,t/.15)*Math.min(1,Math.max(0,(2-t)/.4));
-  if(t>=2){W.on=false;W.g.visible=false;W.MA.opacity=W.MB.opacity=0;return}
-  W.MA.opacity=.8*a;W.MB.opacity=.7*a;const spread=Math.min(1,t/.2);
-  for(const S of W.sides){S.w.rotation.y=-S.sd*(.55+.35*Math.sin(t*13))*spread;S.fe.forEach((f,i)=>{f.rotation.z=-S.sd*(.25+i*.2*spread)})}
-  W.tj-=dt;if(W.tj<=0){W.tj=.05;W.lg.forEach((ln,i)=>{const S=W.sides[i%2],pts=ln.geometry.attributes.position;const f=S.fe[2+(i>>1)*3],L=f.scale.y,rz=f.rotation.z;
-      for(let k=0;k<7;k++){const d=L*k/6,j=(k&&k<6)?(Math.random()-.5)*.28:0;V3.set(-Math.sin(rz)*d+j,Math.cos(rz)*d+j,0).applyEuler(S.w.rotation).add(S.w.position);pts.setXYZ(k,V3.x,V3.y,V3.z)}pts.needsUpdate=true;ln.material.opacity=(Math.random()<.8?.95:.3)*a})}}
+function wingsStep(dt){const W=WING;if(!W||!W.on)return;W.t+=dt;const t=W.t,a=Math.min(1,t/.2)*Math.min(1,Math.max(0,(2-t)/.4));
+  if(t>=2){W.on=false;W.g.visible=false;W.mats.forEach(m=>m.opacity=0);return}
+  W.mats[0].opacity=.95*a;W.mats[1].opacity=.9*a;W.mats[2].opacity=.92*a;const sp=1-Math.pow(1-Math.min(1,t/.25),3),fl=Math.sin(t*9);
+  for(const S of W.sides){S.w.rotation.z=-S.sd*.1*fl;S.w.rotation.y=-S.sd*(.35+.12*fl)*sp;S.fe.forEach(f=>{f.rotation.z=-S.sd*(.08+(f.userData.a-.08)*sp)})}
+  W.tj-=dt;if(W.tj<=0){W.tj=.05;W.lg.forEach((ln,i)=>{const S=W.sides[i%2],pts=ln.geometry.attributes.position;const f=S.fe[Math.floor(i/2)*3+1],L=f.scale.y,rz=f.rotation.z;
+      for(let k=0;k<8;k++){const d=L*k/7,j=(k&&k<7)?(Math.random()-.5)*.4:0;V3.set(-Math.sin(rz)*d+j,Math.cos(rz)*d+j,.05).applyEuler(S.w.rotation).add(S.w.position);pts.setXYZ(k,V3.x,V3.y,V3.z)}pts.needsUpdate=true;ln.material.opacity=(Math.random()<.8?.95:.3)*a})}}
 function blinkSpot(){const hx=HERO.pos.x,hz=HERO.pos.z;let best=null,bs=1e9;
   for(let i=0;i<20;i++){const a=i/20*6.28,r=i%2?4:3;let x=hx+Math.sin(a)*r,z=hz+Math.cos(a)*r;if(arenaOn()&&Math.hypot(x,z)>ARENA-1)continue;let s=0;
     for(const e of enemies){if(e.dead)continue;const d=Math.hypot(e.x-x,e.z-z);if(d<3.5)s+=(3.5-d)}
