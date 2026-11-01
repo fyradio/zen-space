@@ -88,7 +88,30 @@ const skillTier=()=>Math.min(SKILL_SETS.length-1,save.realm>=15?3:save.realm>=12
 // 裝備哪三招改由 skilllib.js 的 equipSkills()（藏經閣自選）
 
 // ---------- 閃現／風雷翼 ----------
-function setBlink(){const b=skBtn.blink,on=save.realm>=12,wing=save.realm>=15;b.hidden=!on;SK.blink.n=wing?'風雷翼':'閃現';SK.blink.ic=wing?'翼':'閃';b.querySelector('.ic').textContent=SK.blink.ic;b.querySelector('em').textContent=SK.blink.n;G.blink2=false}
+function setBlink(){const b=skBtn.blink,on=save.realm>=12,wing=save.realm>=15;b.hidden=!on;SK.blink.n=wing?'風雷翼':'閃現';SK.blink.ic=wing?'翼':'閃';b.querySelector('.ic').textContent=SK.blink.ic;b.querySelector('em').textContent=SK.blink.n;G.blink2=false;blinkTick(0)}
+// 閃現／風雷翼 存次數：結丹 1 次；元嬰 初／中／後期 2／3／4 次；化神（化身）6 次。每 5 秒慢慢回 1 次，用一次扣一次（連點間隔 0.35 秒）
+const BLINK_CD=5;
+const blinkMax=()=>save.realm>=18?6:save.realm>=17?4:save.realm>=16?3:save.realm>=15?2:save.realm>=12?1:0;
+function blinkTick(dt){if(!G)return;const m=blinkMax();if(G.blinkMax===undefined){G.blinkMax=m;G.blinkN=m;G.blinkT=0}else if(m!==G.blinkMax){G.blinkN+=Math.max(0,m-G.blinkMax);G.blinkMax=m}
+  if(G.blinkN<m){G.blinkT+=dt;if(G.blinkT>=BLINK_CD){G.blinkT=0;G.blinkN++;if(!simming)SFX.play('ready')}}else G.blinkT=0;
+  const b=skBtn.blink;if(!b||b.hidden)return;b.style.setProperty('--p',((G.blinkN>=m?0:1-G.blinkT/BLINK_CD)*100).toFixed(1)+'%');
+  const t2=G.blinkN<=0?String(Math.ceil(BLINK_CD-G.blinkT)):(m>1?'×'+G.blinkN:'');if(b._t!==t2){b._t=t2;b.querySelector('b').textContent=t2}}
+// 風雷翼：兩片翼（羽片＋雷弧）從背後展開，維持 2 秒再淡出
+let WING=null;const V3=new THREE.Vector3();
+function wingBuild(){const g=new THREE.Group(),sh=new THREE.Shape();sh.moveTo(0,0);sh.quadraticCurveTo(.13,.4,0,1);sh.quadraticCurveTo(-.13,.4,0,0);const geo=new THREE.ShapeGeometry(sh);
+  const MA=new THREE.MeshBasicMaterial({color:0x9fe8ff,transparent:true,opacity:0,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide}),MB=new THREE.MeshBasicMaterial({color:0xb46cff,transparent:true,opacity:0,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide});
+  const sides=[];for(const sd of [1,-1]){const w=new THREE.Group();w.position.set(sd*.16,0,0);g.add(w);const fe=[];
+    for(let i=0;i<8;i++){const f=new THREE.Mesh(geo,i%2?MB:MA);const L=(1.25+.55*Math.sin(i/7*Math.PI*.9))*1.25;f.scale.set(1.15,L,1);f.rotation.z=-sd*(.25+i*.2);f.renderOrder=6;w.add(f);fe.push(f)}
+    sides.push({w,sd,fe})}
+  const lg=[];for(let i=0;i<4;i++){const ln=new THREE.Line(new THREE.BufferGeometry().setFromPoints(Array.from({length:7},()=>new THREE.Vector3())),new THREE.LineBasicMaterial({color:0xf0f6ff,transparent:true,opacity:0,blending:THREE.AdditiveBlending,depthTest:false}));ln.renderOrder=7;g.add(ln);lg.push(ln)}
+  g.position.set(0,1.3,-.25);g.rotation.x=-.75;g.scale.setScalar(.8);root.add(g);return WING={g,MA,MB,sides,lg,t:99,tj:0}}
+function wingsShow(){if(simming)return;const W=WING||wingBuild();W.t=0;W.g.visible=true;W.on=true}
+function wingsStep(dt){const W=WING;if(!W||!W.on)return;W.t+=dt;const t=W.t,a=Math.min(1,t/.15)*Math.min(1,Math.max(0,(2-t)/.4));
+  if(t>=2){W.on=false;W.g.visible=false;W.MA.opacity=W.MB.opacity=0;return}
+  W.MA.opacity=.8*a;W.MB.opacity=.7*a;const spread=Math.min(1,t/.2);
+  for(const S of W.sides){S.w.rotation.y=-S.sd*(.55+.35*Math.sin(t*13))*spread;S.fe.forEach((f,i)=>{f.rotation.z=-S.sd*(.25+i*.2*spread)})}
+  W.tj-=dt;if(W.tj<=0){W.tj=.05;W.lg.forEach((ln,i)=>{const S=W.sides[i%2],pts=ln.geometry.attributes.position;const f=S.fe[2+(i>>1)*3],L=f.scale.y,rz=f.rotation.z;
+      for(let k=0;k<7;k++){const d=L*k/6,j=(k&&k<6)?(Math.random()-.5)*.28:0;V3.set(-Math.sin(rz)*d+j,Math.cos(rz)*d+j,0).applyEuler(S.w.rotation).add(S.w.position);pts.setXYZ(k,V3.x,V3.y,V3.z)}pts.needsUpdate=true;ln.material.opacity=(Math.random()<.8?.95:.3)*a})}}
 function blinkSpot(){const hx=HERO.pos.x,hz=HERO.pos.z;let best=null,bs=1e9;
   for(let i=0;i<20;i++){const a=i/20*6.28,r=i%2?4:3;let x=hx+Math.sin(a)*r,z=hz+Math.cos(a)*r;if(arenaOn()&&Math.hypot(x,z)>ARENA-1)continue;let s=0;
     for(const e of enemies){if(e.dead)continue;const d=Math.hypot(e.x-x,e.z-z);if(d<3.5)s+=(3.5-d)}
@@ -97,7 +120,7 @@ function blinkSpot(){const hx=HERO.pos.x,hz=HERO.pos.z;let best=null,bs=1e9;
   return {pt:best||[hx,hz-3]}}
 function blinkCast(A){const [tx0,tz0]=A.pt,hx=HERO.pos.x,hz=HERO.pos.z;let dx=tx0-hx,dz=tz0-hz,d=Math.hypot(dx,dz)||1;const R=SK.blink.range();if(d>R){dx*=R/d;dz*=R/d;d=R}
   const tx=hx+dx,tz=hz+dz;SFX.play('soul');buzz(15);G.iframe=Math.max(G.iframe,.2);root.position.x=tx;root.position.z=tz;root.rotation.y=Math.atan2(dx,dz);
-  if(save.realm>=15)G.blink2=!G.blink2;
+  G.blinkN=Math.max(0,(G.blinkN||0)-1);if(save.realm>=15)wingsShow();
   const m=new THREE.Mesh(beamGeo,new THREE.MeshBasicMaterial({map:wBeamTex,color:0x9a5aff,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide}));m.position.set(hx,.9,hz);m.rotation.y=Math.atan2(dx,dz);m.scale.set(.9,1,d);scene.add(m);
   act(.35,t=>{m.material.opacity=1-t/.35;m.scale.x=.9*(1-t/.35)+.1},()=>{scene.remove(m);m.material.dispose()});
   for(let i=0;i<6;i++){const k=i/5;fx({p:tmp.set(hx+dx*k,.6+Math.random()*.8,hz+dz*k),col:i%2?0xd8b0ff:0x9a5aff,add:true,life:.45,s0:1.1,s1:.2,op:.9,vy:.4})}
