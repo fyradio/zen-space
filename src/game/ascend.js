@@ -5,7 +5,7 @@
    各境界招牌：築基＝靈氣化青龍盤旋灌頂、地面放射裂紋、光柱衝破雲層；結丹＝九顆靈珠繞身匯成金丹、丹火燒遍全身、金蓮滿地開；
    元嬰＝黑雲漩渦、九道紫金天雷、身後巨大法相虛影、元嬰坐蓮升空；化神＝天地全白、萬劍從天而降圍成圓、背後九層光輪。
    所有效果都由「時間 t」直接算出位置（不累積狀態），所以短版可以從中途開始播。 */
-const ASC=(()=>{let on=null;const FULL=13,SHORT0=7,SHORT1=12.2;
+const ASC=(()=>{let on=null;const FULL=13,SHORT_T0={zhuji:5.0,jiedan:4.6,yuanying:6.3,huashen:7};// 精簡版：從「靈氣／青龍／金丹灌進主角」那一刻開始、播到完整結尾（光暈與陣圖淡出、鏡頭回到主角）
   const KIND={9:'zhuji',12:'jiedan',15:'yuanying',18:'huashen'};
   const NAME={zhuji:['築基','根基已成・踏入築基期','築'],jiedan:['結丹','金丹凝成・踏入結丹期','丹'],yuanying:['元嬰','元嬰出世・踏入元嬰期','嬰'],huashen:['化神','元嬰化神・踏入化神期','神']};
   const COL={zhuji:0x3fe0a8,jiedan:0xffc040,yuanying:0xc89cff,huashen:0xffe6a0};
@@ -124,7 +124,7 @@ const ASC=(()=>{let on=null;const FULL=13,SHORT0=7,SHORT1=12.2;
       S.lotusPos.forEach(([lx,lz,d,sc],i)=>{const b=sm(7.4+d*1.6,8.4+d*1.6,t)*(1-sm(11.4,12.6,t));for(let p=0;p<12;p++){dummy.position.set(lx,.03,lz);dummy.rotation.set(0,p/12*6.283+i,0);dummy.updateMatrix();const m=dummy.matrix.clone();
           dummy.position.set(0,0,0);dummy.rotation.set(-(.25+b*(p%2?.9:1.25)),0,0);dummy.scale.set(sc*1.1*b+1e-4,sc*1.5*b+1e-4,1);dummy.updateMatrix();m.multiply(dummy.matrix);S.lotus.setMatrixAt(i*12+p,m);dummy.scale.set(1,1,1)}});S.lotus.instanceMatrix.needsUpdate=true}
     if(kind==='yuanying'){S.vort.material.opacity=sm(.5,3,t)*(1-sm(11,12.6,t))*.95;S.vort.rotation.y=-t*.35;
-      const due=[2,2.55,3.1,3.6,4.1,4.6,5.1,5.6,6.9];due.forEach((tt,i)=>{if(t>=tt&&!S.bolts[i]){const a=Math.random()*6.283,r=i===8?0:1+Math.random()*3;S.bolts[i]=boltMesh(x+Math.sin(a)*r,z+Math.cos(a)*r,i===8?0xfff0c0:i%2?0xc8a0ff:0xffd890);S.bolts[i].userData.t0=tt;if(!simming){SFX.play('thunder');shake=Math.max(shake,i===8?.9:.45)}}});
+      const due=[2,2.55,3.1,3.6,4.1,4.6,5.1,5.6,6.9];due.forEach((tt,i)=>{if(t>=tt&&!S.bolts[i]&&t>tt+.5){S.bolts[i]={visible:false,userData:{t0:-9,M:{},S:{material:{}}}};return}if(t>=tt&&!S.bolts[i]){const a=Math.random()*6.283,r=i===8?0:1+Math.random()*3;S.bolts[i]=boltMesh(x+Math.sin(a)*r,z+Math.cos(a)*r,i===8?0xfff0c0:i%2?0xc8a0ff:0xffd890);S.bolts[i].userData.t0=tt;if(!simming){SFX.play('thunder');shake=Math.max(shake,i===8?.9:.45)}}});
       S.bolts.forEach(b=>{if(!b)return;const k=t-b.userData.t0,op=Math.max(0,1-k/.45);b.userData.M.opacity=op;b.userData.S.material.opacity=op;b.visible=op>0});
       const ph=sm(7.4,9.4,t)*(1-sm(11.6,12.8,t));S.fx.position.set(x-fwd[0]*3.2,-4+ph*4,z-fwd[1]*3.2);S.fx.rotation.y=S.yaw;if(S.fxM)S.fxM.opacity=ph*.5;S.fx.visible=ph>0.01;
       S.fxHalo.position.set(x-fwd[0]*3.6,6.2*ph+1.2,z-fwd[1]*3.6);S.fxHalo.rotation.y=S.yaw;S.fxHalo.rotation.z=t*.4;S.fxHalo.material.opacity=ph*.75;
@@ -141,11 +141,11 @@ const ASC=(()=>{let on=null;const FULL=13,SHORT0=7,SHORT1=12.2;
   // ---------- 播放控制 ----------
   function play(realm,opt={},done){const kind=KIND[realm]||realm;if(!NAME[kind]){if(done)done();return}stop();
     const battle=!!(G&&!G.over),short=!!opt.short;if(battle){G.prevPausedAsc=G.paused;G.paused=true}
-    on={kind,t:short?SHORT0:0,end:short?SHORT1:FULL,done,battle,y0:root.position.y,cap:opt.caption||'',snd:0,snap:true};on.S=build(kind,HERO.pos.x,HERO.pos.z,root.rotation.y);
+    const t0=short?(SHORT_T0[kind]||7):0;on={kind,t:t0,t0,end:FULL,done,battle,y0:root.position.y,cap:opt.caption||'',snd:0,snap:true};on.S=build(kind,HERO.pos.x,HERO.pos.z,root.rotation.y);
     while(on.snd<SND.length&&SND[on.snd][0]<on.t)on.snd++;
     const n=NAME[kind];ov.querySelector('b').textContent=n[0];ov.querySelector('.ascCap').textContent=on.cap;
     ov.classList.remove('show','bars');ov.classList.add('on');if(!short)SFX.play('ult');buzz(40)}
-  ov.addEventListener('pointerdown',e=>{e.preventDefault();if(on&&on.t>(on.end===SHORT1?SHORT0+.4:.4))finish()});
+  ov.addEventListener('pointerdown',e=>{e.preventDefault();if(on&&on.t>on.t0+.4)finish()});
   function step(dt){if(!on)return;const o=on;const slow=o.t>7.15&&o.t<8.1?.35:1;o.t+=dt*slow;
     while(o.snd<SND.length&&o.t>=SND[o.snd][0]){if(!simming)SFX.play(SND[o.snd][1]);if(SND[o.snd][1]==='gong'){shake=Math.max(shake,.8);buzz(120)}o.snd++}
     update(o,o.t);if(o.t>=o.end)finish()}
