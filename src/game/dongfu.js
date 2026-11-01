@@ -21,6 +21,7 @@ let CH_READY=12;// how many chapters are playable so far (the rest show 製作�
 save.inv=Object.assign({stone:0,seed:{ning:3,chi:1,shen:0},herb:{ning:0,chi:0,shen:0},pill:{hui:1,juqi:0,zhuji:0,ningdan:0,huaying:0},yaodan:0,paper:0},save.inv||{});
 save.garden=save.garden||[null,null,null,null];save.won=save.won||{};save.ults=save.ults||['wan'];if((save.realm||0)>=18&&!save.ults.includes('fashen'))save.ults.push('fashen');for(const u of ULTS)if(u.ch>0&&!save.ults.includes(u.k)&&[0,1,2].some(n=>save.won[`${u.ch}-${n}`]))save.ults.push(u.k);// 舊存檔補發已打贏章節的大絕
 if(save.won['10-2']&&!save.ending){save.ending=1;if((save.realm||0)<18)save.realm=18}// 舊存檔：打贏過老祖就補開結局、無盡之夜、化神
+if(save.storyV!==2){for(let i=0;i<=10;i++)delete save['seen'+i];for(const k of Object.keys(save))if(k.startsWith('seen_'))delete save[k];save.storyV=2}// 劇情擴寫後：已看過的章節開場／結尾重新再播一次
 save.ults=save.ults||['wan'];save.ult=save.ult||'wan';save.lastSeen=save.lastSeen||Date.now();
 const chUnlocked=i=>i===0||(i===11?!!save.ending:false)||i!==11&&[0,1,2].some(n=>save.won[`${i-1}-${n}`]);
 const DF=(()=>{let tab='go',libTab='sweep',tick=0,lookTab=0,lt=0,ld={g:0,x:0,b:0,h:0};
