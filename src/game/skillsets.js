@@ -95,7 +95,7 @@ const blinkMax=()=>save.realm>=18?6:save.realm>=17?4:save.realm>=16?3:save.realm
 function blinkTick(dt){if(!G)return;const m=blinkMax();if(G.blinkMax===undefined){G.blinkMax=m;G.blinkN=m;G.blinkT=0}else if(m!==G.blinkMax){G.blinkN+=Math.max(0,m-G.blinkMax);G.blinkMax=m}
   if(G.blinkN<m){G.blinkT+=dt;if(G.blinkT>=BLINK_CD){G.blinkT=0;G.blinkN++;if(!simming)SFX.play('ready')}}else G.blinkT=0;
   const b=skBtn.blink;if(!b||b.hidden)return;b.style.setProperty('--p',((G.blinkN>=m?0:1-G.blinkT/BLINK_CD)*100).toFixed(1)+'%');
-  const t2=G.blinkN<=0?String(Math.ceil(BLINK_CD-G.blinkT)):'';if(b._t!==t2){b._t=t2;b.querySelector('b').textContent=t2}const n2=m>1&&G.blinkN>0?String(G.blinkN):'';if(b.dataset.n!==n2)b.dataset.n=n2}
+  if(b._t!==''){b._t='';b.querySelector('b').textContent=''}const n2=G.blinkN>0?(m>1?String(G.blinkN):''):Math.ceil(BLINK_CD-G.blinkT)+'s';if(b.dataset.n!==n2)b.dataset.n=n2}
 // 風雷翼：掛在身體（body）背上、跟著姿勢走（御劍趴著飛也貼在背上）。翼的骨架＝肩→肘→腕，
 //   飛羽從「腕」往外上方開成扇、次級羽沿手臂往下垂、覆羽／小覆羽一層層蓋在上面 → 有翅膀輪廓，不是一圈尖刺。
 //   深藍→藍→（飛羽）金橙／（次級羽）青，小覆羽帶金；白色雷弧沿翼骨與羽尖跳。小小一對貼在肩膀兩側（點綴），維持 2 秒淡出。

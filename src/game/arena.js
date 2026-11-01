@@ -12,7 +12,7 @@ function makeHero2(){if(HERO2)return HERO2;
   const inner=HERO2.scene,main=root.parent;for(const o of [...inner.children]){if(o===HERO2.sky||o.isDirectionalLight||o.isHemisphereLight)continue;main.add(o)}
   return HERO2}
 const DUEL=(()=>{let st=null,ov=null;const BOSSKEYS=['yinshi','xuanbing','jinjia','shenhan','xuehe'];
-  function open(m){SFX.resume();$('#startOv').classList.remove('on');if(m==='ai'){startNight(150,{ch:12,nt:0});return}start2p()}
+  function open(m){SFX.resume();$('#startOv').classList.remove('on');if(m==='ai'){startNight(270,{ch:12,nt:0});return}start2p()}
   // ---------- 雙人同機 ----------
   function ui(){if(ov)return ov;ov=document.createElement('div');ov.id='duel2';ov.innerHTML=`
     <div class="d2bar l"><b id="d2n0"></b><i class="sh"><u id="d2s0"></u></i><i class="hp"><u id="d2h0"></u></i><i class="so"><u id="d2o0"></u></i></div>
