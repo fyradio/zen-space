@@ -13,6 +13,7 @@ const WARM=(()=>{const g=new THREE.Group();g.position.set(0,-40,0);scene.add(g);
   g.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(),new THREE.Vector3(0,.1,0)]),new THREE.LineBasicMaterial({color:0xffffff,transparent:true})));
   g.add(new THREE.Points(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3()]),new THREE.PointsMaterial({size:.1})));g.add(new THREE.Points(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3()]),new THREE.PointsMaterial({map:glowTex,size:.3,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false})));g.add(new THREE.Points(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3()]),new THREE.PointsMaterial({map:bugTex,size:.3,transparent:true,depthWrite:false})));
   try{BRUSH.warm(g)}catch(e){}// 水墨放招的著色器與貼圖
+  try{g.add(new THREE.Mesh(LOTUS_PETAL,LOTUS_M[0]));g.add(new THREE.Mesh(LANT.geo,LANT.body))}catch(e){}// 金蓮、七星燈
   try{g.add(soulFig(0xffffff,.5))}catch(e){}// 元嬰／元神斬／法相用的分身（同時讓第一次 clone 的 JS 先跑過）
   if(typeof soulTrail!=='undefined'&&!soulTrail)soulTrail=new Trail(30,.55,0xffc040);
   g.traverse(o=>{o.frustumCulled=false});

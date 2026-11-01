@@ -86,15 +86,28 @@ ULT_DEF.bagua={n:'八卦封妖陣',ic:'卦',col:0xffe08a,shape:'circle',ult:1,r:
 // ---------- 結丹技能組 ----------
 // 金蓮劍陣: a lotus of golden sword-light opens around you, twice
 const LOTUS_LV=['範圍 +30%、傷害 +30%','開兩次蓮：第二次更大','蓮心：花開時回復一成生命'];
+// 金蓮劍陣：腳下湧出一朵立體金蓮，三層花瓣由內往外綻開；開到最大時外層花瓣化成金色飛劍向四周射出，地上留水墨蓮影（BRUSH）
+const LOTUS_PETAL=(()=>{const sh=new THREE.Shape();sh.moveTo(0,0);sh.quadraticCurveTo(.5,.35,0,1);sh.quadraticCurveTo(-.5,.35,0,0);const g=new THREE.ShapeGeometry(sh,8),P=g.attributes.position,col=[],b=LC(0xa86410),t=LC(0xfff0b8);
+  for(let i=0;i<P.count;i++){const x=P.getX(i),y=P.getY(i),hw=Math.max(.02,.5*Math.sin(Math.PI*Math.min(1,y))*.62),e=Math.min(1,Math.abs(x)/hw),k=Math.pow(y,.8),c=b.clone().lerp(t,k).multiplyScalar(1-.35*e*e);col.push(c.r,c.g,c.b)}
+  g.setAttribute('color',new THREE.Float32BufferAttribute(col,3));return g})();// 花瓣：根部深金→尖端淡金，邊緣壓暗看得出一瓣一瓣
+const LOTUS_M=[0xffffff,0xf0e0c0,0xd8c0a0].map(c=>new THREE.MeshBasicMaterial({color:LC(c),vertexColors:true,side:THREE.DoubleSide,transparent:true,depthWrite:false}));// 由內到外：淡金→金→深金（不受光，不會變黑或發白）
+const LOTUS_SW=new THREE.MeshBasicMaterial({color:0xffd86a,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false});
 function lotusCast(){const lv=G.k.sweepLv,R=SK.sweep.range(),dmg=swordDmg()*5.2*G.k.sweepD,n=lv>=2?2:1;SFX.play('sweep');SFX.play('gold');shake=Math.max(shake,.3);buzz(25);
-  const hx=HERO.pos.x,hz=HERO.pos.z;
-  for(let w=0;w<n;w++){const rr=R*(1+w*.35),t0=w*.45;let hit=false;const petals=[];
-    for(let i=0;i<8;i++){const m=new THREE.Mesh(new THREE.ConeGeometry(.35,1,4),new THREE.MeshBasicMaterial({color:0xffd86a,transparent:true,opacity:0,blending:THREE.AdditiveBlending,depthWrite:false}));m.rotation.order='YXZ';scene.add(m);petals.push(m)}
-    act(.7+t0,t=>{const tt=t-t0;if(tt<0)return;const k=Math.min(1,tt/.35);petals.forEach((m,i)=>{const a=i/8*6.28+w*.4;m.position.set(HERO.pos.x+Math.sin(a)*rr*.6*k,.6,HERO.pos.z+Math.cos(a)*rr*.6*k);m.rotation.set(Math.PI/2,a,0);m.scale.set(1,rr*.9*k,1);m.material.opacity=.7*(1-Math.max(0,tt-.35)/.35)});
-        if(!hit&&tt>=.2){hit=true;if(lv>=3&&w===0){G.hp=Math.min(G.maxhp,G.hp+G.maxhp*.1)}fx({p:tmp.set(HERO.pos.x,.4,HERO.pos.z),col:0xffe08a,add:true,life:.5,s0:1,s1:rr*2.4,op:.9,vy:0});
-          for(const e of enemies){if(e.dead)continue;const dx=e.x-HERO.pos.x,dz=e.z-HERO.pos.z,d=Math.hypot(dx,dz);if(d<rr+e.r)hurtEnemy(e,dmg,dx/(d||1)*1.4,dz/(d||1)*1.4,false,6)}
+  for(let w=0;w<n;w++){const rr=R*(1+w*.35),t0=w*.5,sc=R*.42*(1+w*.3);let hit=false,fired=false;
+    const g=new THREE.Group();g.visible=false;scene.add(g);const mats=LOTUS_M.map(m=>m.clone()),rows=[];
+    [[8,.55,.2,1.15],[8,.85,.6,1],[10,1.15,1,.85]].forEach(([cnt,len,open,off],ri)=>{const row=[];for(let i=0;i<cnt;i++){const piv=new THREE.Group();piv.rotation.y=i/cnt*6.28+ri*.3;g.add(piv);const m=new THREE.Mesh(LOTUS_PETAL,mats[ri]);m.scale.set(len*.7,len,1);piv.add(m);row.push({piv,m,open,off})}rows.push(row)});
+    const core=spr(0xffe9a0,1.2);core.visible=false;const sws=[];
+    act(1.25+t0,(t,dt)=>{const tt=t-t0;if(tt<0)return;g.visible=core.visible=true;g.position.set(HERO.pos.x,0,HERO.pos.z);core.position.set(HERO.pos.x,.5,HERO.pos.z);
+        const rise=Math.min(1,tt/.18),bloom=Math.min(1,Math.max(0,(tt-.08)/.32)),e=1-Math.pow(1-bloom,3);g.scale.setScalar(sc*rise);g.rotation.y+=dt*.8;
+        rows.forEach((row,ri)=>row.forEach(p=>{const op=ri===2&&fired?0:Math.min(1,(1.25-tt)/.35);p.m.rotation.x=-(.15+e*p.open*p.off);p.m.position.y=.02+ri*.03;p.m.material.opacity=Math.max(0,op)}));
+        core.material.opacity=.8*Math.min(1,(1.25-tt)/.35);
+        if(!fired&&tt>=.4){fired=true;const hx=HERO.pos.x,hz=HERO.pos.z;for(let i=0;i<10;i++){const a=i/10*6.28+2*.3+g.rotation.y,m=new THREE.Mesh(swordGeo,LOTUS_SW.clone());m.position.set(hx+Math.sin(a)*1.1*sc,.55,hz+Math.cos(a)*1.1*sc);m.rotation.y=a;scene.add(m);sws.push({m,a,x:hx,z:hz})}
+          if(!simming)fx({p:tmp.set(hx,.5,hz),col:0xffe08a,add:true,life:.4,s0:1,s1:rr*1.2,op:.45,vy:0})}
+        for(const s of sws){const k=Math.min(1,(tt-.4)/.25),d=1.1*sc+(rr-1.1*sc)*k;s.m.position.set(s.x+Math.sin(s.a)*d,.55,s.z+Math.cos(s.a)*d);s.m.material.opacity=1-Math.max(0,(tt-.6)/.25)}
+        if(!hit&&tt>=.45){hit=true;if(lv>=3&&w===0){G.hp=Math.min(G.maxhp,G.hp+G.maxhp*.1)}
+          for(const en of enemies){if(en.dead)continue;const dx=en.x-HERO.pos.x,dz=en.z-HERO.pos.z,d=Math.hypot(dx,dz);if(d<rr+en.r)hurtEnemy(en,dmg,dx/(d||1)*1.4,dz/(d||1)*1.4,false,6)}
           if(boss.alive&&Math.hypot(boss.x-HERO.pos.x,boss.z-HERO.pos.z)<rr+boss.r)hurtBoss(dmg)}},
-      ()=>petals.forEach(m=>{scene.remove(m);m.material.dispose()}))}
+      ()=>{scene.remove(g);mats.forEach(m=>m.dispose());unspr(core);sws.forEach(s=>{scene.remove(s.m);s.m.material.dispose()})})}
   return true}
 // 玄冰長河: a wide river of ice down a line, freezing what it crosses
 const RIVER_LV=['河面變寬','兩道冰河','三道，冰封 1.5 秒','五道冰河'];

@@ -136,13 +136,26 @@ const BOSSES={
         else if(b.k%3===2){b.cd=b.rage?2.2:3.2;const n=b.rage?3:1;for(let j=0;j<n;j++){const a=a0+(j-(n-1)/2)*.35;warnLine(b.x,b.z,a,9,1.1,1+j*.15,16)}}
         else{b.cd=2.5;const fx0=Math.sin(a0),fz0=Math.cos(a0);for(let i=-1;i<=1;i++)for(let j=1;j<=3;j++)spawn('paper',b.x+fx0*j*1.1+fz0*i*1.1,b.z+fz0*j*1.1-fx0*i*1.1);banner('紙兵列陣','',false)}}}},
   fox:{name:'九尾狐',line:'九尾狐：「小道士，陪姐姐玩一會兒～」',rage:'九尾狐：「九尾齊開！」',tip:'九尾狐的紫色光環碰到會讓搖桿反向！從缺口鑽過去。',r:1,dmg:14,spd:2.2,bob:0,keep:4.5,
-    build(g){const W=toon(0xf4f0ea,{emissive:0x3a3430}),R=toon(0xc8322a,{emissive:0x3a0806}),K=toon(0x141414),E=new THREE.MeshBasicMaterial({color:0xffd23a});
-      const body=new THREE.Group();body.scale.setScalar(1.7);g.add(body);part(new THREE.SphereGeometry(.4,16,12),W,body,{p:[0,.7,0],s:[.8,.75,1.3]});
-      [-1,1].forEach(d=>{part(C0,W,body,{p:[d*.15,.32,.3],s:[.06,.4,.06]});part(C0,W,body,{p:[d*.15,.32,-.3],s:[.06,.4,.06]})});
-      part(new THREE.SphereGeometry(.24,14,10),W,body,{p:[0,1.05,.5]});part(new THREE.ConeGeometry(.12,.3,8),W,body,{p:[0,1,.78],r:[Math.PI/2,0,0]});part(new THREE.SphereGeometry(.03,6,5),K,body,{p:[0,1,.93]});
-      [-1,1].forEach(d=>{part(new THREE.ConeGeometry(.08,.24,6),W,body,{p:[d*.13,1.3,.45],r:[0,0,-d*.2]});part(new THREE.SphereGeometry(.04,6,5),E,body,{p:[d*.09,1.1,.7]});part(B0,R,body,{p:[d*.1,1.18,.68],s:[.08,.02,.02],r:[0,0,d*.4]})});
-      const tails=[];for(let i=0;i<9;i++){const t=new THREE.Group();t.position.set(0,.8,-.45);body.add(t);part(new THREE.ConeGeometry(.12,1.1,8),W,t,{p:[0,.5,0]});part(new THREE.ConeGeometry(.07,.25,6),R,t,{p:[0,1.02,0]});tails.push(t)}
-      return {body,spin:b=>tails.forEach((t,i)=>{const a=(i-4)/4;t.rotation.set(-.9+Math.sin(b.t*2+i)*.12,0,a*1.1+Math.sin(b.t*1.6+i*.7)*.15)})}},
+    // 九尾狐：修長白狐、尖耳尖嘴、額頭紅色妖紋；九條一節節由粗到細的蓬鬆彎尾，尾尖漸層成淡紫狐火，身邊飄狐火
+    build(g){const W=toon(0xf6f2ec,{emissive:0x2e2a28}),W2=toon(0xe8e0d8,{emissive:0x24201e}),R=toon(0xd02a2a,{emissive:0x5a0806}),PK=toon(0xe8a0b0,{emissive:0x3a1820}),K=toon(0x141414),E=new THREE.MeshBasicMaterial({color:0xffc83a});
+      const T1=toon(0xe6d8f4,{emissive:0x3a2a5a}),T2=toon(0xc8a0f0,{emissive:0x5a2a9a}),T3=toon(0xb070ff,{emissive:0x7a3ac8});
+      const body=new THREE.Group();body.scale.setScalar(1.75);g.add(body);const S=(r,w=12,h=10)=>new THREE.SphereGeometry(r,w,h);
+      part(S(.3,16,12),W,body,{p:[0,.72,-.05],s:[.85,.85,1.7]});part(S(.3,14,10),W,body,{p:[0,.8,.38],s:[.95,1,1]});// 細長身體＋胸
+      part(S(.2,12,10),W2,body,{p:[0,.66,.52],s:[.9,1,.7]});// 胸前白毛
+      const neck=new THREE.Group();neck.position.set(0,.92,.5);body.add(neck);part(new THREE.CylinderGeometry(.12,.17,.42,10),W,neck,{p:[0,.16,.04],r:[.55,0,0]});
+      const head=new THREE.Group();head.position.set(0,.38,.18);neck.add(head);part(S(.2,14,12),W,head,{s:[1,.9,1.05]});
+      part(new THREE.ConeGeometry(.11,.36,10),W,head,{p:[0,-.04,.27],r:[Math.PI/2,0,0],s:[1,1,.8]});part(S(.035,8,6),K,head,{p:[0,-.04,.45]});// 尖嘴＋鼻
+      [-1,1].forEach(d=>{part(new THREE.ConeGeometry(.08,.3,8),W,head,{p:[d*.11,.22,-.02],r:[-.15,0,-d*.28]});part(new THREE.ConeGeometry(.045,.2,6),PK,head,{p:[d*.105,.2,.015],r:[-.15,0,-d*.28]});// 尖耳
+        part(new THREE.SphereGeometry(.035,8,6),E,head,{p:[d*.085,.04,.17],s:[1.5,.6,.6],r:[0,0,d*.35]});part(B0,R,head,{p:[d*.11,.07,.17],s:[.1,.012,.012],r:[0,0,d*.5]});// 狐眼＋紅眼線
+        part(B0,R,head,{p:[d*.14,-.04,.12],s:[.09,.012,.012],r:[0,.4*d,-d*.2]})});
+      part(new THREE.ConeGeometry(.04,.16,6),R,head,{p:[0,.13,.16],r:[-.6,0,0]});part(new THREE.SphereGeometry(.03,6,5),R,head,{p:[0,.07,.19]});// 額頭妖紋
+      [[.13,.45],[-.13,.45],[.13,-.45],[-.13,-.45]].forEach(([x,z])=>{part(new THREE.CylinderGeometry(.045,.035,.55,8),W,body,{p:[x,.3,z]});part(S(.05,8,6),W2,body,{p:[x,.04,z+.03],s:[1,.6,1.3]})});
+      const tails=[];for(let i=0;i<9;i++){const root=new THREE.Group();root.position.set(0,.85,-.55);body.add(root);let par=root;const segs=[];
+        for(let k=0;k<7;k++){const seg=new THREE.Group();seg.position.y=k?.2:0;par.add(seg);const r=.17-k*.012,m=k>=6?T3:k>=5?T2:k>=4?T1:W;part(S(r,10,8),m,seg,{p:[0,.1,0],s:[1,1.35,1]});segs.push(seg);par=seg}
+        const fire=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex,color:0xb46aff,transparent:true,opacity:.75,blending:THREE.AdditiveBlending,depthWrite:false}));fire.scale.set(.5,.6,1);fire.position.y=.28;par.add(fire);tails.push({root,segs,fire})}
+      const wisps=[];for(let i=0;i<3;i++){const w=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex,color:0xc07cff,transparent:true,opacity:.8,blending:THREE.AdditiveBlending,depthWrite:false}));w.scale.set(.45,.45,1);body.add(w);wisps.push(w)}
+      return {body,spin:b=>{tails.forEach((t,i)=>{const a=(i-4)/4;t.root.rotation.set(-1.05+Math.sin(b.t*1.6+i)*.1,0,a*1.15);t.segs.forEach((sg,k)=>{if(k)sg.rotation.set(.16+Math.sin(b.t*2.2+i*.7+k*.5)*.12,0,Math.sin(b.t*1.7+i+k*.6)*.1*(k/3))});t.fire.material.opacity=.55+.25*Math.sin(b.t*6+i)});
+        neck.rotation.y=Math.sin(b.t*.8)*.25;wisps.forEach((w,i)=>{const a=b.t*1.4+i*2.1;w.position.set(Math.sin(a)*.9,1.1+Math.sin(b.t*2+i)*.15,Math.cos(a)*.9)})}}},
     act(b,dt){b.cd-=dt;if(b.cd<=0){b.k=(b.k||0)+1;
         if(b.k%2){b.cd=b.rage?2:2.8;const n=b.rage?9:4;for(let j=0;j<n;j++){const a=Math.atan2(HERO.pos.x-b.x,HERO.pos.z-b.z)+(j-(n-1)/2)*.4;enemyShot(b.x,1.4,b.z,Math.sin(a),Math.cos(a),3.2,12,0xb46aff,1.6)}}
         else{b.cd=b.rage?2.6:3.6;const gap=Math.random()*Math.PI*2;wave(b.x,b.z,4.2,11,gap,1,10,0xc07cff,()=>{G.charm=2;say('被魅惑了！方向反過來了！',2)});if(b.rage)act(.9,null,()=>{if(boss.alive)wave(b.x,b.z,4.2,11,gap+Math.PI,1,10,0xc07cff,()=>{G.charm=2})})}}
