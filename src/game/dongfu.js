@@ -100,7 +100,7 @@ const DF=(()=>{let tab='go',libTab='sweep',tick=0,lookTab=0,lt=0,ld={g:0,x:0,b:0
   // 造型 edits apply to the figure on the left right away (debounced), and are saved per character
   function look(it){if(it.t.includes('g'))ld.g=1;if(it.t.includes('x'))ld.x=1;if(it.t.includes('b'))ld.b=1;if(it.t.includes('h'))ld.h=1;
     if(!lt)lt=setTimeout(()=>{lt=0;const d=ld;ld={g:0,x:0,b:0,h:0};applyFace(d);if(d.b)applyBody();if(d.h)buildHair();saveFace()},50)}
-  function render(){head();tabs();body()}
+  function render(){if(typeof TALK!=='undefined')TALK.reset();head();tabs();body()}
   function go(ch,n){SFX.resume();const start=()=>startNight(NIGHT,{ch,nt:n});
     if(ch===0&&!save.seenIntro){save.seenIntro=1;writeSave();BGM.play('night');INK.play(CUTS.intro,start)}else if(CUTS['ch'+ch]&&!save['seen'+ch]){save['seen'+ch]=1;writeSave();INK.play(CUTS['ch'+ch],start)}else start()}
   function meditate(){if(G||med||!canBreak(false))return;SFX.resume();$('#startOv').classList.remove('on');med={t:0};root.rotation.y=0;SFX.play('ult');banner('靜室打坐','運轉周天，衝擊瓶頸')}

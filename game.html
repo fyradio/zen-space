@@ -295,7 +295,7 @@ h2{margin:0;font-size:22px;font-weight:400;letter-spacing:.2em}
     <h1 class="ttlh">午夜來<span class="zhan">斬</span>妖<small>提燈・斬妖・修仙</small></h1>
     <div class="ttlmenu"><button class="btn go" id="tNew">重新開始</button><button class="btn" id="tLoad">載入遊戲</button><button class="btn" id="tHelp">遊戲說明</button><button class="btn" id="tAdd">加入主畫面</button></div>
   </div>
-  <div class="ttlver">v56</div>
+  <div class="ttlver">v57</div>
 </div>
 <div class="ov md" id="mdOv"><div class="box" id="mdBox"></div></div>
 
@@ -3083,6 +3083,7 @@ const TALK=(()=>{const el=document.createElement('div');el.id='talk';el.innerHTM
   function ev(kind){if(!G||G.ch>10||simming)return;const C=L[G.ch];if(!C)return;let lines=pick(C[kind],G.nt);if(!lines)return;if(kind==='boss'&&boss.def&&boss.def.line)lines=lines.filter(l=>!boss.def.line.includes(l[1]));if(G.replay)lines=lines.slice(0,1);if(lines.length)push(lines)}
   function step(dt){if(!cur)return;t-=dt;if(t<=0)nextLine()}
   function reset(){q=[];cur=null;el.classList.remove('on')}
+  setInterval(()=>{if(cur&&(!G||G.over))step(.4)},400);// 戰鬥結束後遊戲不再 step，改用實際時間讓最後一句自己收掉
   function say(who,line){if(!G||simming)return;push([[who,line]])}
   return {ev,step,reset,say,L}})();
 window.__story={CUTS,TALK,INK};
@@ -4817,7 +4818,7 @@ function resetWorld(){corpses.length=0;let guard=0;while(acts.length&&guard++<50
   pills.forEach(p=>scene.remove(p.g));pills.length=0;qiRings.forEach(q=>scene.remove(q.m));qiRings.length=0;clearHZ();
   boss.alive=false;boss.g.visible=false;$('#bossBox').classList.remove('on');orbitBlades.forEach(g=>g.visible=false);root.position.set(0,0,0);
   scene.fog.color.copy(NIGHT_FOG);scene.background.copy(NIGHT_FOG);hemi.intensity=.55}
-function endNight(win,gaveUp=false){if(G.over)return;G.over=true;G.paused=true;cancelAim();showAim();
+function endNight(win,gaveUp=false){if(G.over)return;G.over=true;G.paused=true;cancelAim();showAim();TALK.reset();
   // 修行進度: kills / boss / elite / dawn count toward the next breakthrough; a lost night counts half the kills
   const full=G.bossKilled&&boss.def&&boss.def.duel&&boss.fled&&boss.hp<=0;const stone=Math.round((G.kills/8+(G.bossKilled?30:0)+(G.eliteKilled?10:0)+(full?40:0))*(win||G.endless?1:.5)*(1+G.nt*.25));save.inv.stone+=stone;if(G.bossKilled)save.inv.yaodan+=full?2:1;G.reward=stone;
   if(win&&G.ch===10&&G.nt===2&&(G.bossKilled||boss.fled)){save.ending=1;if(save.realm<18){save.realm=18;G.huashen=true}if(!save.ults.includes('fashen'))save.ults.push('fashen')}if(G.ch===11){save.board=(save.board||[]).concat([{k:G.kills,b:G.bossN||0,t:Math.round(G.t),d:new Date(Date.now()-new Date().getTimezoneOffset()*60000).toISOString().slice(0,10)}]).sort((a,b)=>b.k-a.k).slice(0,5)}
@@ -5113,7 +5114,7 @@ const DF=(()=>{let tab='go',libTab='sweep',tick=0,lookTab=0,lt=0,ld={g:0,x:0,b:0
   // 造型 edits apply to the figure on the left right away (debounced), and are saved per character
   function look(it){if(it.t.includes('g'))ld.g=1;if(it.t.includes('x'))ld.x=1;if(it.t.includes('b'))ld.b=1;if(it.t.includes('h'))ld.h=1;
     if(!lt)lt=setTimeout(()=>{lt=0;const d=ld;ld={g:0,x:0,b:0,h:0};applyFace(d);if(d.b)applyBody();if(d.h)buildHair();saveFace()},50)}
-  function render(){head();tabs();body()}
+  function render(){if(typeof TALK!=='undefined')TALK.reset();head();tabs();body()}
   function go(ch,n){SFX.resume();const start=()=>startNight(NIGHT,{ch,nt:n});
     if(ch===0&&!save.seenIntro){save.seenIntro=1;writeSave();BGM.play('night');INK.play(CUTS.intro,start)}else if(CUTS['ch'+ch]&&!save['seen'+ch]){save['seen'+ch]=1;writeSave();INK.play(CUTS['ch'+ch],start)}else start()}
   function meditate(){if(G||med||!canBreak(false))return;SFX.resume();$('#startOv').classList.remove('on');med={t:0};root.rotation.y=0;SFX.play('ult');banner('靜室打坐','運轉周天，衝擊瓶頸')}
