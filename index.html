@@ -81,7 +81,7 @@ html,body{height:100%;margin:0;background:var(--night);color:var(--ink);overflow
 .sk[data-sk=thunder]{border-color:#b784ff;box-shadow:0 0 12px rgba(183,132,255,.4)}.sk[data-sk=thunder] .ic{color:#e8d8ff;text-shadow:0 0 8px rgba(183,132,255,.9)}
 .sk.ult{width:84px;height:84px;border-color:#f2c75c;box-shadow:0 0 16px rgba(242,199,92,.45);background:radial-gradient(circle at 50% 40%,rgba(84,62,20,.94),rgba(22,15,6,.94))}
 .sk.newsk{animation:newsk .8s ease-in-out 6}@keyframes newsk{50%{transform:scale(1.35);box-shadow:0 0 26px #d6a8ff}}
-.sk.blink{width:46px;height:46px;border-color:#b46cff;box-shadow:0 0 12px rgba(180,108,255,.45)}.sk.blink .ic{font-size:21px;color:#e6d0ff}.sk.blink em{font-size:10px;color:#cdb0ff}
+.sk.blink[data-n]:not([data-n=''])::after{content:attr(data-n);position:absolute;right:-5px;top:-5px;min-width:17px;height:17px;padding:0 3px;box-sizing:border-box;border-radius:9px;background:#7a3cd0;border:1px solid #e6d0ff;color:#fff;font-size:11px;line-height:15px;text-align:center;pointer-events:none}.sk.blink{width:46px;height:46px;border-color:#b46cff;box-shadow:0 0 12px rgba(180,108,255,.45)}.sk.blink .ic{font-size:21px;color:#e6d0ff}.sk.blink em{font-size:10px;color:#cdb0ff}
 .sk.ult .ic{font-size:38px;color:#ffe9a8;text-shadow:0 0 10px rgba(242,199,92,.9)}
 .sk.ult .cd{background:conic-gradient(transparent var(--p,0%),rgba(0,0,0,.72) 0)}
 .sk.ult em{color:#f2c75c}
@@ -1888,27 +1888,47 @@ const blinkMax=()=>save.realm>=18?6:save.realm>=17?4:save.realm>=16?3:save.realm
 function blinkTick(dt){if(!G)return;const m=blinkMax();if(G.blinkMax===undefined){G.blinkMax=m;G.blinkN=m;G.blinkT=0}else if(m!==G.blinkMax){G.blinkN+=Math.max(0,m-G.blinkMax);G.blinkMax=m}
   if(G.blinkN<m){G.blinkT+=dt;if(G.blinkT>=BLINK_CD){G.blinkT=0;G.blinkN++;if(!simming)SFX.play('ready')}}else G.blinkT=0;
   const b=skBtn.blink;if(!b||b.hidden)return;b.style.setProperty('--p',((G.blinkN>=m?0:1-G.blinkT/BLINK_CD)*100).toFixed(1)+'%');
-  const t2=G.blinkN<=0?String(Math.ceil(BLINK_CD-G.blinkT)):(m>1?'×'+G.blinkN:'');if(b._t!==t2){b._t=t2;b.querySelector('b').textContent=t2}}
-// 風雷翼：兩片大羽翼（三排羽毛：長飛羽＋次級羽＋覆羽，深藍→青→金橙漸層）＋白色雷弧，從背後展開，維持 2 秒再淡出
-let WING=null;const V3=new THREE.Vector3(),WC=[new THREE.Color(0x060e3a),new THREE.Color(0x0a4aa8),new THREE.Color(0xe06a10)];
-function wingFeatherGeo(tip){const sh=new THREE.Shape();sh.moveTo(0,0);sh.quadraticCurveTo(.2,.35,.05,1);sh.quadraticCurveTo(-.2,.35,0,0);const g=new THREE.ShapeGeometry(sh,8),P=g.attributes.position,col=new Float32Array(P.count*3),c=new THREE.Color();
-  for(let i=0;i<P.count;i++){const y=Math.max(0,Math.min(1,P.getY(i)));if(y<.45)c.copy(WC[0]).lerp(WC[1],y/.45);else c.copy(WC[1]).lerp(tip?WC[2]:new THREE.Color(0x1a8ad8),(y-.45)/.55);col[i*3]=c.r;col[i*3+1]=c.g;col[i*3+2]=c.b}
+  const t2=G.blinkN<=0?String(Math.ceil(BLINK_CD-G.blinkT)):'';if(b._t!==t2){b._t=t2;b.querySelector('b').textContent=t2}const n2=m>1?String(G.blinkN):'';if(b.dataset.n!==n2)b.dataset.n=n2}
+// 風雷翼：掛在身體（body）背上、跟著姿勢走（御劍趴著飛也貼在背上）。翼的骨架＝肩→肘→腕，
+//   飛羽從「腕」往外上方開成扇、次級羽沿手臂往下垂、覆羽／小覆羽一層層蓋在上面 → 有翅膀輪廓，不是一圈尖刺。
+//   深藍→藍→（飛羽）金橙／（次級羽）青，小覆羽帶金；白色雷弧沿翼骨與羽尖跳。小小一對貼在肩膀兩側（點綴），維持 2 秒淡出。
+let WING=null;const V3=new THREE.Vector3();
+const WPAL={pri:[0x071650,0x0a44a0,0xd8661a],sec:[0x071650,0x0a58b0,0x1898c8],cov:[0x081c62,0x0c5ab0,0x2a8ad0],mar:[0x6a3a0a,0xb87a24,0xe0a848]};
+function featherGeo(pal,dim){const sh=new THREE.Shape();sh.moveTo(0,0);sh.bezierCurveTo(.55,.12,.52,.82,.04,1);sh.bezierCurveTo(-.48,.84,-.55,.12,0,0);
+  const g=new THREE.ShapeGeometry(sh,7),P=g.attributes.position,col=new Float32Array(P.count*3),c=new THREE.Color(),A=new THREE.Color(pal[0]),B=new THREE.Color(pal[1]),C=new THREE.Color(pal[2]);
+  for(let i=0;i<P.count;i++){const y=Math.max(0,Math.min(1,P.getY(i))),e=Math.abs(P.getX(i))*1.6;if(y<.5)c.copy(A).lerp(B,y/.5);else c.copy(B).lerp(C,Math.pow((y-.5)/.5,1.3));c.lerp(C,Math.min(.35,e*.4*y));c.multiplyScalar(dim);col[i*3]=c.r;col[i*3+1]=c.g;col[i*3+2]=c.b}
   g.setAttribute('color',new THREE.BufferAttribute(col,3));return g}
-function wingBuild(){const g=new THREE.Group(),G1=wingFeatherGeo(true),G2=wingFeatherGeo(true),G3=wingFeatherGeo(false);
-  const mk=(add)=>new THREE.MeshBasicMaterial({fog:false,vertexColors:true,transparent:true,opacity:0,blending:add?THREE.AdditiveBlending:THREE.NormalBlending,depthWrite:false,side:THREE.DoubleSide});
-  const mats=[mk(0),mk(0),mk(0)],ROWS=[{geo:G1,n:11,len:3.1,w:.62,a0:.2,a1:1.5,z:0,m:0},{geo:G2,n:9,len:2.2,w:.62,a0:.35,a1:1.35,z:.02,m:1},{geo:G3,n:12,len:1.2,w:.5,a0:.2,a1:1.55,z:.04,m:2}];
-  const sides=[];for(const sd of [1,-1]){const w=new THREE.Group();w.position.set(sd*.14,0,0);g.add(w);const fe=[];
-    ROWS.forEach((R,ri)=>{for(let i=0;i<R.n;i++){const u=i/(R.n-1),f=new THREE.Mesh(R.geo,mats[R.m]);const L=R.len*(.75+.25*Math.sin(u*Math.PI*.8+.4));f.scale.set(L*R.w,L,1);f.position.z=R.z;f.userData={a:R.a0+u*(R.a1-R.a0),ri};f.renderOrder=6+ri;w.add(f);fe.push(f)}});
-    sides.push({w,sd,fe})}
-  const lg=[];for(let i=0;i<5;i++){const ln=new THREE.Line(new THREE.BufferGeometry().setFromPoints(Array.from({length:8},()=>new THREE.Vector3())),new THREE.LineBasicMaterial({color:0xf0f6ff,transparent:true,opacity:0,blending:THREE.AdditiveBlending,depthTest:false}));ln.renderOrder=9;g.add(ln);lg.push(ln)}
-  g.position.set(0,.85,-.14);g.rotation.x=-.5;g.scale.setScalar(.29);root.add(g);return WING={g,mats,sides,lg,t:99,tj:0}}
+function wingBuild(){const g=new THREE.Group(),M=new THREE.MeshBasicMaterial({fog:false,vertexColors:true,transparent:true,opacity:0,depthWrite:false,side:THREE.DoubleSide});
+  const geos={};for(const k in WPAL)geos[k]=[featherGeo(WPAL[k],1),featherGeo(WPAL[k],.78)];
+  const S0=[.04,0],EL=[.42,.3],WR=[.72,.52];const lerp2=(a,b,t)=>[a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t];
+  const arm=t=>t<.55?lerp2(S0,EL,t/.55):lerp2(EL,WR,(t-.55)/.45);
+  const sides=[];const LM=new THREE.LineBasicMaterial({color:0xeaf6ff,transparent:true,opacity:0,blending:THREE.AdditiveBlending,depthTest:false});
+  for(const sd of [1,-1]){const w=new THREE.Group();w.position.set(sd*.16,0,0);w.scale.x=sd;g.add(w);const fe=[];
+    const add=(k,i,x,y,ang,L,W,z,ro)=>{const f=new THREE.Mesh(geos[k][i%2],M);f.position.set(x,y,z);f.rotation.z=ang;f.scale.set(L*W,L,1);f.renderOrder=ro;f.userData={ang,L};w.add(f);fe.push(f);return f};
+    // 飛羽：腕部往外上→往外下開扇（rotation.z：0＝朝上，負＝往外）
+    const pri=[];for(let i=0;i<9;i++){const u=i/8,p=lerp2(WR,[.8,.6],u);pri.push(add('pri',i,p[0],p[1],-(.55+u*1.55),.78-.2*u*u,.24,-.006*i,6))}
+    // 次級羽：沿肩→腕往下垂，靠外的稍往外斜
+    for(let i=0;i<9;i++){const u=i/8,p=arm(.08+u*.9);add('sec',i,p[0],p[1],-(2.75+u*.42)+Math.PI,.6+.1*u,.26,.01,7)}
+    // 大覆羽、小覆羽（金邊），一層層蓋住羽根
+    for(let i=0;i<10;i++){const u=i/9,p=arm(.05+u*.95);add('cov',i,p[0],p[1]+.02,-(2.6+u*.6)+Math.PI,.32+.06*u,.34,.02,8)}
+    for(let i=0;i<9;i++){const u=i/8,p=arm(.02+u*.98);add('mar',i,p[0],p[1]+.03,-(2.3+u*.8)+Math.PI,.16,.42,.03,9)}
+    const lines=[];for(let i=0;i<3;i++){const ln=new THREE.Line(new THREE.BufferGeometry().setFromPoints(Array.from({length:9},()=>new THREE.Vector3())),LM);ln.renderOrder=10;w.add(ln);lines.push(ln)}
+    sides.push({w,sd,fe,pri,lines})}
+  // 背心（劍匣下方）往後一點，整片略往後傾
+  g.position.set(0,1.16,-.13);g.rotation.x=-.2;body.add(g);return WING={g,M,LM,sides,arm,WR,t:99,tj:0}}
 function wingsShow(){if(simming)return;const W=WING||wingBuild();W.t=0;W.g.visible=true;W.on=true}
-function wingsStep(dt){const W=WING;if(!W||!W.on)return;W.t+=dt;const t=W.t,a=Math.min(1,t/.2)*Math.min(1,Math.max(0,(2-t)/.4));
-  if(t>=2){W.on=false;W.g.visible=false;W.mats.forEach(m=>m.opacity=0);return}
-  W.mats[0].opacity=.95*a;W.mats[1].opacity=.9*a;W.mats[2].opacity=.92*a;const sp=1-Math.pow(1-Math.min(1,t/.25),3),fl=Math.sin(t*9);
-  for(const S of W.sides){S.w.rotation.z=-S.sd*.1*fl;S.w.rotation.y=-S.sd*(.35+.12*fl)*sp;S.fe.forEach(f=>{f.rotation.z=-S.sd*(.08+(f.userData.a-.08)*sp)})}
-  W.tj-=dt;if(W.tj<=0){W.tj=.05;W.lg.forEach((ln,i)=>{const S=W.sides[i%2],pts=ln.geometry.attributes.position;const f=S.fe[Math.floor(i/2)*3+1],L=f.scale.y,rz=f.rotation.z;
-      for(let k=0;k<8;k++){const d=L*k/7,j=(k&&k<7)?(Math.random()-.5)*.4:0;V3.set(-Math.sin(rz)*d+j,Math.cos(rz)*d+j,.05).applyEuler(S.w.rotation).add(S.w.position);pts.setXYZ(k,V3.x,V3.y,V3.z)}pts.needsUpdate=true;ln.material.opacity=(Math.random()<.8?.95:.3)*a})}}
+function wingsStep(dt){const W=WING;if(!W||!W.on)return;W.t+=dt;const t=W.t,a=Math.min(1,t/.18)*Math.min(1,Math.max(0,(2-t)/.4));
+  if(t>=2){W.on=false;W.g.visible=false;W.M.opacity=W.LM.opacity=0;return}
+  W.M.opacity=.96*a;W.LM.opacity=.9*a;const sp=1-Math.pow(1-Math.min(1,t/.28),3),fl=Math.sin(t*8);
+  W.g.scale.setScalar((.35+.65*sp)*.36);
+  for(const S of W.sides){S.w.rotation.y=-S.sd*(.42+.2*fl);S.w.rotation.z=.08*fl*S.sd;
+    S.pri.forEach((f,i)=>{f.rotation.z=f.userData.ang*(.55+.45*sp)})}
+  W.tj-=dt;if(W.tj<=0){W.tj=.05;for(const S of W.sides){S.lines.forEach((ln,li)=>{const P=ln.geometry.attributes.position;
+      for(let k=0;k<9;k++){let x,y;const u=k/8;
+        if(li===0){const p=W.arm(u);x=p[0];y=p[1]+.02}// 沿翼骨
+        else{const f=S.pri[li===1?1+Math.floor(Math.random()*3):4+Math.floor(Math.random()*4)],L=f.scale.y*u,rz=f.rotation.z;x=f.position.x-Math.sin(rz)*L;y=f.position.y+Math.cos(rz)*L}
+        const j=(k&&k<8)?(Math.random()-.5)*.09:0;P.setXYZ(k,x+j,y+j,.05)}P.needsUpdate=true});
+      S.lines.forEach(ln=>ln.visible=Math.random()<.85)}}}
 function blinkSpot(){const hx=HERO.pos.x,hz=HERO.pos.z;let best=null,bs=1e9;
   for(let i=0;i<20;i++){const a=i/20*6.28,r=i%2?4:3;let x=hx+Math.sin(a)*r,z=hz+Math.cos(a)*r;if(arenaOn()&&Math.hypot(x,z)>ARENA-1)continue;let s=0;
     for(const e of enemies){if(e.dead)continue;const d=Math.hypot(e.x-x,e.z-z);if(d<3.5)s+=(3.5-d)}
