@@ -1,7 +1,7 @@
 /* ================= 大境界突破（電影版）＝ ASC =================
    築基（realm 9）、結丹（12）、元嬰（15）、化神（18，結局）。完整版約 13 秒，三幕：蓄勢 → 爆發 → 蛻變；短版 5 秒（只播爆發＋蛻變）。
    完整版：靜室打坐、靜室「回看突破」、結局的化神。短版：戰場上引雷劫（全場凍結，播完震開妖群）、結局的突破蒙太奇。
-   電影感：上下黑邊、爆發那一秒慢動作、鼓聲蓄勢＋鐘鳴、最後一筆寫出境界名再蓋紅色印章。點一下跳過。
+   電影感：上下黑邊、爆發那一秒慢動作、鼓聲蓄勢＋鐘鳴、化神最後一筆寫出兩個大字（置中）。點一下跳過。
    各境界招牌：築基＝靈氣化青龍盤旋灌頂、地面放射裂紋、光柱衝破雲層；結丹＝九顆靈珠繞身匯成金丹、丹火燒遍全身、金蓮滿地開；
    元嬰＝黑雲漩渦、九道紫金天雷、身後巨大法相虛影、元嬰坐蓮升空；化神＝天地全白、萬劍從天而降圍成圓、背後九層光輪。
    所有效果都由「時間 t」直接算出位置（不累積狀態），所以短版可以從中途開始播。 */
@@ -11,17 +11,14 @@ const ASC=(()=>{let on=null;const FULL=13,SHORT0=7,SHORT1=12.2;
   const COL={zhuji:0x3fe0a8,jiedan:0xffc040,yuanying:0xc89cff,huashen:0xffe6a0};
   const lowQ=()=>typeof POWER!=='undefined'&&POWER.low;
   // ---------- 畫面上的電影元素（黑邊、閃白、天色、字幕、書法大字＋印章）----------
-  const ov=document.createElement('div');ov.id='ascOv';ov.innerHTML='<div class="ascSky"></div><div class="ascFlash"></div><div class="ascBar t"></div><div class="ascBar b"><span class="ascCap"></span></div><div class="ascT"><b></b><i></i><small></small></div><div class="ascSkip">點一下跳過</div>';document.body.appendChild(ov);
+  const ov=document.createElement('div');ov.id='ascOv';ov.innerHTML='<div class="ascSky"></div><div class="ascFlash"></div><div class="ascBar t"></div><div class="ascBar b"><span class="ascCap"></span></div><div class="ascT"><b></b></div><div class="ascSkip">點一下跳過</div>';document.body.appendChild(ov);
   const st=document.createElement('style');st.textContent=`#ascOv{position:fixed;inset:0;z-index:38;display:none;cursor:pointer;overflow:hidden}#ascOv.on{display:block}
     #ascOv .ascBar{position:absolute;left:0;right:0;height:11vh;background:#000;transition:transform .7s cubic-bezier(.3,.9,.3,1)}#ascOv .ascBar.t{top:0;transform:translateY(-100%)}#ascOv .ascBar.b{bottom:0;transform:translateY(100%);display:grid;place-items:center}
     #ascOv.bars .ascBar{transform:none}#ascOv .ascCap{font-size:14px;letter-spacing:.35em;color:#e8dcc0}
     #ascOv .ascSky{position:absolute;inset:0;opacity:0;pointer-events:none}#ascOv .ascFlash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none}
-    #ascOv .ascT{position:absolute;left:0;right:0;top:15vh;display:flex;justify-content:center;align-items:center;gap:14px;opacity:0;transition:opacity .4s}#ascOv.show .ascT{opacity:1}
+    #ascOv .ascT{position:absolute;left:0;right:0;top:0;bottom:0;display:flex;justify-content:center;align-items:center;gap:14px;opacity:0;transition:opacity .4s}#ascOv.show .ascT{opacity:1}
     #ascOv .ascT b{font-family:var(--f-ui);font-weight:700;font-size:min(16vh,78px);letter-spacing:.18em;color:#fff3cf;text-shadow:0 0 22px rgba(242,199,92,.85),0 4px 0 #2a1a04;clip-path:inset(0 100% 0 0);transition:clip-path 1.1s cubic-bezier(.5,0,.3,1)}
     #ascOv.show .ascT b{clip-path:inset(0 0 0 0)}
-    #ascOv .ascT i{font-style:normal;display:grid;place-items:center;width:min(11vh,54px);height:min(11vh,54px);border:3px solid #c8221c;border-radius:6px;color:#c8221c;font-family:var(--f-ui);font-weight:700;font-size:min(8vh,38px);background:rgba(255,236,220,.85);opacity:0;transform:scale(2.6) rotate(-14deg);transition:transform .25s cubic-bezier(.4,1.6,.5,1),opacity .2s}
-    #ascOv.stamp .ascT i{opacity:1;transform:scale(1) rotate(-6deg)}
-    #ascOv .ascT small{position:absolute;top:100%;left:0;right:0;text-align:center;margin-top:6px;font-size:14px;letter-spacing:.4em;color:#f2d79a;text-shadow:0 1px 4px #000}
     #ascOv .ascSkip{position:absolute;right:calc(env(safe-area-inset-right,0px) + 16px);bottom:2vh;font-size:11px;color:rgba(255,255,255,.45);letter-spacing:.2em;z-index:2}`;document.head.appendChild(st);
   // ---------- 花紋貼圖（第一次用到才畫，畫好留著）----------
   const TX={};const cvs=(n,f)=>{const c=document.createElement('canvas');c.width=c.height=n;const x=c.getContext('2d');x.translate(n/2,n/2);f(x,n/2);const t=new THREE.CanvasTexture(c);t.anisotropy=4;return t};
@@ -137,17 +134,17 @@ const ASC=(()=>{let on=null;const FULL=13,SHORT0=7,SHORT1=12.2;
     // 畫面：天色、閃白、黑邊、書法大字＋印章
     const sky=ov.querySelector('.ascSky');sky.style.background=kind==='yuanying'?'radial-gradient(ellipse at 50% 60%,rgba(0,0,0,0) 25%,rgba(6,2,16,.9) 85%)':kind==='huashen'?'radial-gradient(ellipse at 50% 55%,rgba(255,252,240,.25) 20%,rgba(255,250,232,.92) 85%)':'radial-gradient(ellipse at 50% 55%,rgba(0,0,0,0) 25%,rgba(2,6,10,.7) 85%)';
     sky.style.opacity=String(Math.min(1,sm(.3,3,t))*(1-sm(11.8,12.8,t)));ov.querySelector('.ascFlash').style.opacity=String(Math.max(0,1-Math.abs(t-7.2)/.35)*.95);
-    ov.classList.toggle('bars',t>.1&&t<12.3);ov.classList.toggle('show',t>9.6&&t<12.4);ov.classList.toggle('stamp',t>10.9&&t<12.4);
+    ov.classList.toggle('bars',t>.1&&t<12.3);ov.classList.toggle('show',kind==='huashen'&&t>9.6&&t<12.4);// 只有化神出現「化神」兩個字（置中、無印章）
     if(!o.drums){o.drums=1}// 音效由 step 依時間觸發
   }
-  const SND=[[1,'drum'],[2.6,'drum'],[3.9,'drum'],[4.9,'drum'],[5.7,'drum'],[6.3,'drum'],[6.7,'drum'],[7.05,'whoosh'],[7.2,'gong'],[10.9,'stamp']];
+  const SND=[[1,'drum'],[2.6,'drum'],[3.9,'drum'],[4.9,'drum'],[5.7,'drum'],[6.3,'drum'],[6.7,'drum'],[7.05,'whoosh'],[7.2,'gong']];
   // ---------- 播放控制 ----------
   function play(realm,opt={},done){const kind=KIND[realm]||realm;if(!NAME[kind]){if(done)done();return}stop();
     const battle=!!(G&&!G.over),short=!!opt.short;if(battle){G.prevPausedAsc=G.paused;G.paused=true}
     on={kind,t:short?SHORT0:0,end:short?SHORT1:FULL,done,battle,y0:root.position.y,cap:opt.caption||'',snd:0,snap:true};on.S=build(kind,HERO.pos.x,HERO.pos.z,root.rotation.y);
     while(on.snd<SND.length&&SND[on.snd][0]<on.t)on.snd++;
-    const n=NAME[kind];ov.querySelector('b').textContent=n[0];ov.querySelector('small').textContent=n[1];ov.querySelector('i').textContent=n[2];ov.querySelector('.ascCap').textContent=on.cap;
-    ov.classList.remove('show','stamp','bars');ov.classList.add('on');if(!short)SFX.play('ult');buzz(40)}
+    const n=NAME[kind];ov.querySelector('b').textContent=n[0];ov.querySelector('.ascCap').textContent=on.cap;
+    ov.classList.remove('show','bars');ov.classList.add('on');if(!short)SFX.play('ult');buzz(40)}
   ov.addEventListener('pointerdown',e=>{e.preventDefault();if(on&&on.t>(on.end===SHORT1?SHORT0+.4:.4))finish()});
   function step(dt){if(!on)return;const o=on;const slow=o.t>7.15&&o.t<8.1?.35:1;o.t+=dt*slow;
     while(o.snd<SND.length&&o.t>=SND[o.snd][0]){if(!simming)SFX.play(SND[o.snd][1]);if(SND[o.snd][1]==='gong'){shake=Math.max(shake,.8);buzz(120)}o.snd++}
@@ -164,7 +161,7 @@ const ASC=(()=>{let on=null;const FULL=13,SHORT0=7,SHORT1=12.2;
     if(o.battle&&G&&!G.over){G.paused=G.prevPausedAsc||false;const R=8,dmg=swordDmg()*30;fx({p:tmp.set(o.S.x,.5,o.S.z),col:COL[o.kind],add:true,life:.6,s0:1,s1:R*2.2,op:.8,vy:0});shake=Math.max(shake,.6);SFX.play('boom');
       for(const e of enemies){if(e.dead)continue;const dx=e.x-o.S.x,dz=e.z-o.S.z,d=Math.hypot(dx,dz);if(d<R+e.r)hurtEnemy(e,dmg,dx/(d||1)*3,dz/(d||1)*3,true,8)}if(boss.alive&&Math.hypot(boss.x-o.S.x,boss.z-o.S.z)<R+boss.r)hurtBoss(dmg*.3)}
     if(o.done)o.done()}
-  function stop(){if(!on)return;const o=on;on=null;root.position.y=o.y0;clear();ov.classList.remove('on','show','stamp','bars');ov.querySelector('.ascFlash').style.opacity='0'}
+  function stop(){if(!on)return;const o=on;on=null;root.position.y=o.y0;clear();ov.classList.remove('on','show','bars');ov.querySelector('.ascFlash').style.opacity='0'}
   // 結局蒙太奇：築基→結丹→元嬰各 5 秒精華（配字幕），最後接完整化神
   function montage(done){const seq=[[9,'那一夜，你在雷雲下築基'],[12,'師父長眠的那一夜，你結成金丹'],[15,'九道天雷之下，元嬰出世']];let i=0;
     const next=()=>{if(i<seq.length){const [r,c]=seq[i++];play(r,{short:true,caption:c},next)}else play(18,{caption:'千年子時・鬼門合上'},done)};next()}

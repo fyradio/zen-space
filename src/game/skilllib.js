@@ -315,12 +315,17 @@ const SWAP_SLOTS=[['sweep','一技能',()=>G.k.sweepLv],['beam','二技能',()=>
 function swapUI(){let ov=document.getElementById('swapOv');if(ov)return ov;const st=document.createElement('style');
   st.textContent='#swapOv{position:fixed;left:0;right:0;top:0;z-index:35;display:none;padding:calc(env(safe-area-inset-top,0px) + 6px) 12px 8px;background:linear-gradient(#0b0a14ee,#0b0a14d8);border-bottom:1px solid #ffffff22;font-family:var(--f-ui);color:#f4ecd8}#swapOv.on{display:block}#swapOv .sr{display:flex;align-items:center;gap:6px;margin:4px 0}#swapOv .sl{flex:none;width:62px;font-size:12px;opacity:.85;line-height:1.2}#swapOv .sl b{display:block;color:#ffd86a;font-size:11px}#swapOv .cs{display:flex;gap:6px;overflow-x:auto;flex:1;padding:2px}#swapOv .ch{all:unset;cursor:pointer;flex:none;min-width:58px;padding:4px 6px;border-radius:9px;border:2px solid #ffffff33;background:#1a1826;text-align:center;font-size:11px;line-height:1.25}#swapOv .ch i{display:block;font-style:normal;font-size:18px}#swapOv .ch.cur{background:#3a3050;border-width:2px}#swapOv .x{position:absolute;right:10px;top:calc(env(safe-area-inset-top,0px) + 4px);all:unset;cursor:pointer;width:30px;height:30px;text-align:center;line-height:30px;font-size:16px}';
   document.head.appendChild(st);ov=document.createElement('div');ov.id='swapOv';document.body.appendChild(ov);return ov}
-function swapRender(){const ov=swapUI();ov.innerHTML='<button class="x" aria-label="關閉">✕</button><div style="font-size:12px;opacity:.8">換招（等級照格子保留，冷卻不重置）</div>';ov.querySelector('.x').onclick=swapClose;
+function swapRender(){const ov=swapUI();ov.innerHTML='<button class="x" aria-label="關閉">✕</button><div style="font-size:12px;opacity:.8">換招（等級照格子保留，冷卻／殺氣不重置）</div>';ov.querySelector('.x').onclick=swapClose;
+  swapUltRow(ov);
   for(const [slot,nm,lvf] of SWAP_SLOTS){const row=document.createElement('div');row.className='sr';row.innerHTML=`<div class="sl">${nm}<b>Lv ${(lvf()||0)+1}</b></div><div class="cs"></div>`;const cs=row.querySelector('.cs');
     const own=SKILL_LIB[slot].filter(s=>(save.skOwn||[]).includes(s.id)||SK[slot]===s);
     for(const S of own){const c='#'+S.col.toString(16).padStart(6,'0'),b=document.createElement('button');b.className='ch'+(SK[slot]===S?' cur':'');b.style.borderColor=c;b.innerHTML=`<i style="text-shadow:0 0 8px ${c}">${S.ic}</i>${S.n}`;
       b.onclick=()=>{if(SK[slot]!==S){save.sk[slot]=S.id;equipSkills();if(G&&G.cd)G.cd[slot]=Math.min(G.cd[slot],SK[slot].cd());writeSave();SFX.play('gold')}swapClose()};cs.appendChild(b)}
     ov.appendChild(row)}}
+function swapUltRow(ov){const row=document.createElement('div');row.className='sr';row.innerHTML='<div class="sl">大絕<b>殺氣不重置</b></div><div class="cs"></div>';const cs=row.querySelector('.cs');
+  for(const k of (save.ults||['wan'])){const U=ULT_DEF[k];if(!U)continue;const c='#'+U.col.toString(16).padStart(6,'0'),b=document.createElement('button');b.className='ch'+(SK.ult===U?' cur':'');b.style.borderColor=c;b.innerHTML=`<i style="text-shadow:0 0 8px ${c}">${U.ic}</i>${U.n}`;
+    b.onclick=()=>{if(SK.ult!==U){save.ult=k;setUlt(k);writeSave();SFX.play('gold')}swapClose()};cs.appendChild(b)}
+  ov.appendChild(row)}
 function swapOpen(){if(!G||G.over||G.ch===12||G.paused||G.clash)return;resetJoy();cancelAim();swapRender();swapUI().classList.add('on');G.paused=true;G.swapPaused=true}
 function swapClose(){swapUI().classList.remove('on');if(G&&G.swapPaused){G.swapPaused=false;if(!$('#cardOv').classList.contains('on')&&!$('#pauseOv').classList.contains('on'))G.paused=false}}
 $('#swapBtn').onclick=swapOpen;
