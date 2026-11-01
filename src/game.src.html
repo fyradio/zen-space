@@ -693,17 +693,19 @@ const IND={range:new THREE.Mesh(ringGeo,indMat()),fan:new THREE.Mesh(fanGeo(SK.s
   line:new THREE.Mesh(new THREE.PlaneGeometry(1,1).rotateX(-Math.PI/2).translate(0,0,.5),indMat()),circ:new THREE.Mesh(new THREE.CircleGeometry(1,48).rotateX(-Math.PI/2),indMat()),
   edge:new THREE.Mesh(ringGeo,indMat())};
 for(const m of Object.values(IND)){m.visible=false;m.renderOrder=5;scene.add(m)}IND.range.material.opacity=.5;IND.edge.material.opacity=.95;
+/*@include game/inkfx.js*/
+BRUSH.aimify(IND);
 function showAim(){for(const m of Object.values(IND))m.visible=false;if(!aim||!G||G.paused||G.over)return;
   const S=SK[aim.k],A=aimInfo(aim.k,aim),hx=HERO.pos.x,hz=HERO.pos.z,col=aim.cancel?0x9a9a9a:S.col;
-  for(const m of Object.values(IND))m.material.color.setHex(col);
+  for(const m of Object.values(IND))BRUSH.setCol(m,col);
   IND.range.visible=true;IND.range.position.set(hx,.05,hz);IND.range.scale.setScalar(S.range());
-  const fan=(a,R)=>{IND.fan.geometry=fanGeo(a);IND.fan.visible=true;IND.fan.position.set(hx,.06,hz);IND.fan.rotation.y=Math.atan2(A.dir[0],A.dir[1]);IND.fan.scale.setScalar(R)};
+  const fan=(a,R)=>{IND.fan.geometry=BRUSH.sectorGeo(a);IND.fan.visible=true;IND.fan.position.set(hx,.06,hz);IND.fan.rotation.y=Math.atan2(A.dir[0],A.dir[1]);IND.fan.scale.setScalar(R)};
   if(S.shape==='fan')fan(S.full&&S.full()?Math.PI*2:S.ang,S.range());
   else if(S.shape==='line'){const sp=S.spread?S.spread():0;if(sp>0)fan(sp,S.range());else{IND.line.visible=true;IND.line.position.set(hx,.06,hz);IND.line.rotation.y=Math.atan2(A.dir[0],A.dir[1]);IND.line.scale.set(S.w,1,S.range())}}
   else{IND.circ.visible=IND.edge.visible=true;IND.circ.position.set(A.pt[0],.06,A.pt[1]);IND.circ.scale.setScalar(S.r());IND.edge.position.set(A.pt[0],.07,A.pt[1]);IND.edge.scale.setScalar(S.r())}}
 function castSkill(k,A){if(!G||G.paused||G.over||!ready(k))return false;A=A||autoAim(k);
   const d=A.dir||(A.pt?[A.pt[0]-HERO.pos.x,A.pt[1]-HERO.pos.z]:[0,0]);if(d[0]||d[1])root.rotation.y=Math.atan2(d[0],d[1]);G.castT=.45;
-  if(k==='ult'){G.ult=0;G.ultLock=G.k.ultCd;SK.ult.cast(A)}else{G.skMulNow=SK[k].mul||1;let ok;try{ok=SK[k].cast(A)}finally{G.skMulNow=1}if(ok===false){const b=skBtn[k];b.classList.remove('no');void b.offsetWidth;b.classList.add('no');return false}G.cd[k]=SK[k].cd()}
+  if(k==='ult'){G.ult=0;G.ultLock=G.k.ultCd;SK.ult.cast(A)}else{G.skMulNow=SK[k].mul||1;let ok;try{ok=SK[k].cast(A)}finally{G.skMulNow=1}if(ok===false){const b=skBtn[k];b.classList.remove('no');void b.offsetWidth;b.classList.add('no');return false}G.cd[k]=SK[k].cd();BRUSH.cast(k,A)}
   G.casts=(G.casts||0)+1;return true}
 // timed skill effects that follow game time (so pause / slow motion apply)
 const acts=[];const act=(life,step,end)=>{acts.push({t:0,life,step,end})};
@@ -727,7 +729,7 @@ function sweepCast(A){const lv=G.k.sweepLv,full=lv>=3,ang=full?Math.PI*2:SK.swee
   const T1=full?.42:.26,gap=.08,hitAt=[];for(let p=0;p<passes;p++)hitAt.push(p*(T1+gap)+T1*.45);const life=passes*(T1+gap)+.3;let hits=0;
   act(life,t=>{const p=Math.min(passes-1,Math.floor(t/(T1+gap))),tt=t-p*(T1+gap),k=Math.min(1,tt/T1),e=1-Math.pow(1-k,3),dir=p%2?-1:1,hx=HERO.pos.x,hz=HERO.pos.z;
       bamboo.position.set(hx,.9,hz);arc.position.set(hx,.07,hz);bamboo.rotation.y=full?a0+e*Math.PI*2:a0+dir*(ang*.55-ang*1.1*e);
-      arc.material.opacity=t<life-.3?.75*(.45+.55*Math.sin(k*Math.PI)):Math.max(0,.75*(1-(t-(life-.3))/.25));
+      arc.material.opacity=t<life-.3?.2*(.45+.55*Math.sin(k*Math.PI)):Math.max(0,.2*(1-(t-(life-.3))/.25));
       if(t>life-.2)bamboo.scale.setScalar(R/4.6*Math.max(.05,(life-t)/.2));
       while(hits<hitAt.length&&t>=hitAt[hits]){hits++;let killed=0;
         for(const en of enemies){if(en.dead)continue;const dx=en.x-hx,dz=en.z-hz,d=Math.hypot(dx,dz);

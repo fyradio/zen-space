@@ -26,7 +26,7 @@ function shot(o){const s=spr(o.col,o.size||.8,o.tex);let x=o.x,z=o.z,vx=o.dx,vz=
       for(const e of enemies){if(e.dead||hit.has(e))continue;if((e.x-x)**2+(e.z-z)**2<(o.r+e.r)**2){hit.add(e);if(o.onHit)o.onHit(e,x,z,vx,vz);else hurtEnemy(e,o.dmg,vx*.6,vz*.6,false,3);if(--n<=0){end();return}}}
       if(boss.alive&&!hit.has(boss)&&(boss.x-x)**2+(boss.z-z)**2<(o.r+boss.r)**2){hit.add(boss);hurtBoss(o.bossDmg??o.dmg);if(--n<=0){end();return}}
       if(t>=o.life-.03){end()}},()=>{if(!done&&o.end)o.end(x,z);unspr(s)})}
-const ringFx=(x,z,R,col,life=.45)=>fx({p:tmp.set(x,.35,z),col,add:true,life,s0:1,s1:R*2.4,op:.95,vy:0});
+const ringFx=(x,z,R,col,life=.45)=>{BRUSH.circle(x,z,R,col,null,.2);fx({p:tmp.set(x,.35,z),col,add:true,life:life*.7,s0:1,s1:R*1.6,op:.4,vy:0})};// 爆開＝一筆水墨圓＋淡淡一圈光
 const aimD=A=>Math.atan2(A.dir[0],A.dir[1]);
 const bs=()=>G.k.beamStep||0;// 第二格三級
 const SL=()=>G.k.sweepLv,TL=()=>G.k.thLv;
@@ -41,7 +41,7 @@ function peachCast(A){const lv=SL(),a0=aimD(A),R=SK.sweep.range(),n=EVc(lv>=2?5:
     const sw=new THREE.Mesh(new THREE.BoxGeometry(.12,.06,R).translate(0,0,R/2),new THREE.MeshBasicMaterial({color:0x9a3058,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false}));sw.position.set(hx,.9,hz);sw.rotation.y=a;scene.add(sw);
     if(!simming){const pt=peachBloom();for(let k=0;k<5;k++){const s=new THREE.Sprite(new THREE.SpriteMaterial({map:pt,transparent:true,depthWrite:false,rotation:Math.random()*6.28}));const d=R*(.3+Math.random()*.7),aa=a+(Math.random()-.5)*.9,x0=hx+Math.sin(aa)*d,z0=hz+Math.cos(aa)*d,y0=.6+Math.random()*.7,vx=(Math.random()-.5)*.8,vz=(Math.random()-.5)*.8,sc=.22+Math.random()*.16;s.scale.set(sc,sc,1);s.position.set(x0,y0,z0);scene.add(s);
       act(.9,t=>{s.position.set(x0+vx*t,y0-t*.55,z0+vz*t);s.material.rotation+=.05;s.material.opacity=t<.6?1:1-(t-.6)/.3},()=>{scene.remove(s);s.material.dispose()})}}
-    act(.22,t=>{m.material.opacity=.45*(1-t/.22);sw.scale.z=.4+t/.22*.8;sw.material.opacity=1-t/.22},()=>{scene.remove(m,sw);m.material.dispose();sw.geometry.dispose();sw.material.dispose()});
+    act(.22,t=>{m.material.opacity=.06*(1-t/.22);sw.scale.z=.4+t/.22*.8;sw.material.opacity=1-t/.22},()=>{scene.remove(m,sw);m.material.dispose();sw.geometry.dispose();sw.material.dispose()});
     const last=i===n-1;for(const e of enemies){if(e.dead)continue;const dx=e.x-hx,dz=e.z-hz,d=Math.hypot(dx,dz);if(d<R+e.r&&Math.abs(angDiff(Math.atan2(dx,dz),a))<.55){if(last&&lv>=3)e.stun=Math.max(e.stun||0,1);hurtEnemy(e,dmg,dx/(d||1)*(last?2:.7),dz/(d||1)*(last?2:.7),false,last?6:0)}}
     if(boss.alive){const dx=boss.x-hx,dz=boss.z-hz;if(Math.hypot(dx,dz)<R+boss.r&&Math.abs(angDiff(Math.atan2(dx,dz),a))<.6)hurtBoss(dmg)}})}
 // 金剛符陣：身邊炸開一圈符紙
