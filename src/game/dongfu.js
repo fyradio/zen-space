@@ -45,7 +45,7 @@ const DF=(()=>{let tab='go',libTab='sweep',tick=0,lookTab=0,lt=0,ld={g:0,x:0,b:0
         <p class="tag">${can?'':'條件達成後可以在這裡安全突破，或在戰場上按「突破」引雷劫（更快、這一夜更強）。'}</p></div>
         <div class="dfsec"><h3>閉關</h3><p class="tag">離開遊戲時也在修行，最多累積 8 小時，每小時 ${6+4*save.realm} 靈石。</p>
         <button class="btn" id="collect" ${off>0?'':'disabled'}>收下閉關所得：${off} 靈石</button></div>
-        <div class="dfsec"><h3>回看突破</h3><div class="pair asc3">${[[9,'築基'],[12,'結丹'],[15,'元嬰']].map(([r,n])=>`<button class="btn" data-asc="${r}" ${save.realm>=r?'':'disabled'}>${n}${save.realm>=r?'':'<small>未達</small>'}</button>`).join('')}</div></div>`;
+        <div class="dfsec"><h3>回看突破</h3><div class="pair asc3">${[[9,'築基'],[12,'結丹'],[15,'元嬰'],[18,'化神']].map(([r,n])=>`<button class="btn" data-asc="${r}" ${save.realm>=r?'':'disabled'}>${n}${save.realm>=r?'':'<small>未達</small>'}</button>`).join('')}</div></div>`;
       $$('#dfBody [data-asc]').forEach(b=>b.onclick=()=>{SFX.resume();$('#startOv').classList.remove('on');ASC.play(+b.dataset.asc,{},()=>{$('#startOv').classList.add('on');DF.render()})});
       $('#medBtn').onclick=meditate;$('#collect').onclick=()=>{inv.stone+=offline();save.lastSeen=Date.now();writeSave();SFX.play('gold');render()}}
     else if(tab==='garden'){el.innerHTML=`<div class="plots">${save.garden.map((p,i)=>{if(!p)return `<div class="plot"><b>空地</b><div class="seeds">${Object.entries(HERBS).map(([k,h])=>

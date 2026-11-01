@@ -120,7 +120,7 @@ h2{margin:0;font-size:22px;font-weight:400;letter-spacing:.2em}
   background:var(--panel);font-size:17px;letter-spacing:.18em;color:var(--ink)}
 .btn.go{border-color:var(--jade);background:linear-gradient(180deg,rgba(127,227,198,.3),rgba(127,227,198,.08));color:#fff}
 .btn small{display:block;font-size:12px;letter-spacing:.1em;color:var(--dim);margin-top:2px}
-.pair{display:grid;grid-template-columns:1fr 1fr;gap:8px;width:100%}.pair.asc3{grid-template-columns:1fr 1fr 1fr}
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:8px;width:100%}.pair.asc3{grid-template-columns:repeat(4,1fr)}
 .btn[aria-pressed="true"]{border-color:var(--jade);color:var(--jade);background:rgba(127,227,198,.12)}
 .stat{display:grid;grid-template-columns:auto auto;gap:4px 18px;font-size:15px;justify-content:center}
 .stat dt{color:var(--dim);text-align:right}.stat dd{margin:0;text-align:left;color:#fff4d6}
@@ -441,6 +441,10 @@ const SFX=(()=>{let ac=null,out=null,nb=null,on=true;const last={};try{on=localS
       case 'thunder':noise(.6,600,.4,.45,'lowpass');tone(80,35,.5,'sawtooth',.16);break;
       case 'wan':[1568,1319,1047,784].forEach((f,i)=>tone(f,f*.98,.25,'triangle',.1,i*.05));noise(.8,3500,.6,.18,'bandpass');break;
       case 'bell':tone(880,875,1.4,'sine',.22);tone(1320,1316,.9,'sine',.08);break;
+      case 'drum':tone(90,42,.45,'sine',.55);noise(.18,180,.8,.35,'lowpass');break;
+      case 'whoosh':noise(.7,900,.5,.25,'bandpass');tone(200,900,.6,'sine',.06);break;
+      case 'gong':[110,165,220,330,440].forEach((f,i)=>tone(f,f*.995,2.6,'sine',.22/(i+1)));noise(1.2,400,.4,.3,'lowpass');[1047,1319,1568].forEach((f,i)=>tone(f,f,1.2,'triangle',.06,.15+i*.08));break;
+      case 'stamp':noise(.12,300,.6,.4,'lowpass');tone(140,70,.15,'sine',.3);break;
       case 'boss':tone(110,65,1,'sawtooth',.22);tone(164,80,1,'square',.08);noise(.8,300,.6,.2,'lowpass');break;
       case 'bossDie':noise(1.2,500,.4,.5,'lowpass');tone(220,40,1.2,'sawtooth',.2);[784,988,1175,1568].forEach((f,i)=>tone(f,f,.5,'triangle',.14,.4+i*.09));break;
       case 'win':[[600,900],[640,960],[700,1150]].forEach(([a,b],i)=>tone(a,b,.28,'square',.07,i*.32));[392,523,659,784,1047].forEach((f,i)=>tone(f,f,.6,'triangle',.16,1+i*.12));break;
@@ -821,7 +825,7 @@ function startTribulation(){if(!G||G.over||G.paused||G.breaking||!canBreak(true)
     ()=>{if(!G||G.over)return;G.breaking=false;realmUp();G.s.dmg*=1.1*1.2;G.maxhp=Math.round(150*realmMult());G.hp=G.maxhp;
       banner('突破成功！',REALMS[save.realm],true);SFX.play('gold');buzz(90);shake=Math.max(shake,.5);
       fx({p:tmp.set(HERO.pos.x,1,HERO.pos.z),col:0xffe08a,add:true,life:1,s0:1,s1:7,op:1,vy:1.5});
-      const t=skillTier();SHIELD.setTier(t);if(t!==G.tier){setSkills(G.tier=t);for(const k in G.cd)G.cd[k]=0;say(`${SKILL_SETS[t].name}新招：${SK.sweep.n}、${SK.beam.n}、${SK.thunder.n}！`,5)}else say('突破了！血補滿，這一夜傷害再 +20%',4);if(ASC.isMajor(save.realm))ASC.play(save.realm)})}
+      const t=skillTier();SHIELD.setTier(t);if(t!==G.tier){setSkills(G.tier=t);for(const k in G.cd)G.cd[k]=0;say(`${SKILL_SETS[t].name}新招：${SK.sweep.n}、${SK.beam.n}、${SK.thunder.n}！`,5)}else say('突破了！血補滿，這一夜傷害再 +20%',4);if(ASC.isMajor(save.realm))ASC.play(save.realm,{short:true})})}
 function checkBreak(){const b=$('#breakBtn');const can=!G.breaking&&canBreak(true);if(can&&b.hidden){b.hidden=false;if(!simming){SFX.play('ready');say('可以突破了！按左上「突破」引雷劫',4)}}else if(!can&&!b.hidden)b.hidden=true}
 function updSkillUI(){for(const k in SK){const b=skBtn[k];let p,txt='';
     if(k==='ult'){p=Math.min(1,G.ult/G.k.ultNeed,G.ultLock>0?1-G.ultLock/G.k.ultCd:1);b.classList.toggle('ready',p>=1);b.style.setProperty('--p',(p*100).toFixed(1)+'%')}
@@ -1163,7 +1167,7 @@ function endNight(win,gaveUp=false){if(G.over)return;G.over=true;G.paused=true;c
     :'這一夜的斬妖數算一半；境界不會掉。';
   $('#endStat').innerHTML=`<dt>斬妖</dt><dd>${G.kills} 隻</dd><dt>最高戰力</dt><dd>${fmt(G.peak||0)}</dd><dt>頓悟</dt><dd>${G.lv} 次</dd><dt>靈石</dt><dd>+${G.reward}</dd>${G.bossKilled?'<dt>妖丹</dt><dd>+1</dd>':''}${newUlt?`<dt>新大絕</dt><dd>${newUlt.n}</dd>`:''}${G.huashen?'<dt>境界</dt><dd>化神初期！</dd>':''}`;
   renderRealm('#realmText2','#realmBar2','#reqList2',false);$('#breakNote').hidden=!canBreak(false);const showEnd=()=>$('#endOv').classList.add('on'),endKey=win&&G.ch<=10&&!G.endless?(G.ch===10?(G.nt===2?'ch10end':null):CUTS['ch'+G.ch+'end']?'ch'+G.ch+'end':null):null,endCut=endKey&&!save['seen_'+endKey];if(endCut){save['seen_'+endKey]=1;writeSave()}
-  if(win&&!simming)setTimeout(()=>{SFX.play('rooster');INK.dawn(()=>endCut?INK.play(CUTS[endKey],showEnd):showEnd())},1100);else setTimeout(()=>$('#endOv').classList.add('on'),win?1600:900);BGM.play('home');
+  if(win&&!simming)setTimeout(()=>{SFX.play('rooster');INK.dawn(()=>endCut?(endKey==='ch10end'?INK.play(CUTS.ch10end.slice(0,2),()=>ASC.montage(()=>INK.play(CUTS.ch10end.slice(2),showEnd))):INK.play(CUTS[endKey],showEnd)):showEnd())},1100);else setTimeout(()=>$('#endOv').classList.add('on'),win?1600:900);BGM.play('home');
   SFX.play(win?'win':'lose');
   if(win){banner('喔喔喔——！','雞啼');$('#bossBox').classList.remove('on')}}
 
@@ -1186,7 +1190,7 @@ function frame(now){requestAnimationFrame(frame);let dt=Math.min(.05,(now-last)/
   else if(live){POWER.tick(dt);let d=dt;if(G.slow>0){G.slow-=dt;d*=.3}G.t+=d;stepGame(d)}
   else if(G&&G.over){mode='idle'}
   else if(!G){if(titleOn)TITLE.step(dt);else if(med)stepMed(dt);else if(lookCam){root.rotation.y=angLerp(root.rotation.y,0,1-Math.exp(-dt*5));mode='idle'}else{root.rotation.y+=dt*.25;mode='idle'}}
-  if(ASC.on)ASC.step(dt);WARM.tick();animateHero(dt);syncLights();hsAura.visible=save.realm>=18;if(hsAura.visible)hsAura.userData.spin(dt);
+  if(ASC.on)ASC.step(dt);WARM.tick();animateHero(dt);syncLights();hsAura.visible=save.realm>=18;if(hsAura.visible)hsAura.userData.spin(dt);tierAura.update(dt);
   fogs.forEach((m,i)=>{m.rotation.z+=m.userData.s*dt});
   if(D2.on)DUEL.cam(dt);else if(ASC.on)ASC.cam(dt);else if(titleOn&&!G)TITLE.cam(dt);else updateCamera(dt,false);
   // UI that follows the scene
