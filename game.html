@@ -295,7 +295,7 @@ h2{margin:0;font-size:22px;font-weight:400;letter-spacing:.2em}
     <h1 class="ttlh">午夜來<span class="zhan">斬</span>妖<small>提燈・斬妖・修仙</small></h1>
     <div class="ttlmenu"><button class="btn go" id="tNew">重新開始</button><button class="btn" id="tLoad">載入遊戲</button><button class="btn" id="tHelp">遊戲說明</button><button class="btn" id="tAdd">加入主畫面</button></div>
   </div>
-  <div class="ttlver">v55</div>
+  <div class="ttlver">v56</div>
 </div>
 <div class="ov md" id="mdOv"><div class="box" id="mdBox"></div></div>
 
@@ -4787,7 +4787,9 @@ function togglePause(){if(!G||G.over)return;resetJoy();if($('#cardOv').classList
   if(on)$('#pauseInfo').textContent=`已斬 ${G.kills} 隻妖，離雞啼還有 ${clockText()}`}
 $('#viewBtn').onclick=()=>cycleCam();$('#flyBtn').onclick=()=>endlessFly();$('#sfxBtn').onclick=()=>{SFX.resume();const on=SFX.toggle();$('#sfxBtn').textContent=on?'音':'靜';if(on)BGM.resumeIfOn();else BGM.stop()};
 $('#powerBtn').onclick=()=>{POWER.cycle();$('#powerBtn').textContent='省電模式：'+POWER.label};$('#powerBtn').textContent='省電模式：'+POWER.label;
-addEventListener('pointerdown',()=>{SFX.resume();if(!G&&!BGM.mood)BGM.play('home')},{once:true});$('#sfxBtn').textContent=SFX.on?'音':'靜';$('#pauseBtn').onclick=togglePause;$('#resume').onclick=togglePause;$('#giveUp').onclick=()=>{$('#pauseOv').classList.remove('on');endNight(false,true)};
+// 瀏覽器要「使用者點一下」才准出聲：第一次點／觸碰／按鍵就解鎖音效並重新起音樂（iOS 要 touchend／click 才算），解鎖成功後才拿掉監聽
+{const unlock=()=>{SFX.resume();const c=SFX.ctx;if(c&&c.state==='running'){BGM.resumeIfOn();if(!BGM.mood&&!G)BGM.play('home');for(const ev of ['pointerdown','touchend','click','keydown'])removeEventListener(ev,unlock,true)}else if(c)c.resume().then(()=>{if(c.state==='running'){BGM.resumeIfOn();if(!BGM.mood&&!G)BGM.play('home')}}).catch(()=>{})};
+  for(const ev of ['pointerdown','touchend','click','keydown'])addEventListener(ev,unlock,true)}$('#sfxBtn').textContent=SFX.on?'音':'靜';$('#pauseBtn').onclick=togglePause;$('#resume').onclick=togglePause;$('#giveUp').onclick=()=>{$('#pauseOv').classList.remove('on');endNight(false,true)};
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&G&&!G.paused&&!G.over)togglePause()});
 const elapsedText=()=>{const s=Math.floor(G.t),m=Math.floor(s/60);return `${m}:${String(s%60).padStart(2,'0')}`};
 const clockText=()=>{const s=Math.max(0,Math.ceil(G.len-G.t)),m=Math.floor(s/60);return `${m}:${String(s%60).padStart(2,'0')}`};
