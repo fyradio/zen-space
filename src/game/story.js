@@ -158,4 +158,4 @@ const TALK=(()=>{const el=document.createElement('div');el.id='talk';el.innerHTM
   function step(dt){if(!cur)return;t-=dt;if(t<=0)nextLine()}
   function reset(){q=[];cur=null;el.classList.remove('on')}
   return {ev,step,reset,L}})();
-window.__story={CUTS,TALK};
+window.__story={CUTS,TALK,INK};
