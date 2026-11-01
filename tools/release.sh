@@ -12,6 +12,7 @@ tail -1 /tmp/zen_build.log
 # sw.js：const V='zen-vN' → N+1
 N=$(grep -o "zen-v[0-9]*" sw.js | head -1 | grep -o "[0-9]*")
 NN=$((N+1)); sed -i "s/zen-v${N}'/zen-v${NN}'/" sw.js
+python3 tools/build.py >/tmp/zen_build.log 2>&1 || { cat /tmp/zen_build.log; echo "build 失敗，不發佈"; exit 1; }  # 版號寫進標題，要在 sw.js +1 之後再 build 一次
 TRAILERS="${ZEN_TRAILERS:-}"
 git add -A
 if git diff --cached --quiet; then echo "沒有變更"; else

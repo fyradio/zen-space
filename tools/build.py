@@ -55,6 +55,11 @@ def build(src_name, out_name, test_name, page_name=None):
     if not os.path.exists(path):
         return
     src = include(open(path, encoding='utf8').read())
+    try:
+        ver = re.search(r"zen-v(\d+)", open(os.path.join(ROOT, 'sw.js'), encoding='utf8').read()).group(1)
+    except Exception:
+        ver = '?'
+    src = src.replace('__VER__', 'v' + ver)
     print('--', out_name)
     title = '午夜來斬妖'
     # glyphs only for text that can be shown: JS/CSS/HTML comments are dropped first (keeps the embedded font small)
