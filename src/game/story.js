@@ -157,5 +157,6 @@ const TALK=(()=>{const el=document.createElement('div');el.id='talk';el.innerHTM
   function ev(kind){if(!G||G.ch>10||simming)return;const C=L[G.ch];if(!C)return;let lines=pick(C[kind],G.nt);if(!lines)return;if(kind==='boss'&&boss.def&&boss.def.line)lines=lines.filter(l=>!boss.def.line.includes(l[1]));if(G.replay)lines=lines.slice(0,1);if(lines.length)push(lines)}
   function step(dt){if(!cur)return;t-=dt;if(t<=0)nextLine()}
   function reset(){q=[];cur=null;el.classList.remove('on')}
-  return {ev,step,reset,L}})();
+  function say(who,line){if(!G||simming)return;push([[who,line]])}
+  return {ev,step,reset,say,L}})();
 window.__story={CUTS,TALK,INK};
