@@ -23,7 +23,10 @@ save.garden=save.garden||[null,null,null,null];save.won=save.won||{};save.ults=s
 if(save.won['10-2']&&!save.ending){save.ending=1;if((save.realm||0)<18)save.realm=18}// 舊存檔：打贏過老祖就補開結局、無盡之夜、化神
 if(save.storyV!==2){for(let i=0;i<=10;i++)delete save['seen'+i];for(const k of Object.keys(save))if(k.startsWith('seen_'))delete save[k];save.storyV=2}// 劇情擴寫後：已看過的章節開場／結尾重新再播一次
 save.ults=save.ults||['wan'];save.ult=save.ult||'wan';save.lastSeen=save.lastSeen||Date.now();
-const chUnlocked=i=>i===0||(i===11?!!save.ending:false)||i!==11&&[0,1,2].some(n=>save.won[`${i-1}-${n}`]);
+// 劇情順序：第四、五章要先築基，第六～八章要先結丹，第九、十章要先元嬰（不然劇情對不起來）
+const CH_MIN=[0,0,0,0,9,9,12,12,12,15,15],MAJOR_N={9:'築基',12:'結丹',15:'元嬰'};
+const chRealmOk=i=>save.realm>=(CH_MIN[i]||0);
+const chUnlocked=i=>i===0||(i===11?!!save.ending:false)||i!==11&&chRealmOk(i)&&[0,1,2].some(n=>save.won[`${i-1}-${n}`]);
 const DF=(()=>{let tab='go',libTab='sweep',tick=0,lookTab=0,lt=0,ld={g:0,x:0,b:0,h:0};
   const TABS=[['go','出戰'],['med','靜室'],['garden','藥園'],['alch','丹房'],['look','造型'],['lib','藏經閣'],['shop','坊市'],['duel','鬥法台'],['save','存檔'],['title','回標題']];
   const el=$('#dfBody');
@@ -36,7 +39,7 @@ const DF=(()=>{let tab='go',libTab='sweep',tick=0,lookTab=0,lt=0,ld={g:0,x:0,b:0
   function body(){const inv=save.inv;lookCam=tab==='look'?(FACE_SPEC[lookTab].cam==='body'?'body':'face'):null;
     if(tab==='go'){el.innerHTML=CH.map((c,i)=>{const open=chUnlocked(i),ready=i<CH_READY;
         return `<div class="chrow${open&&ready?'':' lock'}"><div class="chn"><b>${c.n}</b><span>${c.p}</span><small>推薦 ${REALMS[c.rec]}</small></div><div class="chnights">${i===11?`<button class="nb" data-ch="11" data-n="0" ${open?'':'disabled'}>挑戰${save.board&&save.board.length?`<small>最佳 ${save.board[0].k}</small>`:''}</button><small class="endnote">沒有終點，撐越久越強，看能斬多少</small>`:NIGHTS.map((n,j)=>
-          `<button class="nb${save.won[`${i}-${j}`]?' won':''}" data-ch="${i}" data-n="${j}" ${open&&ready?'':'disabled'}>${n}${save.won[`${i}-${j}`]?' ✓':''}</button>`).join('')}</div>${!ready?'<em>製作中</em>':!open?'<em>打贏上一章任一夜開放</em>':''}</div>`}).join('');
+          `<button class="nb${save.won[`${i}-${j}`]?' won':''}" data-ch="${i}" data-n="${j}" ${open&&ready?'':'disabled'}>${n}${save.won[`${i}-${j}`]?' ✓':''}</button>`).join('')}</div>${!ready?'<em>製作中</em>':!open?(chRealmOk(i)?'<em>打贏上一章任一夜開放</em>':`<em>需先突破到${MAJOR_N[CH_MIN[i]]}</em>`):''}</div>`}).join('');
       if(save.ending&&save.board&&save.board.length)el.innerHTML+=`<div class="dfsec"><h3>無盡之夜排行（本機前 5）</h3><ul class="reqs">${save.board.map((r,i)=>`<li><span>${i+1}. ${r.d}</span><b>斬妖 ${r.k}・魔王 ${r.b===true?1:r.b||0}・${Math.floor((r.t||0)/60)}分</b></li>`).join('')}</ul></div>`;
       $$('#dfBody [data-ch]').forEach(b=>b.onclick=()=>go(+b.dataset.ch,+b.dataset.n))}
     else if(tab==='med'){const off=offline(),can=canBreak(false);
