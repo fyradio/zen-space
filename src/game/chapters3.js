@@ -51,8 +51,8 @@ const SKYSHOTS=[{n:'側面',yaw:Math.PI/2,P:.26,D:7.2},{n:'追尾',yaw:Math.PI,P
 function skyShot(dt){const g=G;g.shotT=(g.shotT||0)+dt;if(g.shotT>8){g.shotT=0;g.shot=((g.shot||0)+1)%SKYSHOTS.length}
   const danger=warnPool.some(w=>w.on)||HZ.length>0;const S=danger?{yaw:null,P:.82,D:11.5}:SKYSHOTS[g.shot||0];
   return {P:S.P,D:S.D,yaw:S.yaw===null?null:(G.camHead??root.rotation.y)+S.yaw}}
-const SKYCAMS=[{n:'追尾',yaw:Math.PI,P:.4,D:7.2},{n:'側面',yaw:Math.PI/2,P:.24,D:7},{n:'斜前',yaw:Math.PI*.24,P:.36,D:7.4},{n:'高空',yaw:Math.PI,P:.9,D:12}];
-function skyFixed(){const S=SKYCAMS[G.skyCam||0];return {P:S.P,D:S.D,yaw:(G.camHead??root.rotation.y)+S.yaw}}
+const SKYCAMS=[{n:'追尾',yaw:Math.PI,P:.4,D:7.2},{n:'前方遠景',yaw:Math.PI,P:.2,D:11,lock:1},{n:'側面',yaw:Math.PI/2,P:.24,D:7},{n:'斜前',yaw:Math.PI*.24,P:.36,D:7.4},{n:'高空',yaw:Math.PI,P:.9,D:12}];
+function skyFixed(){const S=SKYCAMS[G.skyCam||0];return {P:S.P,D:S.D,yaw:(S.lock?(G.head??root.rotation.y):(G.camHead??root.rotation.y))+S.yaw}}// 前方遠景：鎖在飛行方向正後方、拉遠壓低，永遠看前面
 function cycleCam(){if(G&&G.sky){if(G.camAuto){G.camAuto=false;G.skyCam=0}else if(G.skyCam===SKYCAMS.length-1)G.camAuto=true;else G.skyCam++;if(!G.over)banner(G.camAuto?'自動運鏡':SKYCAMS[G.skyCam].n,'視角')}else setCam(camIdx+1)}
 // 御劍操控：一直往前飛；搖桿的方向＝相對於目前航向要轉去的方向（往左推就一直左轉，往下推就迴轉）
 // 御劍操控（第三版）：搖桿推哪個方向，就往畫面上的那個方向飛（跟地面一樣直覺）；

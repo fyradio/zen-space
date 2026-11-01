@@ -91,7 +91,7 @@ CHC[12]={map:9,fog:0x1a1430,ground:0x2a2440,rate:0,noElite:1,mobs:[['ghost',1,0]
 const ENDLESS_BOSS=['lantern','general','fox','bell','hungry','ferry','yinshi','xuanbing','jinjia','shenhan','xuehe'];
 // 無盡之夜：沒有雞啼，魔王一波一波輪番上（每波更硬），中間夾精英；倒下才結束
 function stepEndless(dt){const g=G;if(g.enNext===undefined){g.enNext=30;g.wave=0}
-  if(!boss.alive&&!g.enOn&&g.t>=g.enNext){g.wave++;{const pool=ENDLESS_BOSS.filter(k=>k!=='shenhan'||save.won['10-1']);g.endBoss=pool[Math.floor(Math.random()*pool.length)]}g.mod.boss=Math.pow(1.3,g.wave-1);g.enOn=true;startBoss();say(`第 ${g.wave} 波魔王：${BOSSES[g.endBoss].name}`,3)}
+  if(!boss.alive&&!g.enOn&&g.t>=g.enNext){g.wave++;g.endBoss=ENDLESS_BOSS[Math.floor(Math.random()*ENDLESS_BOSS.length)];g.mod.boss=Math.pow(1.3,g.wave-1);g.enOn=true;startBoss();say(`第 ${g.wave} 波魔王：${BOSSES[g.endBoss].name}`,3)}
   if(g.enOn&&!boss.alive){g.enOn=false;g.enNext=g.t+25;g.enElite=g.t+12}
   if(g.enElite&&g.t>=g.enElite){g.enElite=0;startElite()}}
 function endlessPick(){const m=Math.floor(Math.random()*6),src=CHC[m];Object.assign(CHC[11],{map:m,fog:src.fog,ground:src.ground,mobs:src.mobs.concat([['skel',1,2]]),elite:src.elite});curMap=-1}

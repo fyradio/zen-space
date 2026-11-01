@@ -839,6 +839,7 @@ function updSkillUI(){for(const k in SK){if(k==='blink')continue;const b=skBtn[k
 /*@include game/chapters2.js*/
 /*@include game/chapters3.js*/
 /*@include game/chapters4.js*/
+/*@include game/midboss.js*/
 /*@include game/story.js*/
 /*@include game/arena.js*/
 /*@include game/skilllib.js*/
@@ -957,7 +958,7 @@ function renderBuffs(){const n={count:'劍',dmg:'鋒',rate:'疾',pierce:'穿',ma
   $('#buffs').textContent=Object.entries(G.skills).map(([k,v])=>n[k]+(v>1?v:'')).join(' ')}
 
 /* ================= 生妖 ================= */
-function spawn(type,x,z,o={}){const t=ET[type];if(enemies.length>=CAP||t.list.length>=t.cap)return null;
+function spawn(type,x,z,o={}){const t=ET[type];if((enemies.length>=CAP&&!o.force)||t.list.length>=t.cap)return null;
   const sp=type!=='ghost'&&Math.random()<specialChance();
   const e=Object.assign({type,t,x,z,y:0,vx:0,vz:0,hp:t.hp*1.1*hpScale()*(sp?2:1)*chHp(G.ch)*endF(),r:t.r*t.sc*(sp?1.15:1),spd:t.spd*(.9+Math.random()*.2),dmg:t.dmg*(1+.15*minute())*(1+.1*G.ch)*chDmg(G.ch)*endF(),flash:0,ph:Math.random()*6,kb:0,s:sp?1.18:1,special:sp},o);
   e.cd=2+Math.random()*4;e.max=e.hp;enemies.push(e);t.list.push(e);return e}
@@ -977,7 +978,7 @@ function hurtEnemy(e,dmg,kx=0,kz=0,crit=false,fly=0){if(e.hp<=0)return;if(e.mark
 function killEnemy(e,kx=0,kz=0,fly=0){if(e.t.revive&&!e.revived&&!fly){e.revived=true;e.hp=e.max*.5;e.stun=2.2;e.down=2.2;if(!simming)fx({p:tmp.set(e.x,.4,e.z),col:0xe8e2d0,life:.4,s0:.5,s1:1.4,op:.7,vy:.3});return}
   G.kills++;e.dead=true;SFX.play('kill');if(G.kills%670===0&&(G.n67||0)<10){G.n67=(G.n67||0)+1;G.extra67=(G.extra67||0)+1;if(!simming)show67(G.n67)}if(G.ult<G.k.ultNeed)G.ult++;if(G.kills%250===0&&G.kills<=1250&&!simming){banner('殺氣凝劍','飛劍 +1');SFX.play('gold')}dashLine(e,false);if(G.kills>=G.nextPill&&!(G.endless&&G.t-(G.pillT??-99)<15)){G.nextPill+=100;G.pillT=G.t;dropPill(e.x,e.z)}
   if(fly&&!simming)launch(e,kx,kz,fly);else fx({p:tmp.set(e.x,.6,e.z),col:0x0a0d0e,life:.7,s0:.5,s1:1.6,op:.75,vy:.9});fx({p:tmp.set(e.x,.6,e.z),col:0x6fffd0,add:true,life:.35,s0:.8,s1:.2,op:.9,vy:0});
-  dropSoul(e.x,e.z,e.t.soul);if(e.elite){G.eliteKilled=true;for(let i=0;i<14;i++)dropSoul(e.x+(Math.random()-.5)*2,e.z+(Math.random()-.5)*2,1);banner('精英伏誅','殺氣大漲・仙緣頓悟');SFX.play('boss');setTimeout(()=>openCards(true),700)}
+  dropSoul(e.x,e.z,e.t.soul);if(e.elite){G.eliteKilled=true;for(let i=0;i<14;i++)dropSoul(e.x+(Math.random()-.5)*2,e.z+(Math.random()-.5)*2,1);banner(e.mid?e.t.n+'伏誅':'精英伏誅','殺氣大漲・仙緣頓悟');SFX.play('boss');setTimeout(()=>openCards(true),700)}
   $('#power').classList.add('pop')}
 function dropSoul(x,z,v){if(souls.length>=SOULCAP){souls[0].v+=v;return}
   const r=Math.hypot(x,z),R=ARENA-.6;if(r>R&&arenaOn()){x*=R/r;z*=R/r}// 鬥法場才有邊界
@@ -1002,7 +1003,7 @@ function hurtBoss(dmg,crit=false){if(!boss.alive||!(dmg>0))return;if(boss.def.du
   boss.hp-=d;showNum(boss.x,3.2,boss.z,d,crit?'c':'b');
   if(boss.hp<=0){if(boss.def.duel&&!boss.fled){beginFlee();return}bossDown()}}
 function launchVolley(){const n=effCount(),used=new Set();const bossSeen=boss.alive&&bossOnScreen(),duelT=boss.alive&&boss.def&&boss.def.duel&&Math.hypot(boss.x-HERO.pos.x,boss.z-HERO.pos.z)<G.s.range*1.6;const from=tmp2.copy(HERO.pos);from.y+=1.0;
-  for(let i=0;i<n;i++){const tg=(duelT&&i%3!==2)||(bossSeen&&i%2===0)?boss:nearest(HERO.pos.x,HERO.pos.z,G.s.range,used)||nearest(HERO.pos.x,HERO.pos.z,G.s.range);if(!tg)return;used.add(tg);
+  for(let i=0;i<n;i++){const mid=G.midE&&!G.midE.dead&&Math.hypot(G.midE.x-HERO.pos.x,G.midE.z-HERO.pos.z)<G.s.range*1.6?G.midE:null;const tg=(duelT&&i%3!==2)||(bossSeen&&i%2===0)?boss:mid&&i%3!==2?mid:nearest(HERO.pos.x,HERO.pos.z,G.s.range,used)||nearest(HERO.pos.x,HERO.pos.z,G.s.range);if(!tg)return;used.add(tg);
     const sw=swords.find(s=>!s.on);if(!sw)return;if(i===0)SFX.play('swing');sw.on=true;sw.g.visible=true;sw.g.scale.setScalar(G.s.size);sw.tgt=tg;sw.life=1.4;sw.pierce=G.s.pierce;sw.hit.clear();sw.tr.pts.length=0;
     const a=(i-(n-1)/2)*.5;sw.pos.copy(from).add(tmp3.set(Math.sin(a)*.4,.2,Math.cos(a)*.4));sw.vel.set(Math.sin(a)*3,4,Math.cos(a)*3)}}
 function stepSwords(dt){const spd=15+G.s.pierce*1.5;
@@ -1014,7 +1015,7 @@ function stepSwords(dt){const spd=15+G.s.pierce*1.5;
     // hits
     const hr=.55*G.s.size;const check=e=>{if(e.dead||sw.hit.has(e))return;const rr=(e===boss?boss.r:e.r)+hr*.5;if((e.x-sw.pos.x)**2+(e.z-sw.pos.z)**2<rr*rr){sw.hit.add(e);
       const k=.18/Math.max(.2,Math.hypot(sw.vel.x,sw.vel.z)),cr=Math.random()<G.s.crit,dm=swordDmg()*(cr?2.5:1);if(e===boss)hurtBoss(dm,cr);else hurtEnemy(e,dm,sw.vel.x*k,sw.vel.z*k,cr);
-      fx({p:sw.pos,col:0xbffff0,add:true,life:.18,s0:.5,s1:1,op:.9,vy:0});if(e!==boss&&sw.tgt===boss&&boss.alive&&boss.def.duel)return;if(--sw.pierce<0)sw.life=0;else sw.tgt=null}};// 鬥法：衝向魔王的飛劍穿過小妖，不被擋下
+      fx({p:sw.pos,col:0xbffff0,add:true,life:.18,s0:.5,s1:1,op:.9,vy:0});if(e!==boss&&((sw.tgt===boss&&boss.alive&&boss.def.duel)||(sw.tgt&&sw.tgt===G.midE&&e!==G.midE)))return;if(--sw.pierce<0)sw.life=0;else sw.tgt=null}};// 鬥法：衝向魔王的飛劍穿過小妖，不被擋下
     for(const e of enemies)check(e);if(boss.alive)check(boss);
     if(sw.life<=0){sw.on=false;sw.g.visible=false}}}
 function stepSkills(dt){
@@ -1049,15 +1050,21 @@ const ELITE_HP=4000,BOSS_HP=75000,BOSS_AT=.4;// fixed: a stronger build kills th
 
 function startElite(){G.eliteDone=true;const a=Math.random()*Math.PI*2,k=(curC()).elite;const e=spawn(k,HERO.pos.x+Math.sin(a)*9,HERO.pos.z+Math.cos(a)*(G.sky?11:9),{elite:true,s:G.sky?1.7:2.4,r:.6,spd:k==='lgh'?1.6:ET[k].spd*.8});
   if(e){e.hp=e.max=ELITE_HP*chHp(G.ch);e.dmg*=1.2}banner('大'+ET[k].n,'精英來了，斬了牠掉一大把魂火');shake=.3}
+// 第十章中魔王（自創角色，見 midboss.js）：沈寒、血河老祖兩夜＝大魔王出場前先打三隻；渡劫那夜＝一邊渡雷劫一邊打三隻
+const midOn=(g,dk)=>g.ch===10&&!!dk.duel;
+const midDone=(g,dk)=>!midOn(g,dk)||((g.midN||0)>=3&&(!g.midE||g.midE.dead));
+function midStep(g,dt){if(g.midE&&!g.midE.dead)return false;if((g.midN||0)>=3)return true;g.midT=(g.midT??0)-dt;if(g.midT<=0){g.midE=startMid(g.midN=(g.midN||0)+1);g.midT=1.5}return false}
+function startMid(i){const a=Math.random()*Math.PI*2,set=MID_SETS[G.sky?2:Math.min(1,G.nt)],k=set[(i-1)%set.length];const e=spawn(k,HERO.pos.x+Math.sin(a)*9,HERO.pos.z+Math.cos(a)*(G.sky?11:9),{elite:true,force:true,s:G.sky?1.9:2.5,r:.7,spd:ET[k].spd*.9});
+  if(e){e.mid=true;e.hp=e.max=ELITE_HP*chHp(G.ch)*1.2;e.dmg*=1.3}banner(`中魔王 ${i}／3・${ET[k].n}`,i<3?'斬了牠，下一隻跟著來':(G.nt===0?'最後一隻！撐過雷劫就能出關':'最後一隻！之後大魔王親自出手'),true);shake=.4;SFX.play('boss');return e}
 // 鬥法魔王血量：第 9～10 章境界高於推薦時跟著變硬（每層 ×1.1），第十章再 ×2（最終章別一開場就打死）；鬥法台對電腦只有一位對手 ×5
-const duelHpMul=D=>!D.duel||D.noHit?1:G.ch===12?5:(G.ch===9||G.ch===10)?Math.pow(1.1,Math.max(0,save.realm-chRec(G.ch)))*(G.ch===10?2:1):1;
+const duelHpMul=D=>!D.duel||D.noHit?1:G.ch===12?5:(G.ch===9||G.ch===10)?Math.pow(1.1,Math.max(0,save.realm-chRec(G.ch)))*(G.ch===10?3:1):1;
 function startBoss(){const key=bossKey(G),D=BOSSES[key];boss.def=D;setTimeout(()=>TALK.ev('boss'),1200);
   for(const k in boss.models)boss.models[k].g.visible=false;
   if(!boss.models[key]){const g=new THREE.Group();boss.g.add(g);boss.models[key]=Object.assign({g},D.build(g))}
   const M=boss.m=boss.models[key];M.g.visible=true;if(boss.souls)for(const k in boss.souls)boss.souls[k].visible=false;M.g.scale.setScalar(1);
   BGM.play('boss');G.bossDone=true;boss.alive=true;const a=Math.random()*Math.PI*2;boss.x=HERO.pos.x+Math.sin(a)*8;boss.z=HERO.pos.z+Math.cos(a)*8;
   // fixed HP (a stronger build kills it faster), scaled by chapter and by night (圍城 ×1.5)
-  boss.max=boss.hp=BOSS_HP*G.mod.boss*chBoss(G.ch)*(D.duel?.3:1)*duelHpMul(D);boss.allow=boss.max/30;boss.r=D.r;boss.dmg=D.dmg*(1+.1*Math.min(10,G.ch))*chDmg(G.ch)*(G.ch===12?.75:1);SFX.play('boss');buzz(80);
+  boss.max=boss.hp=BOSS_HP*G.mod.boss*chBoss(G.ch)*(D.duel?.3:1)*duelHpMul(D);boss.allow=boss.max/30;boss.r=D.r;boss.dmg=D.dmg*(1+.1*Math.min(10,G.ch))*chDmg(G.ch)*(G.ch===12?.75:1)*(G.ch===10&&D.duel&&!D.noHit?3:1);SFX.play('boss');buzz(80);
   Object.assign(boss,{seed:Math.random()*6.28,cd:3,sum:5,t:0,rage:false,ring:4,k:0,swing:0,stun:0,cl:16,dm:14,rd:0,done:false,tele:2,dash:0,fled:false,fleeT:0,shield:D.duel?boss.max*.3:0});if(D.noHit)boss.allow=boss.max;boss.g.visible=true;boss.g.position.set(boss.x,0,boss.z);
   $('#bossName').textContent=D.name;G.clash=null;$('#bossBox').classList.add('on');banner(D.line,'頭目');shake=.8;act(3.8,null,()=>{if(G&&!G.over)say(D.tip,5)})}
 function stepBoss(dt){if(!boss.alive)return;const D=boss.def,M=boss.m;boss.t+=dt;if(boss.markT>0)boss.markT-=dt;boss.allow=Math.min(boss.max/30*1.5,boss.allow+boss.max/30*dt);
@@ -1231,9 +1238,10 @@ function stepGame(dt){const g=G;TALK.step(dt);
   const p=g.t/g.len;
   if(g.endless)stepEndless(dt);else{
   const dk=BOSSES[bossKey(g)],cc=curC();if(!cc.noElite&&!g.eliteDone&&p>=(g.mod.elite2?.17:.22))startElite();if(g.mod.elite2&&!g.elite2Done&&p>=.3){g.elite2Done=true;startElite()}
-  if(!g.bossDone&&p>=(dk.duel?.025:BOSS_AT))startBoss();
-  if(dk.duel&&g.bossDone&&!boss.alive&&g.bossKilled){g.winT=(g.winT||0)+dt;if(g.winT>2.5){endNight(true);return}}
-  if(dk.duel&&g.bossDone&&!boss.alive&&!g.bossKilled){g.winT=(g.winT||0)+dt;if(g.winT>3){endNight(true);return}}
+  if(!g.bossDone&&p>=(dk.duel?.025:BOSS_AT)){if(midOn(g,dk)&&!dk.noHit){if(midStep(g,dt))startBoss()}else{startBoss();g.midT=3}}
+  if(midOn(g,dk)&&dk.noHit&&g.bossDone)midStep(g,dt);
+  if(dk.duel&&g.bossDone&&!boss.alive&&g.bossKilled&&midDone(g,dk)){g.winT=(g.winT||0)+dt;if(g.winT>2.5){endNight(true);return}}
+  if(dk.duel&&g.bossDone&&!boss.alive&&!g.bossKilled&&midDone(g,dk)){g.winT=(g.winT||0)+dt;if(g.winT>3){endNight(true);return}}
   if(p>=.9){const k=Math.min(1,(p-.9)/.1);scene.fog.color.lerpColors(NIGHT_FOG,DAWN_FOG,k);scene.background.copy(scene.fog.color);hemi.intensity=.55+.6*k}
   if(g.clearK&&g.kills>=g.clearK){g.early=true;banner('斬妖達標！','妖群潰散，提前天亮',true);endNight(true);if(boss.alive){boss.alive=false;boss.g.visible=false;$('#bossBox').classList.remove('on')}for(const e of enemies)if(!e.dead){killEnemyQuiet(e)}return}
   if(p>=1){endNight(g.ch!==12);if(boss.alive){boss.alive=false;boss.g.visible=false}for(const e of enemies)if(!e.dead){killEnemyQuiet(e)}return}}
@@ -1316,7 +1324,7 @@ function writeInstances(){const lean=-.45*Math.max(0,Math.min(1,(camP-.45)/.45))
     for(const e of t.list){dummy.position.set(e.x,e.y,e.z);const fy=Math.atan2(HERO.pos.x-e.x,HERO.pos.z-e.z);
       dummy.rotation.set(lean+(e.lunge>0?.35:0)+(t.float?.12:0),fy+(e.spin||0),t.sway?Math.sin(e.ph*5)*.14:t.float?Math.sin(e.ph*1.7)*.08:0,'YXZ');
       const sq=e.squash||0,dn=e.down>0?.22+.78*Math.max(0,1-e.down/.4)*(e.down<.4?1:0):1;const hs=e.hide?.001:1;dummy.scale.set(hs*e.s*t.sc*(1+sq*.25),hs*e.s*t.sc*(1-sq*.3)*dn,hs*e.s*t.sc*(1+sq*.25));dummy.updateMatrix();
-      t.mesh.setMatrixAt(i,dummy.matrix);t.mesh.setColorAt(i,e.flash>0?FLASH:e.slowT>0?ICE:e.elite?ELITE:e.special?SPECIAL:WHITE);i++}
+      t.mesh.setMatrixAt(i,dummy.matrix);t.mesh.setColorAt(i,e.flash>0?FLASH:e.slowT>0?ICE:e.mid?WHITE:e.elite?ELITE:e.special?SPECIAL:WHITE);i++}
     for(const c of corpses){if(c.t!==t||i>=t.cap)continue;const k=c.life/c.max;dummy.position.set(c.x,c.y,c.z);dummy.rotation.set(c.rx,c.ry,c.rz,'YXZ');
       dummy.scale.setScalar(c.s*t.sc*(k>.7?1-(k-.7)/.3*.75:1));dummy.updateMatrix();t.mesh.setMatrixAt(i,dummy.matrix);ASHC.copy(WHITE).lerp(ASH,Math.min(1,k*1.5));t.mesh.setColorAt(i,ASHC);i++}
     t.mesh.count=i;t.mesh.visible=i>0;t.mesh.instanceMatrix.needsUpdate=true;if(t.mesh.instanceColor)t.mesh.instanceColor.needsUpdate=true}
