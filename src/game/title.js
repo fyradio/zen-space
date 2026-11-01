@@ -41,7 +41,7 @@ function slotPicker(mode,done){const rows=[];if(mode==='load'){const a=autoSave(
       if(mode==='save'){const doSave=()=>{writeSave();try{localStorage.setItem(k,JSON.stringify({t:Date.now(),save}))}catch(e){}SFX.play('gold');close();banner('存檔完成',r.n);if(done)done()};
         if(r.d)confirmBox(`${r.n}已經有存檔：<br>${slotInfo(r.d)}<br>要蓋掉嗎？`,[{t:'蓋掉',go:1,f:doSave},{t:'取消',f:()=>slotPicker(mode,done)}]);else doSave()}
       else{close();loadSlot(k)}})})}
-try{if(matchMedia('(display-mode: standalone)').matches||navigator.standalone){const e=document.getElementById('ttlAdd');if(e)e.style.display='none'}}catch(e){}
+try{if(matchMedia('(display-mode: standalone)').matches||navigator.standalone){document.querySelectorAll('.ttladd').forEach(e=>e.style.display='none')}}catch(e){}
 function bootTo(h){try{location.hash=h}catch(e){}location.reload()}
 function loadSlot(k){if(k==='auto'){TITLE.hide();$('#startOv').classList.add('on');DF.render();return}const d=readSlot(k);if(!d)return;try{localStorage.setItem(SAVE_KEY,JSON.stringify(d.save))}catch(e){}bootTo('home')}
 function newGame(){const go=()=>{try{localStorage.removeItem(SAVE_KEY)}catch(e){}bootTo('new')};
@@ -53,6 +53,7 @@ const HELP=[
  ['一夜怎麼過',`<p>每一夜 3 分鐘（築基章 3 分半、結丹章 4 分、元嬰章 4 分半），撐到<b>雞啼</b>就天亮過關。</p><p>斬妖數到<b>目標</b>（左上「斬妖 目前／目標」）會提早天亮。</p><p>夜裡會出精英和<b>魔王</b>；看到地上的水墨圈慢慢暈開就快閃，<b>紅</b>扣血、<b>紫</b>雷、<b>藍</b>緩速、<b>綠</b>定身。</p><p>吸青色<b>魂火</b>會「頓悟」三選一，只在這一夜有效。斬妖越多，殺氣越重、飛劍越強。</p>`],
  ['修行與突破',`<p>境界：煉氣一～九層 → 築基 → 結丹 → 元嬰（各分初／中／後期）。每升一層更強。</p><p>條件達成後，可以在洞府<b>靜室</b>安全突破，或在戰場上按「突破」引雷劫（更快、這一夜更強）。</p><p>大境界要煉丹：築基丹、凝丹靈液、化嬰丹。</p><p>打贏每一章任一夜就能去下一章；破過的章再打，要斬滿更多妖才算過。</p>`],
  ['洞府',`<p><b>出戰</b>：選章、選夜。<b>靜室</b>：突破、收閉關靈石。<b>藥園</b>：種靈草。<b>丹房</b>：控火煉丹。<b>造型</b>：捏臉換裝。</p><p><b>藏經閣</b>：三個技能格各有每個境界三種招、還有大絕，到境界送一招，其他用靈石參悟。</p><p><b>坊市</b>：買種子、替身紙人、回春丹。<b>鬥法台</b>（元嬰）：對電腦或雙人同機。<b>存檔</b>：存進三個手動格。</p>`],
+ ['加入主畫面',`<p><b>iPhone</b>：用 <b>Safari</b> 開這個網址，點下方「分享」→「加入主畫面」。</p><p><b>Android</b>：用 <b>Chrome</b> 開，點右上「⋮」→「加到主畫面」或「安裝應用程式」。</p><p>加入後從主畫面圖示開，全螢幕、離線也能玩，存檔留在這台手機。</p>`],
  ['小技巧',`<p>站著不動時飛劍出得更快，但小心被圍。</p><p>被圍住就用閃現或第一格的近身招。魔王出大招前地上會先畫墨圈，先躲再打。</p><p>護體罩（玄鐵盾／金鐘罩／八卦玉璧罩／蓮花護體）快破時會變橘、變紅，記得拉開距離。</p><p>打不贏就回洞府煉丹、參悟新招、閉關存靈石，境界高一層差很多。</p>`]];
 function showHelp(i=0){const close=modal(`<div class="hlp"><div class="hlptabs">${HELP.map((h,j)=>`<button data-h="${j}" aria-pressed="${i===j}">${h[0]}</button>`).join('')}</div><div class="hlpbody">${HELP[i][1]}</div>
   <div class="mdbtns">${i>0?'<button class="btn" data-p>上一頁</button>':''}${i<HELP.length-1?'<button class="btn go" data-n>下一頁</button>':''}<button class="btn" data-x>關閉</button></div></div>`,ov=>{
