@@ -120,7 +120,7 @@ h2{margin:0;font-size:22px;font-weight:400;letter-spacing:.2em}
   background:var(--panel);font-size:17px;letter-spacing:.18em;color:var(--ink)}
 .btn.go{border-color:var(--jade);background:linear-gradient(180deg,rgba(127,227,198,.3),rgba(127,227,198,.08));color:#fff}
 .btn small{display:block;font-size:12px;letter-spacing:.1em;color:var(--dim);margin-top:2px}
-.pair{display:grid;grid-template-columns:1fr 1fr;gap:8px;width:100%}
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:8px;width:100%}.pair.asc3{grid-template-columns:1fr 1fr 1fr}
 .btn[aria-pressed="true"]{border-color:var(--jade);color:var(--jade);background:rgba(127,227,198,.12)}
 .stat{display:grid;grid-template-columns:auto auto;gap:4px 18px;font-size:15px;justify-content:center}
 .stat dt{color:var(--dim);text-align:right}.stat dd{margin:0;text-align:left;color:#fff4d6}
@@ -821,7 +821,7 @@ function startTribulation(){if(!G||G.over||G.paused||G.breaking||!canBreak(true)
     ()=>{if(!G||G.over)return;G.breaking=false;realmUp();G.s.dmg*=1.1*1.2;G.maxhp=Math.round(150*realmMult());G.hp=G.maxhp;
       banner('突破成功！',REALMS[save.realm],true);SFX.play('gold');buzz(90);shake=Math.max(shake,.5);
       fx({p:tmp.set(HERO.pos.x,1,HERO.pos.z),col:0xffe08a,add:true,life:1,s0:1,s1:7,op:1,vy:1.5});
-      const t=skillTier();SHIELD.setTier(t);if(t!==G.tier){setSkills(G.tier=t);for(const k in G.cd)G.cd[k]=0;say(`${SKILL_SETS[t].name}新招：${SK.sweep.n}、${SK.beam.n}、${SK.thunder.n}！`,5)}else say('突破了！血補滿，這一夜傷害再 +20%',4)})}
+      const t=skillTier();SHIELD.setTier(t);if(t!==G.tier){setSkills(G.tier=t);for(const k in G.cd)G.cd[k]=0;say(`${SKILL_SETS[t].name}新招：${SK.sweep.n}、${SK.beam.n}、${SK.thunder.n}！`,5)}else say('突破了！血補滿，這一夜傷害再 +20%',4);if(ASC.isMajor(save.realm))ASC.play(save.realm)})}
 function checkBreak(){const b=$('#breakBtn');const can=!G.breaking&&canBreak(true);if(can&&b.hidden){b.hidden=false;if(!simming){SFX.play('ready');say('可以突破了！按左上「突破」引雷劫',4)}}else if(!can&&!b.hidden)b.hidden=true}
 function updSkillUI(){for(const k in SK){const b=skBtn[k];let p,txt='';
     if(k==='ult'){p=Math.min(1,G.ult/G.k.ultNeed,G.ultLock>0?1-G.ultLock/G.k.ultCd:1);b.classList.toggle('ready',p>=1);b.style.setProperty('--p',(p*100).toFixed(1)+'%')}
@@ -838,6 +838,7 @@ function updSkillUI(){for(const k in SK){const b=skBtn[k];let p,txt='';
 /*@include game/arena.js*/
 /*@include game/skilllib.js*/
 /*@include game/ults2.js*/
+/*@include game/ascend.js*/
 
 /* ================= 狀態 ================= */
 const SAVE_KEY='zk-game-v1';
@@ -1138,7 +1139,7 @@ function startNight(len,opt={}){if(len===NIGHT&&(opt.ch||0)<=10)len=nightLen(opt
 let med=null;
 function stepMed(dt){med.t+=dt;mode='cast';const k=med.t;pillar.visible=true;pillar.position.set(HERO.pos.x,4.5,HERO.pos.z);pillar.scale.set(.9+Math.sin(k*6)*.08,9,.9+Math.sin(k*6)*.08);
   pillar.material.opacity=.5*Math.min(1,k/.6)*(k>2.8?Math.max(0,1-(k-2.8)/.6):1);
-  if(k>=3.4){pillar.visible=false;med=null;realmUp();banner('突破成功！',REALMS[save.realm],true);SFX.play('gold');setTimeout(()=>{$('#startOv').classList.add('on');DF.render()},1400)}}
+  if(k>=3.4){pillar.visible=false;med=null;realmUp();if(ASC.isMajor(save.realm)){ASC.play(save.realm,{},()=>{banner('突破成功！',REALMS[save.realm],true);setTimeout(()=>{$('#startOv').classList.add('on');DF.render()},900)});return}banner('突破成功！',REALMS[save.realm],true);SFX.play('gold');setTimeout(()=>{$('#startOv').classList.add('on');DF.render()},1400)}}
 $('#again').onclick=()=>startNight(NIGHT,{ch:G?G.ch:0,nt:G?G.nt:0});$('#toTitle').onclick=()=>{leaveSky();$('#breakBtn').hidden=true;$('#endOv').classList.remove('on');$('#skills').hidden=$('#joy').hidden=true;$('#startOv').classList.add('on');$('#hud').hidden=true;DF.render();resetWorld();G=null;$('#pillBtn').hidden=true};
 function resetWorld(){corpses.length=0;let guard=0;while(acts.length&&guard++<5000){const a=acts.shift();if(a.end)a.end()}acts.length=0;/* 結束回呼裡又排進來的效果也要收掉，不然會留在場上 */for(const m of Object.values(IND))m.visible=false;for(const e of enemies)e.dead=true;enemies=[];for(const k in ET)ET[k].list=[];souls=[];shots.length=0;
   swords.forEach(s=>{s.on=false;s.g.visible=false;s.tr.build(0)});warnPool.forEach(w=>{w.on=false;w.m.visible=w.f.visible=false});fxPool.forEach(f=>{f.on=false;f.s.visible=false});
@@ -1184,14 +1185,14 @@ function frame(now){requestAnimationFrame(frame);let dt=Math.min(.05,(now-last)/
   else if(live){POWER.tick(dt);let d=dt;if(G.slow>0){G.slow-=dt;d*=.3}G.t+=d;stepGame(d)}
   else if(G&&G.over){mode='idle'}
   else if(!G){if(titleOn)TITLE.step(dt);else if(med)stepMed(dt);else if(lookCam){root.rotation.y=angLerp(root.rotation.y,0,1-Math.exp(-dt*5));mode='idle'}else{root.rotation.y+=dt*.25;mode='idle'}}
-  WARM.tick();animateHero(dt);syncLights();hsAura.visible=save.realm>=18;if(hsAura.visible)hsAura.userData.spin(dt);
+  if(ASC.on)ASC.step(dt);WARM.tick();animateHero(dt);syncLights();hsAura.visible=save.realm>=18;if(hsAura.visible)hsAura.userData.spin(dt);
   fogs.forEach((m,i)=>{m.rotation.z+=m.userData.s*dt});
-  if(D2.on)DUEL.cam(dt);else if(titleOn&&!G)TITLE.cam(dt);else updateCamera(dt,false);
+  if(D2.on)DUEL.cam(dt);else if(ASC.on)ASC.cam(dt);else if(titleOn&&!G)TITLE.cam(dt);else updateCamera(dt,false);
   // UI that follows the scene
   if(bannerT>0){bannerT-=dt;if(bannerT<=0)$('#banner').classList.remove('on')}
   if(sayT>0){sayT-=dt;if(sayT<=0)$('#bubble').classList.remove('on');bubP.copy(lantern.position);bubP.y+=.35;bubP.project(camera);
     const b=$('#bubble');b.style.left=Math.max(120,Math.min(innerWidth-120,(bubP.x*.5+.5)*innerWidth))+'px';b.style.top=((-bubP.y*.5+.5)*innerHeight-8)+'px'}
-  {const W=innerWidth,H=innerHeight;if(!G&&!titleOn&&W>H)camera.setViewOffset(W,H,W*.2,0,W,H);else if(camera.view&&camera.view.enabled&&(!G||titleOn))camera.clearViewOffset();else if(G&&camera.view&&camera.view.enabled)camera.clearViewOffset()}
+  {const W=innerWidth,H=innerHeight;if(!G&&!titleOn&&!ASC.on&&W>H)camera.setViewOffset(W,H,W*.2,0,W,H);else if(camera.view&&camera.view.enabled&&(!G||titleOn||ASC.on))camera.clearViewOffset();else if(G&&camera.view&&camera.view.enabled)camera.clearViewOffset()}
   showAim();updateEdges();renderer.render(scene,camera)}
 // camera: high and behind, following the hero (snap = jump straight there, for sim())
 // 視角: 俯視 (high, fixed north-up), 斜視 (lower, fixed), 追尾 (behind the hero, turns with them). camYaw = direction the camera sits in.
