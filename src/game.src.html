@@ -1177,7 +1177,7 @@ function endNight(win,gaveUp=false){if(G.over)return;G.over=true;G.paused=true;c
     :'這一夜的斬妖數算一半；境界不會掉。';
   $('#endStat').innerHTML=`<dt>斬妖</dt><dd>${G.kills} 隻</dd><dt>最高戰力</dt><dd>${fmt(G.peak||0)}</dd><dt>頓悟</dt><dd>${G.lv} 次</dd><dt>靈石</dt><dd>+${G.reward}</dd>${G.bossKilled?'<dt>妖丹</dt><dd>+1</dd>':''}${newUlt?`<dt>新大絕</dt><dd>${newUlt.n}</dd>`:''}${G.huashen?'<dt>境界</dt><dd>化神初期！</dd>':''}`;
   renderRealm('#realmText2','#realmBar2','#reqList2',false);$('#breakNote').hidden=!canBreak(false);const showEnd=()=>$('#endOv').classList.add('on'),endKey=win&&G.ch<=10&&!G.endless?(G.ch===10?(G.nt===2?'ch10end':null):CUTS['ch'+G.ch+'end']?'ch'+G.ch+'end':null):null,endCut=endKey&&!save['seen_'+endKey];if(endCut){save['seen_'+endKey]=1;writeSave()}
-  if(win&&!simming)setTimeout(()=>{SFX.play('rooster');INK.dawn(()=>endCut?(endKey==='ch10end'?INK.play(CUTS.ch10end.slice(0,2),()=>ASC.montage(()=>INK.play(CUTS.ch10end.slice(2),showEnd))):INK.play(CUTS[endKey],showEnd)):showEnd())},1100);else setTimeout(()=>$('#endOv').classList.add('on'),win?1600:900);BGM.play('home');
+  if(win&&!simming)setTimeout(()=>{if(!(endCut&&endKey==='ch10end'))SFX.play('rooster');endCut&&endKey==='ch10end'?INK.play(CUTS.ch10end,()=>ASC.montage(()=>{SFX.play('rooster');INK.dawn(()=>ASC.play(18,{},()=>INK.play(CUTS.ch10end2,showEnd)),'雞鳴三聲，東方既白。')})):INK.dawn(()=>endCut?INK.play(CUTS[endKey],showEnd):showEnd())},1100);else setTimeout(()=>$('#endOv').classList.add('on'),win?1600:900);BGM.play('home');
   SFX.play(win?'win':'lose');
   if(win){banner('喔喔喔——！','雞啼');$('#bossBox').classList.remove('on')}}
 

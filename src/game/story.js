@@ -100,11 +100,23 @@ Object.assign(CUTS,{
     {scene:'brother',t:'雷雲下，師兄沈寒站在鬼門前。他的眼睛，是紅色的。'},
     {scene:'brother',t:'「師……弟……」他的聲音一半是自己的，一半是別人的：「快走……他在我身體裡……」'}],
   ch10end:[
-    {scene:'gate',t:'血河老祖的元嬰被斬，鬼門轟然合上，千年的怨氣散成了星光。'},
-    {scene:'brother',t:'師兄醒了。他跪在地上哭了很久，你只是遞給他一壺酒：「回家吧。」'},
-    {scene:'baby',t:'鬼門合上的那一刻，千年魂火化成金光湧進你的丹田——元嬰化神，你踏入了化神初期。'},
-    {scene:'dawn',t:'喔喔喔——公雞終於啼了，天亮了。'},
-    {scene:'home',t:'你接下了青燈觀。從此，每到午夜，你仍提著那盞會說話的燈籠下山——午夜來斬妖。（全劇終・無盡之夜開放）'}]});
+    {scene:'gate',t:'血河元嬰散作青煙，鬼門無聲而合。千年怨氣，化作漫天星屑。'},
+    {scene:'brother',t:'師兄伏地，良久方醒。你遞上師父的酒葫蘆，只說：「回家吧。」'}],
+  // 結局後半（化神動畫之後）：山道、一盞燈
+  ch10end2:[
+    {scene:'lane',t:'燈燈輕聲問：「天亮了……我可以不亮了嗎？」你說：「再亮一會兒。」'},
+    {scene:'lane2',t:'日出山閣，燈不息。每到子時，山下仍有一點光，走過十里荒坡。'},
+    {scene:'titlecard',t:''}]});
+Object.assign(INK.scenes,{
+  lane:(x,I)=>{const g=x.createLinearGradient(0,0,0,360);g.addColorStop(0,'#f1dcae');g.addColorStop(.6,'#f4c680');g.addColorStop(1,'#e6b172');x.fillStyle=g;x.fillRect(0,0,800,360);
+    const s=x.createRadialGradient(400,300,10,400,300,300);s.addColorStop(0,'rgba(255,238,185,.95)');s.addColorStop(1,'rgba(255,238,185,0)');x.fillStyle=s;x.fillRect(0,0,800,360);
+    I.wash(x,230,80,.4,1.6);I.wash(x,290,40,.55,2.4);x.strokeStyle='rgba(40,30,20,.55)';x.lineWidth=14;x.lineCap='round';x.beginPath();x.moveTo(330,360);x.quadraticCurveTo(390,300,420,262);x.stroke();
+    I.figure(x,430,270,.7,{lantern:1})},
+  lane2:(x,I)=>{const g=x.createLinearGradient(0,0,0,360);g.addColorStop(0,'#2a2430');g.addColorStop(.7,'#5a4640');g.addColorStop(1,'#a07a58');x.fillStyle=g;x.fillRect(0,0,800,360);
+    I.wash(x,250,90,.7,1.4);I.wash(x,300,40,.8,2.2);x.strokeStyle='rgba(20,14,10,.8)';x.lineWidth=12;x.lineCap='round';x.beginPath();x.moveTo(260,360);x.quadraticCurveTo(380,310,470,268);x.stroke();
+    const l=x.createRadialGradient(470,262,2,470,262,60);l.addColorStop(0,'rgba(255,230,150,.95)');l.addColorStop(1,'rgba(255,200,100,0)');x.fillStyle=l;x.fillRect(380,180,180,160);x.fillStyle='#ffe9a8';x.beginPath();x.arc(470,262,4,0,7);x.fill()},
+  titlecard:(x,I)=>{I.paper(x);x.fillStyle='rgba(24,18,12,.92)';x.font='700 76px "Noto Serif TC","Songti TC",serif';x.textAlign='center';x.textBaseline='middle';x.fillText('午夜來斬妖',400,160);x.textAlign='start';
+    const l=x.createRadialGradient(400,262,2,400,262,40);l.addColorStop(0,'rgba(255,200,90,.95)');l.addColorStop(1,'rgba(255,200,90,0)');x.fillStyle=l;x.fillRect(340,210,120,100);x.fillStyle='#e8a030';x.beginPath();x.arc(400,262,4,0,7);x.fill()}});
 // 主角是男是女，師兄對你的稱呼跟著換
 Object.defineProperty(CUTS.ch10[3],'t',{get(){return `「師……${(typeof who!=='undefined'&&who===0)?'妹':'弟'}……」他的聲音一半是自己的，一半是別人的：「快走……他在我身體裡……」`}});
 /* ---------- 夜間對話：開夜、魔王出場、魔王狂暴、斬了魔王；每章三夜各不同；重玩只講第一句 ---------- */

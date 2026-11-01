@@ -56,7 +56,7 @@ const INK=(()=>{const W=800,H=360;
   function end(){ov.classList.remove('on');q=[];const f=done;done=null;if(f)f()}
   ov.addEventListener('click',e=>{if(e.target.id==='cutSkip')return;next()});$('#cutSkip').onclick=e=>{e.stopPropagation();end()};
   // 雞啼: a short, self-advancing dawn panel
-  function dawn(cb){play([{scene:'dawn',t:'喔喔喔——！雞啼了，天亮了！'}],cb);$('#cutNext').textContent='繼續';ov.classList.add('dawn');setTimeout(()=>{ov.classList.remove('dawn');if(q.length&&q[0].scene==='dawn')end()},2600)}
+  function dawn(cb,txt){play([{scene:'dawn',t:txt||'喔喔喔——！雞啼了，天亮了！'}],cb);$('#cutNext').textContent='繼續';ov.classList.add('dawn');setTimeout(()=>{ov.classList.remove('dawn');if(q.length&&q[0].scene==='dawn')end()},2600)}
   return {play,dawn,scenes:INK_SCENES,get on(){return ov.classList.contains('on')}}})();
 const CUTS={intro:[
   {scene:'night_village',t:'子時一到，白石村的燈籠一盞一盞熄滅了。連公雞都不啼——這一夜，好像不會結束。'},
