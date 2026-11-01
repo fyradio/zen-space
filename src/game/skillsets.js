@@ -95,7 +95,7 @@ const blinkMax=()=>save.realm>=18?6:save.realm>=17?4:save.realm>=16?3:save.realm
 function blinkTick(dt){if(!G)return;const m=blinkMax();if(G.blinkMax===undefined){G.blinkMax=m;G.blinkN=m;G.blinkT=0}else if(m!==G.blinkMax){G.blinkN+=Math.max(0,m-G.blinkMax);G.blinkMax=m}
   if(G.blinkN<m){G.blinkT+=dt;if(G.blinkT>=BLINK_CD){G.blinkT=0;G.blinkN++;if(!simming)SFX.play('ready')}}else G.blinkT=0;
   const b=skBtn.blink;if(!b||b.hidden)return;b.style.setProperty('--p',((G.blinkN>=m?0:1-G.blinkT/BLINK_CD)*100).toFixed(1)+'%');
-  const t2=G.blinkN<=0?String(Math.ceil(BLINK_CD-G.blinkT)):'';if(b._t!==t2){b._t=t2;b.querySelector('b').textContent=t2}const n2=m>1?String(G.blinkN):'';if(b.dataset.n!==n2)b.dataset.n=n2}
+  const t2=G.blinkN<=0?String(Math.ceil(BLINK_CD-G.blinkT)):'';if(b._t!==t2){b._t=t2;b.querySelector('b').textContent=t2}const n2=m>1&&G.blinkN>0?String(G.blinkN):'';if(b.dataset.n!==n2)b.dataset.n=n2}
 // 風雷翼：掛在身體（body）背上、跟著姿勢走（御劍趴著飛也貼在背上）。翼的骨架＝肩→肘→腕，
 //   飛羽從「腕」往外上方開成扇、次級羽沿手臂往下垂、覆羽／小覆羽一層層蓋在上面 → 有翅膀輪廓，不是一圈尖刺。
 //   深藍→藍→（飛羽）金橙／（次級羽）青，小覆羽帶金；白色雷弧沿翼骨與羽尖跳。小小一對貼在肩膀兩側（點綴），維持 2 秒淡出。
@@ -110,7 +110,7 @@ function wingBuild(){const g=new THREE.Group(),M=new THREE.MeshBasicMaterial({fo
   const S0=[.04,0],EL=[.42,.3],WR=[.72,.52];const lerp2=(a,b,t)=>[a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t];
   const arm=t=>t<.55?lerp2(S0,EL,t/.55):lerp2(EL,WR,(t-.55)/.45);
   const sides=[];const LM=new THREE.LineBasicMaterial({color:0xeaf6ff,transparent:true,opacity:0,blending:THREE.AdditiveBlending,depthTest:false});
-  for(const sd of [1,-1]){const w=new THREE.Group();w.position.set(sd*.16,0,0);w.scale.x=sd;g.add(w);const fe=[];
+  for(const sd of [1,-1]){const w=new THREE.Group();w.position.set(sd*.24,0,0);w.scale.x=sd;g.add(w);const fe=[];
     const add=(k,i,x,y,ang,L,W,z,ro)=>{const f=new THREE.Mesh(geos[k][i%2],M);f.position.set(x,y,z);f.rotation.z=ang;f.scale.set(L*W,L,1);f.renderOrder=ro;f.userData={ang,L};w.add(f);fe.push(f);return f};
     // 飛羽：腕部往外上→往外下開扇（rotation.z：0＝朝上，負＝往外）
     const pri=[];for(let i=0;i<9;i++){const u=i/8,p=lerp2(WR,[.8,.6],u);pri.push(add('pri',i,p[0],p[1],-(.55+u*1.55),.78-.2*u*u,.24,-.006*i,6))}
@@ -122,13 +122,13 @@ function wingBuild(){const g=new THREE.Group(),M=new THREE.MeshBasicMaterial({fo
     const lines=[];for(let i=0;i<3;i++){const ln=new THREE.Line(new THREE.BufferGeometry().setFromPoints(Array.from({length:9},()=>new THREE.Vector3())),LM);ln.renderOrder=10;w.add(ln);lines.push(ln)}
     sides.push({w,sd,fe,pri,lines})}
   // 背心（劍匣下方）往後一點，整片略往後傾
-  g.position.set(0,1.16,-.13);g.rotation.x=-.2;body.add(g);return WING={g,M,LM,sides,arm,WR,t:99,tj:0}}
+  g.position.set(0,.8,-.13);g.rotation.x=-.2;body.add(g);return WING={g,M,LM,sides,arm,WR,t:99,tj:0}}
 function wingsShow(){if(simming)return;const W=WING||wingBuild();W.t=0;W.g.visible=true;W.on=true}
 function wingsStep(dt){const W=WING;if(!W||!W.on)return;W.t+=dt;const t=W.t,a=Math.min(1,t/.18)*Math.min(1,Math.max(0,(2-t)/.4));
   if(t>=2){W.on=false;W.g.visible=false;W.M.opacity=W.LM.opacity=0;return}
   W.M.opacity=.96*a;W.LM.opacity=.9*a;const sp=1-Math.pow(1-Math.min(1,t/.28),3),fl=Math.sin(t*8);
   W.g.scale.setScalar((.35+.65*sp)*.36);
-  for(const S of W.sides){S.w.rotation.y=-S.sd*(.42+.2*fl);S.w.rotation.z=.08*fl*S.sd;
+  for(const S of W.sides){S.w.rotation.y=-S.sd*(.42+.2*fl);S.w.rotation.z=S.sd*(-.45+.08*fl);
     S.pri.forEach((f,i)=>{f.rotation.z=f.userData.ang*(.55+.45*sp)})}
   W.tj-=dt;if(W.tj<=0){W.tj=.05;for(const S of W.sides){S.lines.forEach((ln,li)=>{const P=ln.geometry.attributes.position;
       for(let k=0;k<9;k++){let x,y;const u=k/8;
