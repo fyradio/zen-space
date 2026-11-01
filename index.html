@@ -69,7 +69,7 @@ html,body{height:100%;margin:0;background:var(--night);color:var(--ink);overflow
 .joy i{position:absolute;left:50%;top:50%;width:52px;height:52px;margin:-26px 0 0 -26px;border-radius:50%;background:radial-gradient(circle at 40% 35%,rgba(210,255,242,.75),rgba(127,227,198,.35));box-shadow:0 0 12px rgba(127,227,198,.5)}
 #safeL{position:fixed;left:env(safe-area-inset-left,0px);top:0;width:0;height:0;pointer-events:none}
 .joy[hidden],.skills[hidden],.sk[hidden]{display:none}
-.skills{position:fixed;right:calc(env(safe-area-inset-right,0px) + 8px);bottom:calc(env(safe-area-inset-bottom,0px) + 4px);width:236px;height:206px;pointer-events:none}
+.skills{position:fixed;right:calc(env(safe-area-inset-right,0px) + 8px);bottom:calc(env(safe-area-inset-bottom,0px) + 4px + var(--vbo,0px));width:236px;height:206px;pointer-events:none}
 .sk{all:unset;pointer-events:auto;position:absolute;width:62px;height:62px;border-radius:50%;box-sizing:border-box;display:grid;place-items:center;cursor:pointer;touch-action:none;
   background:radial-gradient(circle at 50% 40%,rgba(30,62,60,.92),rgba(8,18,19,.92));border:2px solid rgba(127,227,198,.75);box-shadow:0 0 12px rgba(127,227,198,.35);color:#eafff8;font-family:var(--f-ui)}
 .sk .ic{font-size:27px;line-height:1;text-shadow:0 0 8px rgba(127,227,198,.85)}
@@ -295,7 +295,7 @@ h2{margin:0;font-size:22px;font-weight:400;letter-spacing:.2em}
     <h1 class="ttlh">午夜來<span class="zhan">斬</span>妖<small>提燈・斬妖・修仙</small></h1>
     <div class="ttlmenu"><button class="btn go" id="tNew">重新開始</button><button class="btn" id="tLoad">載入遊戲</button><button class="btn" id="tHelp">遊戲說明</button><button class="btn" id="tAdd">加入主畫面</button></div>
   </div>
-  <div class="ttlver">v57</div>
+  <div class="ttlver">v58</div>
 </div>
 <div class="ov md" id="mdOv"><div class="box" id="mdBox"></div></div>
 
@@ -4845,7 +4845,10 @@ function checkRot(){const need=isTouch&&innerHeight>innerWidth;$('#rotOv').class
 // Android: go full screen and lock to landscape when the night starts (iPhone Safari cannot, so it just asks to turn the phone)
 function tryLandscape(){try{if(isTouch&&window.top===window&&/Android/i.test(navigator.userAgent)&&document.fullscreenEnabled&&!document.fullscreenElement)
   document.documentElement.requestFullscreen().then(()=>screen.orientation&&screen.orientation.lock&&screen.orientation.lock('landscape')).catch(()=>{})}catch(e){}}
-addEventListener('resize',resize);resize();
+// 轉向後（尤其 iOS）瀏覽器回報的版面高度常常晚一步才對，右下角技能鍵會被擠下去：轉向後多量幾次，並用「版面高度 − 可視高度」把底部元件抬回來
+function fixVbo(){try{scrollTo(0,0);const vv=window.visualViewport,lh=document.documentElement.clientHeight;const o=vv?Math.max(0,Math.round(lh-(vv.height+vv.offsetTop))):0;document.documentElement.style.setProperty('--vbo',(o>2&&o<200?o:0)+'px')}catch(e){}}
+const resize2=()=>{resize();fixVbo()};
+addEventListener('resize',resize2);addEventListener('orientationchange',()=>{for(const d of [60,250,600,1200])setTimeout(resize2,d)});if(window.visualViewport)visualViewport.addEventListener('resize',fixVbo);resize2();
 try{if('serviceWorker' in navigator&&/^https?:/.test(location.protocol)&&window.top===window)navigator.serviceWorker.register('sw.js').catch(()=>{})}catch(e){}
 let last=performance.now();const camT=new THREE.Vector3(),bubP=new THREE.Vector3();
 mode='idle';
