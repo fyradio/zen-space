@@ -4223,7 +4223,7 @@ function spawnTick(dt){const m=minute(),rate=1.25*(1+1.1*m+.18*m*m)*G.mod.spawn*
 /* ================= 戰鬥 ================= */
 function hurtEnemy(e,dmg,kx=0,kz=0,crit=false,fly=0){if(e.hp<=0)return;if(e.markT>0)dmg*=2;e.hp-=dmg;e.flash=.1;if(!fly){e.x+=kx;e.z+=kz}else{e.x+=kx*.3;e.z+=kz*.3};showNum(e.x,1+e.y,e.z,dmg,crit?'c':e.elite?'b':'n');if(e.hp<=0)killEnemy(e,kx,kz,fly)}
 function killEnemy(e,kx=0,kz=0,fly=0){if(e.t.revive&&!e.revived&&!fly){e.revived=true;e.hp=e.max*.5;e.stun=2.2;e.down=2.2;if(!simming)fx({p:tmp.set(e.x,.4,e.z),col:0xe8e2d0,life:.4,s0:.5,s1:1.4,op:.7,vy:.3});return}
-  G.kills++;e.dead=true;SFX.play('kill');if(G.ult<G.k.ultNeed)G.ult++;if(G.kills%250===0&&G.kills<=1250&&!simming){banner('殺氣凝劍','飛劍 +1');SFX.play('gold')}dashLine(e,false);if(G.kills>=G.nextPill){G.nextPill+=100;dropPill(e.x,e.z)}
+  G.kills++;e.dead=true;SFX.play('kill');if(G.kills%670===0&&(G.n67||0)<10){G.n67=(G.n67||0)+1;G.extra67=(G.extra67||0)+1;if(!simming)show67(G.n67)}if(G.ult<G.k.ultNeed)G.ult++;if(G.kills%250===0&&G.kills<=1250&&!simming){banner('殺氣凝劍','飛劍 +1');SFX.play('gold')}dashLine(e,false);if(G.kills>=G.nextPill){G.nextPill+=100;dropPill(e.x,e.z)}
   if(fly&&!simming)launch(e,kx,kz,fly);else fx({p:tmp.set(e.x,.6,e.z),col:0x0a0d0e,life:.7,s0:.5,s1:1.6,op:.75,vy:.9});fx({p:tmp.set(e.x,.6,e.z),col:0x6fffd0,add:true,life:.35,s0:.8,s1:.2,op:.9,vy:0});
   dropSoul(e.x,e.z,e.t.soul);if(e.elite){G.eliteKilled=true;for(let i=0;i<14;i++)dropSoul(e.x+(Math.random()-.5)*2,e.z+(Math.random()-.5)*2,1);banner('精英伏誅','殺氣大漲・仙緣頓悟');SFX.play('boss');setTimeout(()=>openCards(true),700)}
   $('#power').classList.add('pop')}
@@ -4496,6 +4496,7 @@ function stepGame(dt){const g=G;TALK.step(dt);
     if(d<mg||s.pull||s.t>5){s.pull=true;const v=4+s.t*6;s.x+=dx/d*Math.min(d,v*dt);s.z+=dz/d*Math.min(d,v*dt)}
     if(d<.45){g.souls+=s.v;g.wu+=s.v;SFX.play('soul');souls.splice(i,1)}}
   if(g.wu>=g.wuNeed&&!g.over){g.wu-=g.wuNeed;g.lv++;g.wuNeed=Math.round(25*Math.pow(1.75,g.lv));openCards()}
+  else if(g.extra67>0&&!g.over&&!$('#cardOv').classList.contains('on')&&(g.t67=(g.t67||0)+dt)>1.4){g.t67=0;g.extra67--;openCards()}// 每斬 670 隻多一次頓悟（一夜最多 10 次）
   // hero upkeep
   g.iframe=Math.max(0,g.iframe-dt);if(g.s.regen)g.hp=Math.min(g.maxhp,g.hp+g.s.regen*dt);
   // fx
@@ -4509,6 +4510,16 @@ function stepGame(dt){const g=G;TALK.step(dt);
   const pe=$('#power');pe.textContent=fmt(pw);if(pe.classList.contains('pop'))setTimeout(()=>pe.classList.remove('pop'),60);
   $('#kills').textContent=g.showClear?`${g.kills} / ${g.clearK}`:g.kills;$('#hp').style.width=(100*g.hp/g.maxhp)+'%';$('#wu').style.width=(100*Math.min(1,g.wu/g.wuNeed))+'%';
   updSkillUI();if((g.brkT=(g.brkT||0)+dt)>.5){g.brkT=0;checkBreak()}$('#nightBar').style.width=(g.endless?0:100*p)+'%';$('#clock').textContent=g.endless?'撐過 '+elapsedText():'雞啼 '+clockText()}
+// 67 彩蛋：每斬 670 隻跳出大大的「6 7」，再送一次頓悟
+const ov67=(()=>{const d=document.createElement('div');d.id='ov67';d.innerHTML='<div class="d67"><b class="s6">6</b><b class="s7">7</b></div><small></small>';document.body.appendChild(d);
+  const st=document.createElement('style');st.textContent=`#ov67{position:fixed;inset:0;z-index:30;pointer-events:none;display:none;place-items:center;align-content:center;gap:4px}#ov67.on{display:grid}
+    #ov67 .d67{display:flex;gap:min(4vw,30px);font-family:var(--f-title);font-size:min(34vh,170px);line-height:1}#ov67 b{font-weight:400;color:#fff1c2;text-shadow:0 0 30px rgba(242,199,92,.9),0 6px 0 #6a3a08}
+    #ov67 .s6{animation:up67 .32s ease-in-out infinite alternate}#ov67 .s7{animation:up67 .32s ease-in-out infinite alternate-reverse;color:#ffd0e0;text-shadow:0 0 30px rgba(255,120,180,.9),0 6px 0 #6a0830}
+    #ov67 small{text-align:center;font-size:16px;letter-spacing:.3em;color:#ffe9b0;text-shadow:0 2px 6px #000}
+    @keyframes up67{from{transform:translateY(-22%) rotate(-8deg)}to{transform:translateY(22%) rotate(8deg)}}`;document.head.appendChild(st);return d})();
+let t67=null;function show67(n){ov67.querySelector('small').textContent=`斬妖 ${n*670}・六七頓悟 ${n}/10`;ov67.classList.add('on');SFX.play('gold');buzz(40);shake=Math.max(shake,.3);
+  for(let i=0;i<24;i++)fx({p:tmp.set(HERO.pos.x+(Math.random()-.5)*6,1+Math.random()*2,HERO.pos.z+(Math.random()-.5)*6),col:Math.random()<.5?0xffd86a:0xff8ac0,add:true,life:.9,s0:.5,s1:.1,op:1,vy:2});
+  clearTimeout(t67);t67=setTimeout(()=>ov67.classList.remove('on'),1500)}
 function killEnemyQuiet(e){e.dead=true;fx({p:tmp.set(e.x,.6,e.z),col:0xffffff,add:true,life:.6,s0:.4,s1:1.2,op:.6,vy:.8})}
 // spatial grid for separation
 const GRID=1.1,grid=new Map();
