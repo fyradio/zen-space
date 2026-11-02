@@ -295,7 +295,7 @@ h2{margin:0;font-size:22px;font-weight:400;letter-spacing:.2em}
     <h1 class="ttlh">午夜來<span class="zhan">斬</span>妖<small>提燈・斬妖・修仙</small></h1>
     <div class="ttlmenu"><button class="btn go" id="tNew">重新開始</button><button class="btn" id="tLoad">載入遊戲</button><button class="btn" id="tHelp">遊戲說明</button><button class="btn" id="tAdd">加入主畫面</button></div>
   </div>
-  <div class="ttlver">v71</div>
+  <div class="ttlver">v72</div>
 </div>
 <div class="ov md" id="mdOv"><div class="box" id="mdBox"></div></div>
 
@@ -2316,22 +2316,27 @@ function fireCast(A){const S=SK.ult,ang=S.ang,R=S.range(),a0=Math.atan2(A.dir[0]
         if(boss.alive){const dx=boss.x-hx,dz=boss.z-hz,d=Math.hypot(dx,dz);if(d<R+boss.r&&Math.abs(angDiff(Math.atan2(dx,dz),a0))<=ang/2+.3){const v=Math.min(boss.max*.03,dmg*1.2);boss.allow+=v;hurtBoss(v,true)}}}},
     ()=>{scene.remove(m);m.material.dispose();scene.remove(ring);ring.material.dispose();ring.geometry.dispose()})}
 // 九天神雷: a huge circle of purple-gold thunder, everything inside stunned (the boss too, briefly)
-const thForm=(()=>{const t=ctex(512,512,x=>{x.translate(256,256);x.strokeStyle=x.fillStyle='#d8b0ff';x.lineWidth=7;x.beginPath();x.arc(0,0,244,0,7);x.stroke();x.lineWidth=3;x.beginPath();x.arc(0,0,196,0,7);x.stroke();
+const thForm=(()=>{const t=ctex(512,512,x=>{x.translate(256,256);x.strokeStyle=x.fillStyle='#8a52d8';x.lineWidth=7;x.beginPath();x.arc(0,0,244,0,7);x.stroke();x.lineWidth=3;x.beginPath();x.arc(0,0,196,0,7);x.stroke();
     for(let i=0;i<8;i++){x.save();x.rotate(i/8*Math.PI*2);for(let j=0;j<3;j++){const bro=(i>>j)&1;if(bro){x.fillRect(-16,-168+j*16,12,8);x.fillRect(4,-168+j*16,12,8)}else x.fillRect(-16,-168+j*16,32,8)}x.restore()}
     for(let i=0;i<12;i++){const a=i/12*Math.PI*2;x.beginPath();let px=Math.cos(a)*60,py=Math.sin(a)*60;x.moveTo(px,py);for(let k=1;k<5;k++){const rr=60+k*24,aa=a+(k%2?.08:-.08);x.lineTo(Math.cos(aa)*rr,Math.sin(aa)*rr)}x.stroke()}
-    x.font='bold 96px serif';x.textAlign='center';x.textBaseline='middle';x.fillStyle='#ffe08a';x.fillText('雷',0,6)});
+    x.font='bold 96px serif';x.textAlign='center';x.textBaseline='middle';x.fillStyle='#b588ff';x.fillText('雷',0,6)});
   const m=new THREE.Mesh(new THREE.PlaneGeometry(2,2).rotateX(-Math.PI/2),new THREE.MeshBasicMaterial({map:t,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false,opacity:0}));m.visible=false;m.renderOrder=4;scene.add(m);return m})();
+// 神雷分支：主幹落下後，從幾個高度岔出細碎、再分叉的暗紫電枝（只畫，不傷人）
+function thBranch(x,z,col,top=9){if(simming)return;const mk=(sx,sy,sz,dx,dz,len,th,depth)=>{const pts=[new THREE.Vector3(sx,sy,sz)];let px=sx,py=sy,pz=sz;const n=3+(Math.random()*3|0);for(let i=0;i<n;i++){px+=dx*len/n+(Math.random()-.5)*.5;pz+=dz*len/n+(Math.random()-.5)*.5;py-=len/n*(.5+Math.random()*.5);pts.push(new THREE.Vector3(px,Math.max(.05,py),pz))}
+    const m=new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts),n*3,th,3),new THREE.MeshBasicMaterial({color:col,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false,opacity:.8}));scene.add(m);bolts.push({m,t:0});
+    if(depth<1&&pts.length>3){const q=pts[2],a=Math.random()*6.283;mk(q.x,q.y,q.z,Math.sin(a),Math.cos(a),len*.6,th*.7,depth+1)}};
+  for(let i=0;i<4;i++){const y=1.5+Math.random()*(top-3),a=Math.random()*6.283;mk(x+(Math.random()-.5)*.3,y,z+(Math.random()-.5)*.3,Math.sin(a),Math.cos(a),1.2+Math.random()*1.6,.028,0)}}
 function thunder9Cast(A){const [x,z]=A.pt,r=SK.ult.r(),dmg=swordDmg()*9;G.ultBoss=0;
   G.slow=.5;shake=Math.max(shake,.5);SFX.play('ult');buzz(60);const u=$('#ultFx');u.classList.remove('on');void u.offsetWidth;u.classList.add('on');banner('九天神雷','大絕',true);
   thForm.visible=true;thForm.position.set(x,.08,z);thForm.scale.setScalar(r);for(const e of enemies)if(!e.dead&&(e.x-x)**2+(e.z-z)**2<r*r)e.stun=2.5;if(boss.alive&&(boss.x-x)**2+(boss.z-z)**2<(r+boss.r)**2)boss.stun=1.5;
   let n=0,big=false;act(2.2,(t,dt)=>{thForm.rotation.y-=dt;thForm.material.opacity=Math.min(1,t/.2)*(t>1.8?Math.max(0,1-(t-1.8)/.4):1);
-      while(n<26&&t>=.2+n*.05){const a=Math.random()*Math.PI*2,rr=Math.sqrt(Math.random())*r;boltAt(x+Math.sin(a)*rr,z+Math.cos(a)*rr,dmg,1.5,n%2?0xd8b0ff:0xffe08a,.08);if(n%4===0)SFX.play('thunder');n++}
-      if(!big&&t>=1.65){big=true;boltAt(x,z,0,0,0xffe8b0,.45,16);ultHit(x,z,r,dmg*4);shake=Math.max(shake,1);SFX.play('bossDie')}},
+      while(n<26&&t>=.2+n*.05){const a=Math.random()*Math.PI*2,rr=Math.sqrt(Math.random())*r;{const bx=x+Math.sin(a)*rr,bz=z+Math.cos(a)*rr,c=n%2?0xa070f0:0x7a3ccc;boltAt(bx,bz,dmg,1.5,c,.06);thBranch(bx,bz,n%2?0xc8a0ff:0x9a5ae8)}if(n%4===0)SFX.play('thunder');n++}
+      if(!big&&t>=1.65){big=true;boltAt(x,z,0,0,0xb080ff,.32,16);boltAt(x,z,0,0,0xe0c8ff,.1,16);for(let i=0;i<3;i++)thBranch(x,z,0xb080ff,16);ultHit(x,z,r,dmg*4);shake=Math.max(shake,1);SFX.play('bossDie')}},
     ()=>{thForm.visible=false})}
 /* ---------- 大絕表（藏經閣選哪個，右下角就是哪個） ---------- */
 const ULT_DEF={wan:{n:'萬劍歸宗',ic:'萬',col:0xffd86a,shape:'circle',ult:1,r:()=>3.8,range:()=>8,cast:A=>ultCast(A.pt)},
   fire:{n:'三昧真火',ic:'火',col:0xff7a2a,shape:'fan',ult:1,ang:1.7,range:()=>6.5,cast:fireCast},
-  thunder9:{n:'九天神雷',ic:'霆',col:0xc89aff,shape:'circle',ult:1,r:()=>5.5,range:()=>9,cast:thunder9Cast}};
+  thunder9:{n:'九天神雷',ic:'霆',col:0x9a62e8,shape:'circle',ult:1,r:()=>5.5,range:()=>9,cast:thunder9Cast}};
 SK.ult=ULT_DEF.wan;
 function setUlt(k){const U=ULT_DEF[k]||ULT_DEF.wan;SK.ult=U;const b=skBtn.ult;b.querySelector('.ic').textContent=U.ic;b.querySelector('em').textContent=U.n;b.setAttribute('aria-label',U.n)}
 buildMap(0);
