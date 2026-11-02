@@ -574,11 +574,12 @@ const WHITE=new THREE.Color(1,1,1),FLASH=new THREE.Color(4,4,4),dummy=new THREE.
 const boss={g:new THREE.Group(),models:{},def:null,m:null,alive:false,hp:0,max:0,x:0,z:0,t:0,cd:3,sum:6,flash:0,r:1.15,dmg:16};boss.g.visible=false;scene.add(boss.g);
 
 /* ================= 飛劍、技能、特效 ================= */
-const swordMat=new THREE.MeshBasicMaterial({color:0xbffff0,transparent:true,opacity:.95,blending:THREE.AdditiveBlending,depthWrite:false});
+const swordMat=new THREE.MeshBasicMaterial({color:0x2f8a58,transparent:true,opacity:.95,blending:THREE.AdditiveBlending,depthWrite:false});
 const swords=[];for(let i=0;i<60;i++){const g=new THREE.Group();g.visible=false;scene.add(g);
   part(new THREE.BoxGeometry(.05,.012,.6),swordMat,g,{ol:false});const tp=new THREE.ConeGeometry(.035,.12,4);tp.rotateX(Math.PI/2);part(tp,swordMat,g,{p:[0,0,.36],ol:false});
-  const s=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex,color:0x7fffd4,opacity:.6,blending:THREE.AdditiveBlending,depthWrite:false}));s.scale.set(.7,.7,1);g.add(s);
-  swords.push({g,on:false,tr:new Trail(10,.07,0x8fffe0),pos:new THREE.Vector3(),vel:new THREE.Vector3(),tgt:null,life:0,pierce:0,hit:new Set()})}
+  const s=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex,color:0x2a8a55,opacity:.5,blending:THREE.AdditiveBlending,depthWrite:false}));s.scale.set(.7,.7,1);g.add(s);
+  const gd=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex,color:0x9a7a22,opacity:0,blending:THREE.AdditiveBlending,depthWrite:false}));gd.scale.set(.45,.45,1);g.add(gd);// 暗金微光：若隱若現
+  swords.push({g,gd,ph:Math.random()*6.28,on:false,tr:new Trail(10,.07,0x4fae78),pos:new THREE.Vector3(),vel:new THREE.Vector3(),tgt:null,life:0,pierce:0,hit:new Set()})}
 const orbitBlades=[];for(let i=0;i<8;i++){const g=new THREE.Group();g.visible=false;scene.add(g);
   part(new THREE.BoxGeometry(.06,.014,.7),swordMat,g,{ol:false});const s=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex,color:0x7fffd4,opacity:.55,blending:THREE.AdditiveBlending,depthWrite:false}));s.scale.set(.9,.9,1);g.add(s);
   orbitBlades.push(g)}
@@ -1013,7 +1014,7 @@ function launchVolley(){const n=effCount(),used=new Set();const bossSeen=boss.al
     const sw=swords.find(s=>!s.on);if(!sw)return;if(i===0)SFX.play('swing');sw.on=true;sw.g.visible=true;sw.g.scale.setScalar(G.s.size);sw.tgt=tg;sw.life=1.4;sw.pierce=G.s.pierce;sw.hit.clear();sw.tr.pts.length=0;
     const a=(i-(n-1)/2)*.5;sw.pos.copy(from).add(tmp3.set(Math.sin(a)*.4,.2,Math.cos(a)*.4));sw.vel.set(Math.sin(a)*3,4,Math.cos(a)*3)}}
 function stepSwords(dt){const spd=15+G.s.pierce*1.5;
-  for(const sw of swords){if(!sw.on){sw.tr.build(0);continue}sw.life-=dt;
+  for(const sw of swords){if(!sw.on){sw.tr.build(0);continue}sw.life-=dt;sw.gd.material.opacity=Math.max(0,Math.sin(G.t*7+sw.ph))*.5;
     let tg=sw.tgt;if(!tg||tg.dead||(tg===boss&&!boss.alive)){tg=sw.tgt=nearest(sw.pos.x,sw.pos.z,G.s.range*1.2,sw.hit)}
     if(tg){tmp.set(tg.x-sw.pos.x,(tg===boss?2:.6)-sw.pos.y,tg.z-sw.pos.z);const d=tmp.length();tmp.multiplyScalar(spd/Math.max(d,.001));sw.vel.lerp(tmp,1-Math.exp(-dt*9))}
     sw.pos.addScaledVector(sw.vel,dt);sw.g.position.copy(sw.pos);sw.g.lookAt(tmp.copy(sw.pos).add(sw.vel));
