@@ -112,21 +112,43 @@ function lotusCast(){const lv=G.k.sweepLv,R=SK.sweep.range(),dmg=swordDmg()*5.2*
 // 玄冰長河: a wide river of ice down a line, freezing what it crosses
 const RIVER_LV=['河面變寬','兩道冰河','三道，冰封 1.5 秒','五道冰河'];
 const RIVER_N=[1,1,2,3,5],RIVER_W=[2,2.6,2.6,2.6,2.6],RIVER_SP=[0,0,.6,1.1,2.2];
+const iceShardGeo=new THREE.ConeGeometry(.16,1,5).translate(0,.5,0);
+const iceRiverMat=()=>new THREE.ShaderMaterial({transparent:true,depthWrite:false,side:THREE.DoubleSide,fog:false,uniforms:{t:{value:0},op:{value:0}},
+  vertexShader:'varying vec2 vUv;void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}',
+  fragmentShader:`varying vec2 vUv;uniform float t,op;
+    float h(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
+    float n(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(h(i),h(i+vec2(1,0)),f.x),mix(h(i+vec2(0,1)),h(i+vec2(1,1)),f.x),f.y);}
+    void main(){float u=vUv.x,d=1.-vUv.y,e=abs(u*2.-1);
+      float fl=n(vec2(u*5.,d*12.-t*5.)),st=n(vec2(u*13.+fl*2.5,d*4.-t*8.));
+      vec3 c=mix(vec3(.1,.38,.78),vec3(.55,.9,1.),st);
+      float rim=smoothstep(.7,.98,e+(fl-.5)*.18);c+=vec3(.7,.95,1.)*rim*.7;
+      c+=vec3(.9,1.,1.)*smoothstep(.93,1.,st)*.5;// 冰面反光
+      float a=(1.-smoothstep(.9,1.,e+(fl-.5)*.2))*(.45+.55*st);a*=smoothstep(0.,.05,d);
+      a+=smoothstep(.04,0.,abs(vUv.y-.0))*0.;
+      gl_FragColor=vec4(c,a*op);}`});
 function riverCast(A){const lv=G.k.beamLv,L=SK.beam.range(),a0=Math.atan2(A.dir[0],A.dir[1]),dmg=swordDmg()*7.5*G.k.beamD*[1,1,.9,.8,.7][lv],hx=HERO.pos.x,hz=HERO.pos.z,n=EVc(RIVER_N[lv],1),W=2*EVm(RIVER_W[lv]/2);
   SFX.play('beam');SFX.play('bell');shake=Math.max(shake,.25);
   for(let j=0;j<n;j++){const a=n>1?fanA(a0,j,n,RIVER_SP[lv]/(n-1)):a0,dx=Math.sin(a),dz=Math.cos(a),hit=new Set();
-    const m=new THREE.Mesh(beamGeo,new THREE.MeshBasicMaterial({color:0x9fe8ff,transparent:true,opacity:0,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide}));m.position.set(hx,.1,hz);m.rotation.y=a;scene.add(m);
-    act(.8,t=>{const k=Math.min(1,t/.18);m.scale.set(W*(.6+.4*k),1,L*k);m.material.opacity=.6*(t>.4?Math.max(0,1-(t-.4)/.4):1);
+    const m=new THREE.Mesh(beamGeo,iceRiverMat());m.position.set(hx,.1,hz);m.rotation.y=a;scene.add(m);
+    // 冰晶：兩岸與河心長出的冰柱，河頭掃過才冒出來
+    const shG=new THREE.Group();shG.position.set(hx,0,hz);shG.rotation.y=a;scene.add(shG);const shM=new THREE.MeshBasicMaterial({color:0x3f9ee0,transparent:true,opacity:.8,depthWrite:false,fog:false}),shM2=new THREE.MeshBasicMaterial({color:0xaee6ff,transparent:true,opacity:.9,depthWrite:false,fog:false}),shards=[];
+    if(!simming)for(let i=0;i<16;i++){const side=i%4===3?0:(i%2?1:-1),zz=L*(.1+.9*(i+Math.random()*.6)/16),h=.5+Math.random()*.9,s=new THREE.Mesh(iceShardGeo,i%3?shM:shM2);s.position.set(side*(W*.5*.92)+(Math.random()-.5)*.3+(side?0:(Math.random()-.5)*W*.5),0,zz);s.rotation.set((Math.random()-.5)*.35,Math.random()*6,(Math.random()-.5)*.35);s.scale.setScalar(.001);s.userData={zz,h};shG.add(s);shards.push(s)}
+    act(1.15,(t,dt)=>{const k=Math.min(1,t/.18);m.scale.set(W*(.6+.4*k),1,L*k);m.material.uniforms.t.value=t;m.material.uniforms.op.value=.85*(t>.55?Math.max(0,1-(t-.55)/.6):1);
+        for(const s of shards){const g=Math.min(1,Math.max(0,(L*k-s.userData.zz)/1.4+.05)),f=t>.6?Math.max(0,1-(t-.6)/.55):1;s.scale.set(g*f*.8,g*s.userData.h*f,g*f*.8);s.position.y=-.1*(1-g)}
+        shM.opacity=.8*(t>.6?Math.max(0,1-(t-.6)/.55):1);shM2.opacity=.9*(t>.6?Math.max(0,1-(t-.6)/.55):1);
+        if(!simming&&t<.5){const fr=L*k;for(let q=0;q<2;q++){const along=fr*Math.random(),sd=(Math.random()-.5)*W;fx({p:tmp.set(hx+dx*along+dz*sd,.3+Math.random()*.5,hz+dz*along-dx*sd),col:Math.random()<.5?0xdff6ff:0x9fe8ff,add:true,life:.7,s0:.35,s1:.08,op:.8,vy:.9})}}
         const front=L*k;for(const e of enemies){if(e.dead||hit.has(e))continue;const px=e.x-hx,pz=e.z-hz,al=px*dx+pz*dz,pe=Math.abs(px*dz-pz*dx);if(al>0&&al<front&&pe<W/2+e.r){hit.add(e);e.slowT=3;if(lv>=2)e.stun=Math.max(e.stun||0,1.5);hurtEnemy(e,dmg,dx*.5,dz*.5,false,4)}}
         if(boss.alive&&!hit.has(boss)){const px=boss.x-hx,pz=boss.z-hz,al=px*dx+pz*dz,pe=Math.abs(px*dz-pz*dx);if(al>0&&al<front&&pe<W/2+boss.r){hit.add(boss);hurtBoss(dmg)}}},
-      ()=>{scene.remove(m);m.material.dispose()})}}
+      ()=>{scene.remove(m);m.material.dispose();scene.remove(shG);shM.dispose();shM2.dispose()})}}
 // 紫霄雷網: bolts rain on the nearest monsters and lightning links them into a net
 const NET_LV=['落雷更多，雷網：被劈到的妖之間連電','雷網麻痺 1.5 秒','雷暴：落雷再翻倍'];
+// 雷網連線：主電弧＋兩條岔電，閃爍三下（只是畫面）
+function netLink(x1,z1,x2,z2){if(simming)return;const f=()=>{zap(x1,z1,x2,z2,0xb889ff);const r=Math.random(),mx=x1+(x2-x1)*(.25+r*.5),mz=z1+(z2-z1)*(.25+r*.5);for(let i=0;i<2;i++){const a=Math.random()*6.283;zap(mx,mz,mx+Math.sin(a)*1.3,mz+Math.cos(a)*1.3,0x8a4ad8)}};f();act(.09,null,f);act(.2,null,f)}
 function netCast(){const lv=G.k.thLv,n=8+G.k.thN+(lv>=3?Math.max(1,Math.floor(8*evQ())):0),dmg=swordDmg()*2.6*G.k.thD,hx=HERO.pos.x,hz=HERO.pos.z,R=SK.thunder.range(),used=new Set(),hits=[];
   for(let i=0;i<n;i++){const tg=(i===0&&boss.alive&&bossOnScreen())?boss:pickNear(hx,hz,R,used);if(!tg)break;used.add(tg);hits.push(tg)}
   if(!hits.length)return false;SFX.play('thunder');shake=Math.max(shake,.3);
-  hits.forEach((tg,i)=>act(i*.05+.1,null,()=>{boltAt(tg.x,tg.z,dmg,1.2,0xb889ff,.07);if(tg!==boss&&lv>=2)tg.stun=Math.max(tg.stun||0,lv>=3?1.5:.6)}));
-  if(lv>=1)act(hits.length*.05+.3,null,()=>{for(let i=0;i<hits.length;i++)for(let j=i+1;j<Math.min(hits.length,i+3);j++){const a=hits[i],b=hits[j];if(a.dead||b.dead)continue;zap(a.x,a.z,b.x,b.z);
+  hits.forEach((tg,i)=>act(i*.05+.1,null,()=>{boltAt(tg.x,tg.z,dmg,1.2,0x9a62e8,.06);boltAt(tg.x,tg.z,0,0,0xeee4ff,.02,9);thBranch(tg.x,tg.z,0xc8a0ff,9);ringFx(tg.x,tg.z,1.4,0xb889ff,.4);if(tg!==boss&&lv>=2)tg.stun=Math.max(tg.stun||0,lv>=3?1.5:.6)}));
+  if(lv>=1)act(hits.length*.05+.3,null,()=>{for(let i=0;i<hits.length;i++)for(let j=i+1;j<Math.min(hits.length,i+3);j++){const a=hits[i],b=hits[j];if(a.dead||b.dead)continue;netLink(a.x,a.z,b.x,b.z);
       for(const e of enemies){if(e.dead)continue;const px=e.x-a.x,pz=e.z-a.z,dx=b.x-a.x,dz=b.z-a.z,t=Math.max(0,Math.min(1,(px*dx+pz*dz)/(dx*dx+dz*dz+1e-6)));if((px-dx*t)**2+(pz-dz*t)**2<.5)hurtEnemy(e,dmg*.5,0,0,false,3)}}});
   return true}
 SKILL_SETS.push({name:'結丹',sweep:{n:'金蓮劍陣',ic:'蓮',col:0xffd86a,shape:'self',range:()=>4.4*G.k.sweepR,cd:()=>7*G.k.sweepCd,lv:LOTUS_LV,cast:lotusCast},
