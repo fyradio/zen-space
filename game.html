@@ -295,7 +295,7 @@ h2{margin:0;font-size:22px;font-weight:400;letter-spacing:.2em}
     <h1 class="ttlh">午夜來<span class="zhan">斬</span>妖<small>提燈・斬妖・修仙</small></h1>
     <div class="ttlmenu"><button class="btn go" id="tNew">重新開始</button><button class="btn" id="tLoad">載入遊戲</button><button class="btn" id="tHelp">遊戲說明</button><button class="btn" id="tAdd">加入主畫面</button></div>
   </div>
-  <div class="ttlver">v62</div>
+  <div class="ttlver">v63</div>
 </div>
 <div class="ov md" id="mdOv"><div class="box" id="mdBox"></div></div>
 
@@ -4415,7 +4415,20 @@ const dragonHead=(()=>{let T=null;return ()=>T||(T=ctex(256,160,x=>{x.lineCap='r
             vec3 col=mix(vec3(.01,.26,.21),vec3(.22,.78,.6),clamp(rim*.9,0.,1.));col=mix(col,vec3(1.,.8,.38),edgeG*.55+spine*.7);col=mix(col,vec3(1.,.96,.8),spine*.3);
             float I=(.3+.7*sc)*tail*fade;gl_FragColor=vec4(col*I*1.15,I);}`});
       S.dTube=keep(new THREE.Mesh(gb,dm));S.dTube.frustumCulled=false;S.dTube.renderOrder=3;S.dTube.visible=false;S.dN={NS,SD,pa,na,gb};
-      S.head=keep(new THREE.Mesh(new THREE.PlaneGeometry(2.7,1.7),new THREE.MeshBasicMaterial({map:dragonHead(),transparent:true,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide})));S.head.visible=false;S.head.renderOrder=4;
+      // 龍首（立體、不畫五官）：菲涅耳發光的長形頭顱＋前伸的吻＋兩支分岔鹿角（細光管）＋向後飄的光鬃，加一圈光暈
+      S.hU={time:{value:0},fade:{value:1}};
+      const hm=new THREE.ShaderMaterial({uniforms:S.hU,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,side:THREE.DoubleSide,
+        vertexShader:'varying vec3 vN,vV;varying vec2 vUv;void main(){vUv=uv;vN=normalize(normalMatrix*normal);vec4 mv=modelViewMatrix*vec4(position,1.);vV=-mv.xyz;gl_Position=projectionMatrix*mv;}',
+        fragmentShader:'uniform float time,fade;varying vec3 vN,vV;varying vec2 vUv;void main(){float f=pow(1.-abs(dot(normalize(vN),normalize(vV))),1.4);float band=.75+.25*sin(vUv.x*40.-time*3.);vec3 c=mix(vec3(.25,.85,.65),vec3(1.,.88,.5),f);c=mix(c,vec3(1.,.97,.85),smoothstep(.55,1.,f));float I=(.28+.85*f)*band*fade;gl_FragColor=vec4(c*I,I);}'});
+      const hg=new THREE.Group(),skull=new THREE.Mesh(new THREE.SphereGeometry(1,22,14),hm);skull.scale.set(.7,.3,.34);hg.add(skull);
+      const snout=new THREE.Mesh(new THREE.ConeGeometry(.2,.9,12,1,true).rotateZ(-Math.PI/2),hm);snout.position.x=.72;snout.scale.set(1,.8,.7);hg.add(snout);
+      const jaw=new THREE.Mesh(new THREE.ConeGeometry(.14,.7,10,1,true).rotateZ(-Math.PI/2),hm);jaw.position.set(.58,-.12,0);hg.add(jaw);
+      const am=new THREE.MeshBasicMaterial({color:LC(0xffe6a0),transparent:true,opacity:.85,blending:THREE.AdditiveBlending,depthWrite:false}),tube=(pts,r)=>new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts.map(a=>new THREE.Vector3(...a))),14,r,5),am);
+      for(const sz of [-1,1]){hg.add(tube([[.15,.12,sz*.1],[-.1,.45,sz*.22],[-.5,.72,sz*.3],[-.95,.78,sz*.34]],.045));hg.add(tube([[-.12,.5,sz*.23],[-.2,.82,sz*.28],[-.3,1.08,sz*.3]],.02));
+        hg.add(tube([[.62,.0,sz*.12],[.9,-.28,sz*.34],[.6,-.62,sz*.48],[.2,-.76,sz*.5]],.014));// 長須
+        for(let k=0;k<2;k++)hg.add(tube([[-.1,.05,sz*(.08+k*.1)],[-.6,.12-k*.2,sz*(.22+k*.12)],[-1.3,-.02-k*.3,sz*(.34+k*.16)]],.03-.01*k))}
+      const halo=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex,color:LC(0xffd890),transparent:true,opacity:.55,blending:THREE.AdditiveBlending,depthWrite:false}));halo.scale.set(3.4,3.4,1);hg.add(halo);
+      S.head=keep(hg);S.head.visible=false;
       S.cracks=disc(crack(),0x3fe0a8,26,.05,0);S.cracks.position.x=x;S.cracks.position.z=z;
       S.pU={op:{value:0},time:{value:0}};S.pil=keep(new THREE.Mesh(new THREE.CylinderGeometry(1,1.4,1,40,1,true),new THREE.ShaderMaterial({uniforms:S.pU,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,side:THREE.DoubleSide,vertexShader:'varying vec2 vUv;varying vec3 vN,vV;void main(){vUv=uv;vN=normalize(normalMatrix*normal);vec4 mv=modelViewMatrix*vec4(position,1.);vV=-mv.xyz;gl_Position=projectionMatrix*mv;}',fragmentShader:'uniform float op,time;varying vec2 vUv;varying vec3 vN,vV;void main(){float c=pow(abs(dot(normalize(vN),normalize(vV))),1.8);float st=.6+.4*sin(vUv.x*70.+time*1.5)*sin(vUv.y*14.-time*7.);float e=smoothstep(0.,.08,vUv.y)*smoothstep(1.,.85,vUv.y);float I=c*st*e*op;gl_FragColor=vec4(mix(vec3(.2,.9,.65),vec3(.9,1.,.95),c*c)*I,I);}'})));S.pil.position.set(x,0,z);
       S.cl=keep(new THREE.Mesh(new THREE.RingGeometry(1,30,48).rotateX(Math.PI/2),new THREE.MeshBasicMaterial({map:cloudLayer(),color:LC(0x9fc0c8),transparent:true,opacity:0,depthWrite:false,side:THREE.DoubleSide})));S.cl.position.set(x,16,z)}
@@ -4457,8 +4470,8 @@ const dragonHead=(()=>{let T=null;return ()=>T||(T=ctex(256,160,x=>{x.lineCap='r
         for(let k=0;k<=N.SD;k++){const th=k/N.SD*Math.PI*2,nx=Math.cos(th)*sd.x+Math.sin(th)*up.x,ny=Math.cos(th)*sd.y+Math.sin(th)*up.y,nz=Math.cos(th)*sd.z+Math.sin(th)*up.z,n=(i*(N.SD+1)+k)*3;
           N.pa[n]=Pt[i].x+nx*rad;N.pa[n+1]=Pt[i].y+ny*rad;N.pa[n+2]=Pt[i].z+nz*rad;N.na[n]=nx;N.na[n+1]=ny;N.na[n+2]=nz}}
       N.gb.attributes.position.needsUpdate=true;N.gb.attributes.normal.needsUpdate=true;S.dU.fade.value=show*(1-sm(7.0,7.3,t));S.dU.time.value=t;S.dTube.visible=show>0&&t<7.3;
-      {const h=Pt[0],Td=Pt[0].clone().sub(Pt[3]).normalize();S.head.visible=show>0&&t<7.3;S.head.position.copy(h).addScaledVector(Td,.5);S.head.quaternion.copy(camera.quaternion);
-        const cr=V.set(1,0,0).applyQuaternion(camera.quaternion),cu=V2.set(0,1,0).applyQuaternion(camera.quaternion);S.head.rotateZ(Math.atan2(Td.dot(cu),Td.dot(cr)));S.head.scale.setScalar((.5+.5*show)*.9)}
+      {const h=Pt[0],Td=Pt[0].clone().sub(Pt[3]).normalize(),sd=new THREE.Vector3().crossVectors(Td,new THREE.Vector3(0,1,0));if(sd.lengthSq()<1e-4)sd.set(0,0,1);sd.normalize();const up=new THREE.Vector3().crossVectors(sd,Td).normalize();
+        S.head.visible=show>0&&t<7.3;S.head.position.copy(h).addScaledVector(Td,.35);S.head.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(Td,up,sd.clone().negate().negate()));S.head.scale.setScalar((.5+.5*show)*.85);S.hU.fade.value=S.dU.fade.value;S.hU.time.value=t}
       S.cracks.material.opacity=sm(7.1,7.6,t)*(1-sm(10.5,12.5,t))*.9;S.cracks.scale.setScalar(.2+sm(7.1,8.6,t)*.8);
       const pk=sm(7.2,7.7,t);S.pil.scale.set(.5+pk*.7+Math.sin(t*20)*.04,60*pk,.5+pk*.7);S.pil.position.y=30*pk;S.pU.op.value=pk*(1-sm(8.6,10.6,t))*1.1;S.pU.time.value=t;
       S.cl.material.opacity=sm(1,4,t)*.55*(1-sm(10,12,t));S.cl.scale.setScalar(1+sm(7.4,9,t)*.6);S.cl.rotation.y=t*.05}
