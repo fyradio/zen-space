@@ -45,7 +45,18 @@ const woodM=toon(0x1a2421);
 const PALS=[
   {outer:'#82b3a8',inner:'#eef2ee',trim:'#2c675e',belt:'#26354a',ribbon:'#a3e6d2',cloud:'#5f948a'},
   {outer:'#2d313c',inner:'#e4ddcf',trim:'#a8352c',belt:'#121318',ribbon:'#c8463a',cloud:'#4b5161'},
-  {outer:'#8f2c2c',inner:'#f2e6d2',trim:'#d9ad52',belt:'#1c1a1f',ribbon:'#e8c066',cloud:'#b4544a'}];
+  {outer:'#8f2c2c',inner:'#f2e6d2',trim:'#d9ad52',belt:'#1c1a1f',ribbon:'#e8c066',cloud:'#b4544a'},
+  {outer:'#e6a82c',inner:'#f6efe0',trim:'#b8501e',belt:'#2a1e14',ribbon:'#ffd060',cloud:'#c88a2a'},
+  {outer:'#1f4a3c',inner:'#ebe6d8',trim:'#12161a',belt:'#0d0f11',ribbon:'#58a07c',cloud:'#2e6a52'},
+  {outer:'#f0a4b6',inner:'#f6eee8',trim:'#3c8c5c',belt:'#2c6444',ribbon:'#9be0b4',cloud:'#d4788e'},
+  {outer:'#8a5cba',inner:'#f4ecf6',trim:'#e6a2d2',belt:'#3a2850',ribbon:'#d8b0f0',cloud:'#6a4290'},
+  {outer:'#d65a22',inner:'#f6ecda',trim:'#f2c248',belt:'#1c1210',ribbon:'#ffb060',cloud:'#a8401a'},
+  {outer:'#2a4e9c',inner:'#e8eef6',trim:'#78c2e6',belt:'#121a2e',ribbon:'#9ad0ff',cloud:'#1f3a78'},
+  {outer:'#c8d0d8',inner:'#f6f6f4',trim:'#6a7684',belt:'#2a2e36',ribbon:'#e8eef4',cloud:'#9aa4b0'},
+  {outer:'#23262e',inner:'#f4f4f2',trim:'#d8d8d8',belt:'#101114',ribbon:'#b8bcc8',cloud:'#464a56'},
+  {outer:'#2c2430',inner:'#efe4e4',trim:'#e88aa8',belt:'#16121a',ribbon:'#ff9ab8',cloud:'#5a4458'},
+  {outer:'#4e6a66',inner:'#e4eae6',trim:'#c8b070',belt:'#1e2826',ribbon:'#9ccbbf',cloud:'#364a47'}];
+const PAL_NAMES=['月白青衫','玄墨朱紋','絳紅金邊','金橘雷衫','墨綠玄衫','櫻粉青帶','紫藤白衫','赤炎金邊','深海藍衫','霧銀素衣','雪墨半衣','夜櫻黑粉','松煙青灰'];
 let pal=PALS[0];
 
 /* ---------- procedural textures ---------- */

@@ -65,7 +65,7 @@ const DF=(()=>{let tab='go',libTab='sweep',tick=0,lookTab=0,lt=0,ld={g:0,x:0,b:0
     else if(tab==='look'){const SP=FACE_SPEC;
       el.innerHTML=`<div class="dftabs" id="lkTabs">${SP.map((t,i)=>`<button data-lk="${i}" aria-pressed="${i===lookTab}">${t.tab}</button>`).join('')}</div>
         <div class="dfsec" id="lkList"></div>
-        <div class="dfsec"><h3>道袍顏色</h3><div class="pair" style="grid-template-columns:repeat(3,1fr)">${PALS.map((p,i)=>`<button class="btn${(save.pal||0)===i?' go':''}" data-pal="${i}" style="background:linear-gradient(135deg,${p.inner} 50%,${p.outer} 50%);min-height:34px" aria-label="服裝${i+1}"></button>`).join('')}</div>
+        <div class="dfsec"><h3>道袍顏色</h3><div class="pair" style="grid-template-columns:repeat(5,1fr)">${PALS.map((p,i)=>`<button class="btn${(save.pal||0)===i?' go':''}" data-pal="${i}" style="background:linear-gradient(135deg,${p.inner} 50%,${p.outer} 50%);min-height:34px" aria-label="${PAL_NAMES[i]}" title="${PAL_NAMES[i]}"></button>`).join('')}</div>
         <div class="pair"><button class="btn" id="lkReset">還原這位預設</button><button class="btn" id="lkCopy">複製設定</button></div></div>`;
       $$('#lkTabs [data-lk]').forEach(b=>b.onclick=()=>{lookTab=+b.dataset.lk;body()});
       $$('#dfBody [data-pal]').forEach(b=>b.onclick=()=>{save.pal=+b.dataset.pal;applyPal(save.pal);writeSave();SFX.play('soul');body()});
