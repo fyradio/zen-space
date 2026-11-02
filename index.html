@@ -295,7 +295,7 @@ h2{margin:0;font-size:22px;font-weight:400;letter-spacing:.2em}
     <h1 class="ttlh">午夜來<span class="zhan">斬</span>妖<small>提燈・斬妖・修仙</small></h1>
     <div class="ttlmenu"><button class="btn go" id="tNew">重新開始</button><button class="btn" id="tLoad">載入遊戲</button><button class="btn" id="tHelp">遊戲說明</button><button class="btn" id="tAdd">加入主畫面</button></div>
   </div>
-  <div class="ttlver">v67</div>
+  <div class="ttlver">v68</div>
 </div>
 <div class="ov md" id="mdOv"><div class="box" id="mdBox"></div></div>
 
@@ -4225,10 +4225,10 @@ function ultBoss(d,cap=.22){if(!boss.alive)return;const room=boss.max*cap-G.ultB
 function ultAoe(x,z,R,dmg,o={},cap){for(const e of enemies){if(e.dead)continue;const dx=e.x-x,dz=e.z-z,d=Math.hypot(dx,dz);if(d>R+e.r)continue;if(o.stun)e.stun=Math.max(e.stun||0,o.stun);if(o.slow)e.slowT=Math.max(e.slowT||0,o.slow);if(o.burn){e.burn=o.burn;e.burnD=dmg*.1}hurtEnemy(e,dmg,dx/(d||1)*(o.kb||0),dz/(d||1)*(o.kb||0),true,o.fly??5)}
   if(boss.alive&&Math.hypot(boss.x-x,boss.z-z)<R+boss.r)ultBoss(dmg*(o.bm||2),cap)}
 // 金雷竹：天雷引下，地面一圈一圈竄出金色雷竹（有竹節、頂端雷光），每圈落雷、竹梢間電弧跳躍，最後一道金雷灌入圓心
-const goldBambooGeo=(()=>{const parts=[],cols=[];for(let i=0;i<5;i++){parts.push(new THREE.CylinderGeometry(.075-.006*i,.09-.006*i,.4,8).translate(0,.2+i*.42,0));cols.push([.82,.52,.08]);parts.push(new THREE.TorusGeometry(.1-.006*i,.032,5,10).rotateX(Math.PI/2).translate(0,.4+i*.42,0));cols.push([.95,.1,.06])}
-  parts.push(new THREE.ConeGeometry(.07,.5,6).translate(0,2.35,0));cols.push([1,.35,.2]);const P=[],N=[],C=[];parts.forEach((g,gi)=>{const t=g.toNonIndexed();P.push(...t.attributes.position.array);N.push(...t.attributes.normal.array);for(let i=0;i<t.attributes.position.count;i++)C.push(...cols[gi])})
+const goldBambooGeo=(()=>{const parts=[],cols=[];for(let i=0;i<5;i++){parts.push(new THREE.CylinderGeometry(.075-.006*i,.09-.006*i,.4,8).translate(0,.2+i*.42,0));cols.push([.04,.17,.1]);parts.push(new THREE.TorusGeometry(.1-.006*i,.032,5,10).rotateX(Math.PI/2).translate(0,.4+i*.42,0));cols.push([.62,.46,.1])}
+  parts.push(new THREE.ConeGeometry(.07,.5,6).translate(0,2.35,0));cols.push([.55,.4,.08]);const P=[],N=[],C=[];parts.forEach((g,gi)=>{const t=g.toNonIndexed();P.push(...t.attributes.position.array);N.push(...t.attributes.normal.array);for(let i=0;i<t.attributes.position.count;i++)C.push(...cols[gi])})
   const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(P,3));g.setAttribute('normal',new THREE.Float32BufferAttribute(N,3));g.setAttribute('color',new THREE.Float32BufferAttribute(C,3));return g})();
-function bambooUlt(A){const [x,z]=A.pt,R=SK.ult.r(),dmg=swordDmg()*22;ultStart('金雷竹');const M=new THREE.MeshBasicMaterial({vertexColors:true,fog:false}),ms=[],tips=[],rings=5,G0=.15;
+function bambooUlt(A){const [x,z]=A.pt,R=SK.ult.r(),dmg=swordDmg()*27;ultStart('金雷竹');const M=new THREE.MeshBasicMaterial({vertexColors:true,fog:false}),ms=[],tips=[],rings=5,G0=.15;
   const disc=new THREE.Mesh(new THREE.RingGeometry(.9,1,64).rotateX(-Math.PI/2),new THREE.MeshBasicMaterial({color:0xffe08a,transparent:true,opacity:0,blending:THREE.AdditiveBlending,depthWrite:false}));disc.position.set(x,.08,z);scene.add(disc);
   for(let k=1;k<=rings;k++){const rr=R*k/rings,n=Math.round(rr*5.2);for(let i=0;i<n;i++){const a=i/n*6.28+k*.7,d=rr*(.88+Math.random()*.24),m=new THREE.Mesh(goldBambooGeo,M);m.position.set(x+Math.sin(a)*d,0,z+Math.cos(a)*d);m.rotation.set((Math.random()-.5)*.22,Math.random()*6,(Math.random()-.5)*.22);m.scale.setScalar(.01);m.userData.k=k;m.userData.h=.85+Math.random()*.5;scene.add(m);ms.push(m)}}
   for(let k=1;k<=rings;k++)act(k*G0,null,()=>{SFX.play('sweep');if(k%2)SFX.play('thunder');shake=Math.max(shake,.22);const r0=R*(k-1)/rings,r1=R*k/rings;
@@ -4238,9 +4238,14 @@ function bambooUlt(A){const [x,z]=A.pt,R=SK.ult.r(),dmg=swordDmg()*22;ultStart('
       for(let q=0;q<10;q++){const a=Math.random()*6.283,d=r0+Math.random()*(r1-r0);fx({p:tmp.set(x+Math.sin(a)*d,.5,z+Math.cos(a)*d),col:Math.random()<.45?0xff3a1a:Math.random()<.5?0xffe08a:0xfff6c8,add:true,life:.6,s0:.6,s1:.1,op:.95,vy:2.4})}}
     for(const e of enemies){if(e.dead)continue;const d=Math.hypot(e.x-x,e.z-z);if(d>=r0-.3&&d<r1+e.r){e.stun=Math.max(e.stun||0,1.4);hurtEnemy(e,dmg,0,0,true,7)}}if(boss.alive){const d=Math.hypot(boss.x-x,boss.z-z);if(d>=r0-boss.r&&d<r1+boss.r)ultBoss(dmg*3)}});
   act(rings*G0+.35,null,()=>{boltAt(x,z,0,0,0xff2a1a,.34,18);boltAt(x,z,0,0,0xfff0b0,.22,16);ringFx(x,z,R*.9,0xff3a2a,.45);ringFx(x,z,R*.6,0xfff0b0,.4);shake=Math.max(shake,.5);SFX.play('boom')});
-  act(2.6,t=>{disc.scale.setScalar(Math.max(.1,R*Math.min(1,t/.7)));disc.material.opacity=.7*Math.max(0,1-t/2.2);disc.rotation.y=t*1.4;
+  const arcs=[];if(!simming)for(let i=0;i<16;i++){const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.Float32BufferAttribute(new Float32Array(6*3),3));const l=new THREE.Line(geo,new THREE.LineBasicMaterial({color:0xff2a1a,transparent:true,opacity:0,blending:THREE.AdditiveBlending,depthWrite:false}));l.frustumCulled=false;scene.add(l);arcs.push({l,life:0,next:Math.random()*.3})}
+  act(2.6,(t,dt)=>{for(const a of arcs){if(a.life>0){a.life-=dt;a.l.material.opacity=a.life>0?(Math.random()<.8?1:.3):0;continue}a.next-=dt;if(a.next>0)continue;a.next=.06+Math.random()*.16;
+      const live=ms.filter(m=>m.scale.x>.5*m.userData.h);if(!live.length)continue;const m=live[Math.floor(Math.random()*live.length)],P=a.l.geometry.attributes.position.array,y0=Math.random()*1.4*m.scale.x,sx=m.scale.x;
+      for(let k=0;k<6;k++){P[k*3]=m.position.x+(k&&k<5?(Math.random()-.5)*.28:0)*sx;P[k*3+1]=y0+k*.26*sx;P[k*3+2]=m.position.z+(k&&k<5?(Math.random()-.5)*.28:0)*sx}
+      a.l.geometry.attributes.position.needsUpdate=true;a.life=.08+Math.random()*.1}
+    disc.scale.setScalar(Math.max(.1,R*Math.min(1,t/.7)));disc.material.opacity=.7*Math.max(0,1-t/2.2);disc.rotation.y=t*1.4;
     ms.forEach(m=>{const tt=t-m.userData.k*G0,h=m.userData.h;m.scale.setScalar(tt<0?.01:Math.max(.01,(tt<.14?tt/.14*1.15:1.15+.05*Math.sin(t*14+m.position.x))*h*(t>2.2?Math.max(0,(2.6-t)/.4):1)))})},
-    ()=>{ms.forEach(m=>scene.remove(m));M.dispose();scene.remove(disc);disc.geometry.dispose();disc.material.dispose()})}
+    ()=>{arcs.forEach(a=>{scene.remove(a.l);a.l.geometry.dispose();a.l.material.dispose()});ms.forEach(m=>scene.remove(m));M.dispose();scene.remove(disc);disc.geometry.dispose();disc.material.dispose()})}
 // 百鬼夜行：一列友善的鬼燈籠遊行，沿路燒妖
 function paradeUlt(A){const a0=Math.atan2(A.dir[0],A.dir[1]),L=16,sx=HERO.pos.x,sz=HERO.pos.z,dx=Math.sin(a0),dz=Math.cos(a0),dmg=swordDmg()*3.2,T=3,N=12;ultStart('百鬼夜行');
   const ps=[];for(let i=0;i<N;i++){const lan=spr(0xff9a3a,1.1),gh=spr(0xd8f0e8,.9);ps.push([lan,gh])}let tk=0;
