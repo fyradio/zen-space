@@ -295,7 +295,7 @@ h2{margin:0;font-size:22px;font-weight:400;letter-spacing:.2em}
     <h1 class="ttlh">午夜來<span class="zhan">斬</span>妖<small>提燈・斬妖・修仙</small></h1>
     <div class="ttlmenu"><button class="btn go" id="tNew">重新開始</button><button class="btn" id="tLoad">載入遊戲</button><button class="btn" id="tHelp">遊戲說明</button><button class="btn" id="tAdd">加入主畫面</button></div>
   </div>
-  <div class="ttlver">v61</div>
+  <div class="ttlver">v62</div>
 </div>
 <div class="ov md" id="mdOv"><div class="box" id="mdBox"></div></div>
 
@@ -4383,26 +4383,18 @@ const ASC=(()=>{let on=null;const FULL=13,SHORT_T0={zhuji:5.0,jiedan:4.6,yuanyin
   function boltMesh(x,z,col,top=22){const pts=[];let px=x,pz=z;for(let y=top;y>=1;y-=1.4){pts.push(new THREE.Vector3(px,y,pz));px=x+(Math.random()-.5)*1.8;pz=z+(Math.random()-.5)*1.8}pts.push(new THREE.Vector3(x,.2,z));
     const g=new THREE.Group();const M=add(col,{opacity:1});for(let i=0;i<pts.length-1;i++){const a=pts[i],b=pts[i+1],len=a.distanceTo(b),m=new THREE.Mesh(new THREE.CylinderGeometry(.09,.09,len,4),M);m.position.copy(a).add(b).multiplyScalar(.5);m.lookAt(b);m.rotateX(Math.PI/2);g.add(m)}
     const s=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex,color:LC(col),transparent:true,blending:THREE.AdditiveBlending,depthWrite:false}));s.scale.set(6,6,1);s.position.set(x,.8,z);g.add(s);g.userData.M=M;g.userData.S=s;return keep(g)}
-// 青龍龍頭（側面、朝右）：莊重的長吻、分岔金鹿角、長須、細長金眼、金色鬃焰（不要圓潤可愛）
-const dragonHead=(()=>{let T=null;return ()=>T||(T=ctex(256,160,x=>{x.lineJoin=x.lineCap='round';x.translate(30,88);
-  // 鬃焰（金）
-  for(let i=0;i<6;i++){const g=x.createLinearGradient(60,0,-30,0);g.addColorStop(0,'rgba(255,210,110,.85)');g.addColorStop(1,'rgba(255,170,60,0)');x.fillStyle=g;x.beginPath();x.moveTo(70,-22+i*5);x.quadraticCurveTo(20,-60-i*7+i*9,-40-i*4,-48+i*18);x.quadraticCurveTo(24,-28+i*7,70,-6+i*5);x.fill()}
-  // 長須
-  x.strokeStyle='rgba(255,236,190,.95)';x.lineWidth=2;for(const [sy,ey,cy] of [[8,70,50],[16,56,66]]){x.beginPath();x.moveTo(168,sy);x.bezierCurveTo(200,cy,150,cy+16,100,ey+14);x.stroke()}
-  x.strokeStyle='rgba(255,220,150,.85)';x.lineWidth=1.6;for(let i=0;i<4;i++){x.beginPath();x.moveTo(104+i*8,26);x.quadraticCurveTo(92+i*8,48+i*6,70+i*10,66+i*5);x.stroke()}
-  // 分岔鹿角
-  x.strokeStyle='#ffe6a0';x.lineWidth=4;x.beginPath();x.moveTo(74,-18);x.bezierCurveTo(60,-54,20,-70,-10,-66);x.stroke();
-  x.lineWidth=2.6;for(const [bx,by,ex,ey] of [[46,-52,40,-86],[24,-62,10,-90],[8,-66,-14,-86]]){x.beginPath();x.moveTo(bx,by);x.quadraticCurveTo((bx+ex)/2+8,(by+ey)/2,ex,ey);x.stroke()}
-  // 頭：長吻、微上翹的鼻端、有稜角的眉骨
-  const g=x.createLinearGradient(0,-30,0,34);g.addColorStop(0,'#f2d27a');g.addColorStop(.35,'#2fa98a');g.addColorStop(1,'#0a4a40');x.fillStyle=g;
-  x.beginPath();x.moveTo(44,-16);x.lineTo(92,-30);x.lineTo(120,-22);x.quadraticCurveTo(160,-18,200,-6);x.quadraticCurveTo(206,2,196,6);x.quadraticCurveTo(160,10,128,18);x.lineTo(82,34);x.quadraticCurveTo(48,34,34,12);x.closePath();x.fill();
-  x.strokeStyle='rgba(255,230,160,.95)';x.lineWidth=2.2;x.stroke();
-  x.strokeStyle='rgba(255,236,190,.7)';x.lineWidth=1.5;x.beginPath();x.moveTo(60,-6);x.lineTo(120,-4);x.moveTo(128,6);x.lineTo(188,2);x.stroke();
-  // 細長金眼（斜入眉骨）
-  x.fillStyle='#ffd870';x.beginPath();x.moveTo(84,-8);x.quadraticCurveTo(100,-20,116,-10);x.quadraticCurveTo(100,-4,84,-8);x.fill();x.fillStyle='#4a1a00';x.fillRect(98,-14,2.6,8);
-  x.fillStyle='rgba(20,60,50,.9)';x.beginPath();x.arc(190,-3,2.6,0,7);x.fill();
-  // 利齒
-  x.fillStyle='#fffaf0';for(const px of [136,152,168]){x.beginPath();x.moveTo(px,12);x.lineTo(px+3,22);x.lineTo(px+7,10);x.fill()}}))})();
+// 青龍龍頭（側面、朝右）：不畫五官，只留神韻——一團金白光暈拖著長長的光鬃與鹿角形光痕，輪廓是前尖後散的水墨筆鋒
+const dragonHead=(()=>{let T=null;return ()=>T||(T=ctex(256,160,x=>{x.lineCap='round';x.translate(40,80);
+  // 後方散開的光鬃（金→透明）
+  for(let i=0;i<9;i++){const ang=(i-4)*.13,L=70+((i*37)%30);const g=x.createLinearGradient(60,0,60-Math.cos(ang)*L,Math.sin(ang)*L);g.addColorStop(0,'rgba(255,225,140,.55)');g.addColorStop(1,'rgba(255,190,80,0)');x.strokeStyle=g;x.lineWidth=7-Math.abs(i-4)*.9;x.beginPath();x.moveTo(60,0);x.quadraticCurveTo(20,Math.sin(ang)*L*.5-6,60-Math.cos(ang)*L,Math.sin(ang)*L);x.stroke()}
+  // 鹿角形光痕
+  x.strokeStyle='rgba(255,240,200,.65)';x.lineWidth=2.4;x.beginPath();x.moveTo(74,-10);x.bezierCurveTo(60,-40,24,-58,-6,-54);x.stroke();for(const [bx,by,ex,ey] of [[50,-38,44,-66],[24,-48,10,-72]]){x.beginPath();x.moveTo(bx,by);x.quadraticCurveTo((bx+ex)/2+6,(by+ey)/2,ex,ey);x.stroke()}
+  // 長須光痕
+  x.strokeStyle='rgba(255,236,190,.5)';x.lineWidth=1.8;for(const k of [0,1]){x.beginPath();x.moveTo(150,6+k*6);x.bezierCurveTo(190,30+k*12,150,50,96,56+k*10);x.stroke()}
+  // 前尖後散的光暈主體（無五官）
+  let g=x.createRadialGradient(90,0,2,90,0,66);g.addColorStop(0,'rgba(255,252,230,.95)');g.addColorStop(.35,'rgba(255,214,120,.7)');g.addColorStop(.7,'rgba(70,220,170,.3)');g.addColorStop(1,'rgba(40,200,150,0)');x.fillStyle=g;x.save();x.scale(1.5,.62);x.beginPath();x.arc(60,0,66,0,7);x.fill();x.restore();
+  g=x.createLinearGradient(30,0,175,0);g.addColorStop(0,'rgba(120,240,200,0)');g.addColorStop(.5,'rgba(255,236,170,.75)');g.addColorStop(1,'rgba(255,255,240,.95)');x.fillStyle=g;
+  x.beginPath();x.moveTo(30,-10);x.quadraticCurveTo(110,-26,176,-3);x.quadraticCurveTo(110,14,30,12);x.closePath();x.fill()}))})();
   // ---------- 各境界的場景 ----------
   function build(kind,x,z,yaw){const S={x,z,yaw},q=lowQ()?.5:1,C=COL[kind];
     S.rune=disc(rune(),C,kind==='huashen'?9:7,.06,0);S.rune.position.x=x;S.rune.position.z=z;
@@ -4423,7 +4415,7 @@ const dragonHead=(()=>{let T=null;return ()=>T||(T=ctex(256,160,x=>{x.lineJoin=x
             vec3 col=mix(vec3(.01,.26,.21),vec3(.22,.78,.6),clamp(rim*.9,0.,1.));col=mix(col,vec3(1.,.8,.38),edgeG*.55+spine*.7);col=mix(col,vec3(1.,.96,.8),spine*.3);
             float I=(.3+.7*sc)*tail*fade;gl_FragColor=vec4(col*I*1.15,I);}`});
       S.dTube=keep(new THREE.Mesh(gb,dm));S.dTube.frustumCulled=false;S.dTube.renderOrder=3;S.dTube.visible=false;S.dN={NS,SD,pa,na,gb};
-      S.head=keep(new THREE.Mesh(new THREE.PlaneGeometry(2.7,1.7),new THREE.MeshBasicMaterial({map:dragonHead(),transparent:true,depthWrite:false,side:THREE.DoubleSide})));S.head.visible=false;S.head.renderOrder=4;
+      S.head=keep(new THREE.Mesh(new THREE.PlaneGeometry(2.7,1.7),new THREE.MeshBasicMaterial({map:dragonHead(),transparent:true,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide})));S.head.visible=false;S.head.renderOrder=4;
       S.cracks=disc(crack(),0x3fe0a8,26,.05,0);S.cracks.position.x=x;S.cracks.position.z=z;
       S.pU={op:{value:0},time:{value:0}};S.pil=keep(new THREE.Mesh(new THREE.CylinderGeometry(1,1.4,1,40,1,true),new THREE.ShaderMaterial({uniforms:S.pU,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,side:THREE.DoubleSide,vertexShader:'varying vec2 vUv;varying vec3 vN,vV;void main(){vUv=uv;vN=normalize(normalMatrix*normal);vec4 mv=modelViewMatrix*vec4(position,1.);vV=-mv.xyz;gl_Position=projectionMatrix*mv;}',fragmentShader:'uniform float op,time;varying vec2 vUv;varying vec3 vN,vV;void main(){float c=pow(abs(dot(normalize(vN),normalize(vV))),1.8);float st=.6+.4*sin(vUv.x*70.+time*1.5)*sin(vUv.y*14.-time*7.);float e=smoothstep(0.,.08,vUv.y)*smoothstep(1.,.85,vUv.y);float I=c*st*e*op;gl_FragColor=vec4(mix(vec3(.2,.9,.65),vec3(.9,1.,.95),c*c)*I,I);}'})));S.pil.position.set(x,0,z);
       S.cl=keep(new THREE.Mesh(new THREE.RingGeometry(1,30,48).rotateX(Math.PI/2),new THREE.MeshBasicMaterial({map:cloudLayer(),color:LC(0x9fc0c8),transparent:true,opacity:0,depthWrite:false,side:THREE.DoubleSide})));S.cl.position.set(x,16,z)}
