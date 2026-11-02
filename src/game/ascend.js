@@ -198,7 +198,9 @@ const dragonHead=(()=>{let T=null;return ()=>T||(T=ctex(256,160,x=>{x.lineCap='r
   function cam(dt){if(!on)return;const o=on,S=o.S,t=o.t,x=S.x,z=S.z,hy=root.position.y;let a,d,h,ly;
     if(t<7){a=S.yaw+Math.PI+.9+t*.22;d=(o.kind==='zhuji'?10:8)-t*.45;h=1.4+t*.3;ly=1.8+hy}
     else if(t<9){const k=sm(7,9,t);a=S.yaw+Math.PI+.9+7*.22+k*.6;d=3.6+k*(o.kind==='zhuji'?9:6);h=1.4+k*(o.kind==='zhuji'?6:3);ly=1.5+hy+k*(o.kind==='zhuji'?4:1)}
-    else{const k=sm(9,10.5,t);a=S.yaw+(o.kind==='yuanying'||o.kind==='huashen'?0:.5)+(1-k)*.8;d=(o.kind==='yuanying'?8.5:o.kind==='huashen'?9:6)-k*.8;h=.7+hy;ly=(o.kind==='yuanying'?3.4:2)+hy}
+    else{const k=sm(9,10.5,t);a=S.yaw+(o.kind==='yuanying'||o.kind==='huashen'?0:.5)+(1-k)*.8;d=(o.kind==='yuanying'?8.5:o.kind==='huashen'?9:6)-k*.8;h=.7+hy;ly=(o.kind==='yuanying'?3.4:2)+hy;
+       // 最後 3 秒：鏡頭慢慢收回主角身上（靠近、略抬高、看向胸口）
+       const r=sm(10,13,t);if(r>0){a+=(S.yaw+.35-a)*r;d+=(4.6-d)*r;h+=(1.9+hy-h)*r;ly+=(1.3+hy-ly)*r}}
     const p=tmp2.set(x+Math.sin(a)*d,h,z+Math.cos(a)*d);camera.position.lerp(p,o.snap?1:1-Math.exp(-dt*4));o.snap=false;
     if(shake>0){camera.position.x+=(Math.random()-.5)*shake*.35;camera.position.y+=(Math.random()-.5)*shake*.2;shake=Math.max(0,shake-dt*1.4)}
     camera.lookAt(tmp3.set(x,ly,z));camera.updateMatrixWorld();sky.position.copy(camera.position)}
