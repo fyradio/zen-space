@@ -55,12 +55,12 @@ function dragonCast(A){const lv=G.k.beamLv,L=SK.beam.range(),a0=Math.atan2(A.dir
   SFX.play('beam');SFX.play('boom');shake=Math.max(shake,.2);
   for(let j=0;j<n;j++){const a=lv>=4?a0+j/n*Math.PI*2:n>1?fanA(a0,j,n,sp/(n-1)):a0,dx=Math.sin(a),dz=Math.cos(a),mine=new Set(),T=L/15;let trail=0;
     const segs=[];if(!simming)for(let i=0;i<7;i++){const s=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex,color:i===0?0xffe08a:i<3?0xff8a2a:0xff4a1a,opacity:.95,blending:THREE.AdditiveBlending,depthWrite:false}));
-      const sc=i===0?1.7:1.35-i*.12;s.scale.set(sc,sc,1);s.visible=false;scene.add(s);segs.push(s)}
-    act(T+.4,t=>{segs.forEach((s,i)=>{const tt=t-i*.05;if(tt<0||tt>T){s.visible=false;return}const dd=tt/T*L,w=Math.sin(dd*1.3+j)*.5;s.visible=true;s.position.set(hx+dx*dd+dz*w,.75+Math.sin(dd*2.2)*.2,hz+dz*dd-dx*w)});
-        if(t>T)return;const dd=t/T*L,w=Math.sin(dd*1.3+j)*.5,x=hx+dx*dd+dz*w,z=hz+dz*dd-dx*w;
+      const sc=(i===0?1.7:1.35-i*.12)*1.7;s.scale.set(sc,sc,1);s.visible=false;scene.add(s);segs.push(s)}
+    act(T+.4,t=>{segs.forEach((s,i)=>{const tt=t-i*.05;if(tt<0||tt>T){s.visible=false;return}const dd=tt/T*L,w=Math.sin(dd*1.3+j)*.9;s.visible=true;s.position.set(hx+dx*dd+dz*w,.75+Math.sin(dd*2.2)*.2,hz+dz*dd-dx*w)});
+        if(t>T)return;const dd=t/T*L,w=Math.sin(dd*1.3+j)*.9,x=hx+dx*dd+dz*w,z=hz+dz*dd-dx*w;
         if(!simming)while(trail<dd){trail+=1;fx({p:tmp.set(hx+dx*trail,.3,hz+dz*trail),col:0xff7a2a,add:true,life:1.5,s0:1,s1:.4,op:.7,vy:.3})}
-        for(const en of enemies){if(en.dead||mine.has(en))continue;if((en.x-x)**2+(en.z-z)**2<(1+en.r)**2){mine.add(en);const c=hitN.get(en)||0;if(c>=2)continue;hitN.set(en,c+1);en.burn=3;en.burnD=dmg*.12;hurtEnemy(en,dmg,dx*.8,dz*.8,false,4.5)}}
-        if(boss.alive&&!mine.has(boss)&&(boss.x-x)**2+(boss.z-z)**2<(1+boss.r)**2){mine.add(boss);const c=hitN.get(boss)||0;if(c<3){hitN.set(boss,c+1);hurtBoss(dmg)}}},
+        for(const en of enemies){if(en.dead||mine.has(en))continue;if((en.x-x)**2+(en.z-z)**2<(1.5+en.r)**2){mine.add(en);const c=hitN.get(en)||0;if(c>=2)continue;hitN.set(en,c+1);en.burn=3;en.burnD=dmg*.12;hurtEnemy(en,dmg,dx*.8,dz*.8,false,4.5)}}
+        if(boss.alive&&!mine.has(boss)&&(boss.x-x)**2+(boss.z-z)**2<(1.5+boss.r)**2){mine.add(boss);const c=hitN.get(boss)||0;if(c<3){hitN.set(boss,c+1);hurtBoss(dmg)}}},
       ()=>{segs.forEach(s=>{scene.remove(s);s.material.dispose()})})}}
 // ---------- 太極氣旋（築基・黑白）----------
 const TAIJI_LV=['範圍 +30%','雙氣旋：同時捲兩團妖','爆開後定身 1.5 秒、傷害 +50%'];

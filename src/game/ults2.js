@@ -1,16 +1,27 @@
 /* ================= 大絕擴充：每章一個＋兩個參悟＋化神「百丈法相」=================
-   萬竹穿心（第二章）、百鬼夜行（第四章）、九霄御劍（第六章）、星河倒懸（第八章）、天劫引（第十章）；
+   金雷竹（第二章，原萬竹穿心）、百鬼夜行（第四章）、九霄御劍（第六章）、星河倒懸（第八章）、天劫引（第十章）；
    參悟：燈陣（3000 靈石）、光陰凝（5000）；化神後：百丈法相。對魔王一樣有上限（一般 22%、法相 40%）。 */
 function ultStart(name){G.ultBoss=0;G.slow=.4;shake=Math.max(shake,.5);SFX.play('ult');buzz(60);const u=$('#ultFx');u.classList.remove('on');void u.offsetWidth;u.classList.add('on');banner(name,'大絕',true)}
 function ultBoss(d,cap=.22){if(!boss.alive)return;const room=boss.max*cap-G.ultBoss;if(room<=0)return;const v=Math.min(d,room);G.ultBoss+=v;boss.allow+=v;hurtBoss(v,true)}
 function ultAoe(x,z,R,dmg,o={},cap){for(const e of enemies){if(e.dead)continue;const dx=e.x-x,dz=e.z-z,d=Math.hypot(dx,dz);if(d>R+e.r)continue;if(o.stun)e.stun=Math.max(e.stun||0,o.stun);if(o.slow)e.slowT=Math.max(e.slowT||0,o.slow);if(o.burn){e.burn=o.burn;e.burnD=dmg*.1}hurtEnemy(e,dmg,dx/(d||1)*(o.kb||0),dz/(d||1)*(o.kb||0),true,o.fly??5)}
   if(boss.alive&&Math.hypot(boss.x-x,boss.z-z)<R+boss.r)ultBoss(dmg*(o.bm||2),cap)}
-// 萬竹穿心：地面竄出一大片竹刺，一圈一圈往外
-const bambooSpikeGeo=new THREE.CylinderGeometry(.03,.12,1.8,5).translate(0,.9,0);
-function bambooUlt(A){const [x,z]=A.pt,R=SK.ult.r(),dmg=swordDmg()*22;ultStart('萬竹穿心');const M=toon(0x5cc46e,{emissive:0x1f5a2a}),ms=[],rings=5;
-  for(let k=1;k<=rings;k++){const rr=R*k/rings,n=Math.round(rr*6);for(let i=0;i<n;i++){const a=i/n*6.28+k,m=new THREE.Mesh(bambooSpikeGeo,M);m.position.set(x+Math.sin(a)*rr*(.85+Math.random()*.3),0,z+Math.cos(a)*rr*(.85+Math.random()*.3));m.rotation.set((Math.random()-.5)*.5,0,(Math.random()-.5)*.5);m.scale.setScalar(.01);m.userData.k=k;scene.add(m);ms.push(m)}
-    act(k*.13,null,()=>{SFX.play('sweep');shake=Math.max(shake,.2);const r0=R*(k-1)/rings,r1=R*k/rings;for(const e of enemies){if(e.dead)continue;const d=Math.hypot(e.x-x,e.z-z);if(d>=r0-.3&&d<r1+e.r){e.stun=Math.max(e.stun||0,1.2);hurtEnemy(e,dmg,0,0,true,7)}}if(boss.alive){const d=Math.hypot(boss.x-x,boss.z-z);if(d>=r0-boss.r&&d<r1+boss.r)ultBoss(dmg*3)}})}
-  act(2.4,t=>{ms.forEach(m=>{const tt=t-m.userData.k*.13;m.scale.setScalar(tt<0?.01:tt<.12?Math.max(.01,tt/.12*1.3):t>2?Math.max(.01,1.3*(2.4-t)/.4):1.3)})},()=>{ms.forEach(m=>scene.remove(m));M.dispose()})}
+// 金雷竹：天雷引下，地面一圈一圈竄出金色雷竹（有竹節、頂端雷光），每圈落雷、竹梢間電弧跳躍，最後一道金雷灌入圓心
+const goldBambooGeo=(()=>{const parts=[];for(let i=0;i<5;i++){parts.push(new THREE.CylinderGeometry(.075-.006*i,.09-.006*i,.4,8).translate(0,.2+i*.42,0));parts.push(new THREE.TorusGeometry(.1-.006*i,.026,5,10).rotateX(Math.PI/2).translate(0,.4+i*.42,0))}
+  parts.push(new THREE.ConeGeometry(.07,.5,6).translate(0,2.35,0));const P=[],N=[];for(const g of parts){const t=g.toNonIndexed();P.push(...t.attributes.position.array);N.push(...t.attributes.normal.array)}
+  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(P,3));g.setAttribute('normal',new THREE.Float32BufferAttribute(N,3));return g})();
+function bambooUlt(A){const [x,z]=A.pt,R=SK.ult.r(),dmg=swordDmg()*22;ultStart('金雷竹');const M=toon(0xe8b83c,{emissive:0x8a5a08,roughness:.35}),ms=[],tips=[],rings=5,G0=.15;
+  const disc=new THREE.Mesh(new THREE.RingGeometry(.9,1,64).rotateX(-Math.PI/2),new THREE.MeshBasicMaterial({color:0xffe08a,transparent:true,opacity:0,blending:THREE.AdditiveBlending,depthWrite:false}));disc.position.set(x,.08,z);scene.add(disc);
+  for(let k=1;k<=rings;k++){const rr=R*k/rings,n=Math.round(rr*5.2);for(let i=0;i<n;i++){const a=i/n*6.28+k*.7,d=rr*(.88+Math.random()*.24),m=new THREE.Mesh(goldBambooGeo,M);m.position.set(x+Math.sin(a)*d,0,z+Math.cos(a)*d);m.rotation.set((Math.random()-.5)*.22,Math.random()*6,(Math.random()-.5)*.22);m.scale.setScalar(.01);m.userData.k=k;m.userData.h=.85+Math.random()*.5;scene.add(m);ms.push(m)}}
+  for(let k=1;k<=rings;k++)act(k*G0,null,()=>{SFX.play('sweep');if(k%2)SFX.play('thunder');shake=Math.max(shake,.22);const r0=R*(k-1)/rings,r1=R*k/rings;
+    ringFx(x,z,r1,0xffe08a,.5);
+    if(!simming){const ring=ms.filter(m=>m.userData.k===k);for(let q=0;q<3;q++){const m=ring[Math.floor(Math.random()*ring.length)];if(m)boltAt(m.position.x,m.position.z,0,0,0xffd860,.07,11)}
+      for(let q=0;q<Math.min(6,ring.length);q++){const m1=ring[Math.floor(Math.random()*ring.length)],m2=ring[Math.floor(Math.random()*ring.length)];if(m1&&m2&&m1!==m2&&(m1.position.x-m2.position.x)**2+(m1.position.z-m2.position.z)**2<6)zap(m1.position.x,m1.position.z,m2.position.x,m2.position.z,0xffe08a)}
+      for(let q=0;q<10;q++){const a=Math.random()*6.283,d=r0+Math.random()*(r1-r0);fx({p:tmp.set(x+Math.sin(a)*d,.5,z+Math.cos(a)*d),col:Math.random()<.5?0xffe08a:0xfff6c8,add:true,life:.6,s0:.5,s1:.1,op:.95,vy:2.4})}}
+    for(const e of enemies){if(e.dead)continue;const d=Math.hypot(e.x-x,e.z-z);if(d>=r0-.3&&d<r1+e.r){e.stun=Math.max(e.stun||0,1.4);hurtEnemy(e,dmg,0,0,true,7)}}if(boss.alive){const d=Math.hypot(boss.x-x,boss.z-z);if(d>=r0-boss.r&&d<r1+boss.r)ultBoss(dmg*3)}});
+  act(rings*G0+.35,null,()=>{boltAt(x,z,0,0,0xfff0b0,.3,16);ringFx(x,z,R*.6,0xfff0b0,.4);shake=Math.max(shake,.5);SFX.play('boom')});
+  act(2.6,t=>{disc.scale.setScalar(Math.max(.1,R*Math.min(1,t/.7)));disc.material.opacity=.7*Math.max(0,1-t/2.2);disc.rotation.y=t*1.4;
+    ms.forEach(m=>{const tt=t-m.userData.k*G0,h=m.userData.h;m.scale.setScalar(tt<0?.01:Math.max(.01,(tt<.14?tt/.14*1.15:1.15+.05*Math.sin(t*14+m.position.x))*h*(t>2.2?Math.max(0,(2.6-t)/.4):1)))})},
+    ()=>{ms.forEach(m=>scene.remove(m));M.dispose();scene.remove(disc);disc.geometry.dispose();disc.material.dispose()})}
 // 百鬼夜行：一列友善的鬼燈籠遊行，沿路燒妖
 function paradeUlt(A){const a0=Math.atan2(A.dir[0],A.dir[1]),L=16,sx=HERO.pos.x,sz=HERO.pos.z,dx=Math.sin(a0),dz=Math.cos(a0),dmg=swordDmg()*3.2,T=3,N=12;ultStart('百鬼夜行');
   const ps=[];for(let i=0;i<N;i++){const lan=spr(0xff9a3a,1.1),gh=spr(0xd8f0e8,.9);ps.push([lan,gh])}let tk=0;
@@ -74,7 +85,7 @@ function fashenUlt(){ultStart('百丈法相');const g=new THREE.Group(),fig=soul
         for(const e of enemies)if(!e.dead&&onScreen(e.x,.4,e.z))hurtEnemy(e,e.hp+1,0,0,true,9);if(boss.alive&&bossOnScreen())ultBoss(boss.max*.4,.4)}},
     ()=>{scene.remove(g,palm);M.dispose();palm.geometry.dispose();palm.material.dispose()})}
 Object.assign(ULT_DEF,{
-  bamboo:{n:'萬竹穿心',ic:'竹',col:0x5cc46e,shape:'circle',ult:1,r:()=>5.5,range:()=>8,cast:bambooUlt},
+  bamboo:{n:'金雷竹',ic:'竹',col:0xf2c75c,shape:'circle',ult:1,r:()=>5.5,range:()=>8,cast:bambooUlt},
   parade:{n:'百鬼夜行',ic:'鬼',col:0xff9a3a,shape:'line',ult:1,w:4,range:()=>16,cast:paradeUlt},
   swordform:{n:'九霄御劍',ic:'霄',col:0x8fffe0,shape:'self',ult:1,range:()=>8,cast:swordFormUlt},
   galaxy:{n:'星河倒懸',ic:'河',col:0x6ab4ff,shape:'circle',ult:1,r:()=>6.5,range:()=>8,cast:galaxyUlt},
