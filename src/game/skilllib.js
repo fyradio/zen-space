@@ -87,12 +87,28 @@ function soulBellCast(){const lv=TL(),R=5*EVm(lv>=1?1.25:1),dmg=swordDmg()*3*G.k
 
 /* ================= 築基 ================= */
 // 烈焰劍舞：火劍繞身三圈並點燃
-function fireDanceCast(){const lv=SL(),R=2.6*G.k.sweepR,n=EVc(lv>=2?5:3,3),dmg=swordDmg()*1.5*G.k.sweepD,T=1.5;SFX.play('sweep');SFX.play('boom');
+// 烈焰劍舞：火焰環繞的同時，多帶一把（進化後兩把、三把）真正的赤紅火劍繞身飛旋
+//  進化造型：Lv1 地面火焰符圈旋轉；Lv2 五團火＋兩把赤劍，劍後拖火焰緞帶；Lv3 三把赤劍（劍身更長）＋結束時火蓮炸開
+const redSwordGeo=(()=>{const bl=new THREE.BoxGeometry(.14,.045,1.25).translate(0,0,.78),tp=new THREE.ConeGeometry(.095,.34,4).rotateX(Math.PI/2).translate(0,0,1.6),gd=new THREE.BoxGeometry(.5,.06,.1).translate(0,0,.12),hl=new THREE.CylinderGeometry(.04,.04,.34,6).rotateX(Math.PI/2);const P=[],N=[],C=[];
+  const add=(g,c)=>{const t=g.toNonIndexed(),pa=t.attributes.position.array,na=t.attributes.normal.array;for(let i=0;i<pa.length;i+=3){P.push(pa[i],pa[i+1],pa[i+2]);N.push(na[i],na[i+1],na[i+2]);C.push(...c)}};
+  add(bl,[1,.16,.1]);add(tp,[1,.7,.4]);add(gd,[1,.8,.3]);add(hl,[.35,.08,.05]);const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(P,3));g.setAttribute('normal',new THREE.Float32BufferAttribute(N,3));g.setAttribute('color',new THREE.Float32BufferAttribute(C,3));return g})();
+function fireDanceCast(){const lv=SL(),R=2.6*G.k.sweepR,n=EVc(lv>=2?5:3,3),dmg=swordDmg()*1.5*G.k.sweepD,T=1.5,nsw=lv>=3?3:lv>=2?2:1;SFX.play('sweep');SFX.play('boom');
   const sw=[];for(let i=0;i<n;i++){const s=spr(0xff7a2a,1.2);sw.push(s)}const hitT=new Map();
+  // 赤紅火劍
+  const swM=new THREE.MeshBasicMaterial({vertexColors:true,fog:false}),swords=[];for(let i=0;i<nsw;i++){const g=new THREE.Group(),m=new THREE.Mesh(redSwordGeo,swM);m.scale.setScalar(lv>=3?1.25:1);g.add(m);const gl=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex,color:0xff3a1a,transparent:true,opacity:.7,blending:THREE.AdditiveBlending,depthWrite:false}));gl.scale.set(2.4,2.4,1);gl.position.z=.9;g.add(gl);scene.add(g);swords.push(g)}
+  // Lv1+：地面火焰符圈（旋轉、有火舌邊）
+  let ring=null;if(lv>=1){const cv=document.createElement('canvas');cv.width=cv.height=256;const x=cv.getContext('2d');x.translate(128,128);for(let i=0;i<24;i++){x.save();x.rotate(i/24*6.2832);const g=x.createLinearGradient(0,-122,0,-80);g.addColorStop(0,'rgba(255,200,90,0)');g.addColorStop(.5,'rgba(255,120,30,.8)');g.addColorStop(1,'rgba(200,30,10,.1)');x.fillStyle=g;x.beginPath();x.moveTo(-9,-84);x.quadraticCurveTo(-4,-110,0,-124);x.quadraticCurveTo(4,-110,9,-84);x.fill();x.restore()}
+    x.strokeStyle='rgba(255,170,70,.9)';x.lineWidth=4;x.beginPath();x.arc(0,0,82,0,7);x.stroke();x.lineWidth=2;x.beginPath();x.arc(0,0,66,0,7);x.stroke();
+    ring=new THREE.Mesh(new THREE.PlaneGeometry(2,2).rotateX(-Math.PI/2),new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(cv),transparent:true,opacity:0,blending:THREE.AdditiveBlending,depthWrite:false}));scene.add(ring)}
   act(T,(t,dt)=>{const hx=HERO.pos.x,hz=HERO.pos.z;sw.forEach((s,i)=>{const a=t*12+i/n*6.28;s.position.set(hx+Math.sin(a)*R,.9,hz+Math.cos(a)*R);if(!simming&&Math.random()<.4)fx({p:tmp.copy(s.position),col:0xff5a1a,add:true,life:.35,s0:.8,s1:.1,op:.8,vy:.5})});
+      swords.forEach((g,i)=>{const a=t*12+(i+.5)/nsw*6.28+.5,r=R*(1.05+.06*Math.sin(t*9+i));g.position.set(hx+Math.sin(a)*r,1.05+.12*Math.sin(t*7+i*2),hz+Math.cos(a)*r);g.rotation.set(.18,a+Math.PI/2,0);const f=Math.min(1,t/.12)*(t>T-.2?Math.max(0,(T-t)/.2):1);g.scale.setScalar(.01+f);
+        if(!simming&&Math.random()<(lv>=2?.9:.55)){const tp=tmp.set(g.position.x-Math.cos(a)*.9,g.position.y,g.position.z+Math.sin(a)*.9);fx({p:tp,col:Math.random()<.5?0xff3a1a:0xffb040,add:true,life:.45,s0:1.1,s1:.2,op:.85,vy:.3})}});
+      if(ring){ring.position.set(hx,.07,hz);ring.rotation.y=-t*2.4;ring.scale.setScalar(R*1.25*(1+.04*Math.sin(t*10)));ring.material.opacity=.85*Math.min(1,t/.15)*(t>T-.25?Math.max(0,(T-t)/.25):1)}
       for(const e of enemies){if(e.dead)continue;const d=Math.hypot(e.x-hx,e.z-hz);if(Math.abs(d-R)<.8+e.r&&(hitT.get(e)||-1)<t-.3){hitT.set(e,t);e.burn=3;e.burnD=dmg*.2;hurtEnemy(e,dmg,0,0,false,0)}}
       if(boss.alive&&Math.abs(Math.hypot(boss.x-hx,boss.z-hz)-R)<.8+boss.r&&(hitT.get(boss)||-1)<t-.3){hitT.set(boss,t);hurtBoss(dmg)}},
-    ()=>{sw.forEach(unspr);if(lv>=3){const hx=HERO.pos.x,hz=HERO.pos.z;ringFx(hx,hz,R+1,0xff7a2a,.5);aoe(hx,hz,R+1,dmg*3,{burn:3,kb:1.5});SFX.play('boom')}})}
+    ()=>{sw.forEach(unspr);swords.forEach(g=>{scene.remove(g);g.traverse(o=>{if(o.material&&o.material!==swM&&o.material.dispose)o.material.dispose()})});swM.dispose();if(ring){scene.remove(ring);ring.material.map.dispose();ring.material.dispose();ring.geometry.dispose()}
+      if(lv>=3){const hx=HERO.pos.x,hz=HERO.pos.z;ringFx(hx,hz,R+1,0xff7a2a,.5);ringFx(hx,hz,R+2,0xff3a1a,.4);aoe(hx,hz,R+1,dmg*3,{burn:3,kb:1.5});SFX.play('boom');
+        if(!simming)for(let q=0;q<28;q++){const a=q/28*6.2832,k=q%2?1:.62;fx({p:tmp.set(hx+Math.sin(a)*R*k,.4,hz+Math.cos(a)*R*k),col:q%2?0xff4a1a:0xffc060,add:true,life:.8,s0:1.8,s1:.3,op:1,vy:2.8})}}})}
 // 石牢：身邊突出一圈石刺，定身
 const spikeGeo=new THREE.ConeGeometry(.28,1.3,5).translate(0,.65,0);
 function stoneCast(){const lv=SL(),R=SK.sweep.range(),dmg=swordDmg()*4*G.k.sweepD*EVm(lv>=3?1.5:1),rings=lv>=2?2:1;SFX.play('boom');shake=Math.max(shake,.3);
@@ -278,7 +294,7 @@ const NEW=[
  ['beam',0,'coin',{n:'銅錢鏢',ic:'錢',col:0xffd86a,shape:'line',w:.8,range:()=>9,cd:()=>5*G.k.beamCd,spread:()=>[0,.5,.9,2.4][bs()],lv3:['三串','五串','八串，打中暈 0.5 秒'],d:'一串銅錢穿透，飛到底再回旋',cast:coinCast}],
  ['thunder',0,'yinlei',{n:'引雷符',ic:'引',col:0xffe08a,shape:'auto',range:()=>9,cd:()=>9,lv:['六道雷','落雷再電旁邊一隻','最後一道巨雷'],d:'往妖最多處落 4 道雷',cast:talisThunderCast}],
  ['thunder',0,'bell2',{n:'鎮魂鈴',ic:'鈴',col:0xb0fff0,shape:'auto',range:()=>5,cd:()=>10,lv:['範圍 +25%','搖兩次','定身 2.5 秒、回 5% 血'],d:'搖鈴震波，周圍妖定身 1.5 秒',cast:soulBellCast}],
- ['sweep',1,'firedance',{n:'烈焰劍舞',ic:'焰',col:0xff7a2a,shape:'self',range:()=>2.6*G.k.sweepR,cd:()=>7*G.k.sweepCd,lv:['範圍 +30%','五把火劍','結束時爆炸'],d:'火劍繞身三圈並點燃',cast:fireDanceCast}],
+ ['sweep',1,'firedance',{n:'烈焰劍舞',ic:'焰',col:0xff7a2a,shape:'self',range:()=>2.6*G.k.sweepR,cd:()=>7*G.k.sweepCd,lv:['範圍 +30%、地面火焰符圈','五團火＋兩把赤劍、劍拖火焰','三把長赤劍、結束時火蓮炸開'],d:'火焰環繞，並有一把赤紅火劍繞身飛旋',cast:fireDanceCast}],
  ['sweep',1,'stone',{n:'石牢',ic:'岩',col:0xc8a06a,shape:'self',range:()=>3.6*G.k.sweepR,cd:()=>7*G.k.sweepCd,lv:['範圍 +30%','兩圈石刺','傷害 +50%、定身 2.5 秒'],d:'身邊突出一圈石刺，定身',cast:stoneCast}],
  ['beam',1,'icecone',{n:'冰錐連射',ic:'錐',col:0xbff4ff,shape:'line',w:1,range:()=>10,cd:()=>5.5*G.k.beamCd,spread:()=>[.8,1.3,2,Math.PI*2][bs()],lv3:['九根','十五根、穿透','二十四根四面八方、凍住'],d:'扇面射出冰錐、緩速',cast:iceConeCast}],
  ['beam',1,'wind',{n:'風刃',ic:'風',col:0xc8ffe8,shape:'line',w:2,range:()=>10,cd:()=>6*G.k.beamCd,lv3:['旋風變寬','兩道旋風','三道、飛得更遠'],d:'旋風直線推進，把妖捲走',cast:windCast}],
