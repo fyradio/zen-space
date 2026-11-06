@@ -996,7 +996,7 @@ function spawnTick(dt){const m=minute(),rate=1.25*(1+1.1*m+.18*m*m)*G.mod.spawn*
 
 /* ================= 戰鬥 ================= */
 // 打擊感參數（真機調整用）：閃白秒數、受擊壓扁量、火花數、飛劍擊退倍率、頓幀秒數與冷卻、暴擊震動
-const FEEL={flash:.15,squash:.55,spark:2,kb:1.7,stop:.04,stopCd:.4,heavyCd:.7,critShake:.12};
+const FEEL={flash:.15,squash:0,spark:2,kb:1.7,stop:.04,stopCd:.4,heavyCd:.7,critShake:.12};
 let HITK='sword',sparkAt=-1;const slashPool=[];
 const slashTex=(()=>{const c=document.createElement('canvas');c.width=128;c.height=128;const x=c.getContext('2d'),g=x.createLinearGradient(0,64,128,64);g.addColorStop(0,'rgba(255,255,255,0)');g.addColorStop(.5,'rgba(255,255,255,1)');g.addColorStop(1,'rgba(255,255,255,0)');
   x.fillStyle=g;x.beginPath();x.moveTo(4,64);x.quadraticCurveTo(64,56,124,64);x.quadraticCurveTo(64,70,4,64);x.fill();return new THREE.CanvasTexture(c)})();
