@@ -1233,7 +1233,7 @@ function tryLandscape(){try{if(isTouch&&window.top===window&&/Android/i.test(nav
 function fixVbo(){try{scrollTo(0,0);const vv=window.visualViewport,lh=document.documentElement.clientHeight;const o=vv?Math.max(0,Math.round(lh-(vv.height+vv.offsetTop))):0;document.documentElement.style.setProperty('--vbo',(o>2&&o<200?o:0)+'px')}catch(e){}}
 const resize2=()=>{resize();fixVbo()};
 addEventListener('resize',resize2);addEventListener('orientationchange',()=>{for(const d of [60,250,600,1200])setTimeout(resize2,d)});if(window.visualViewport)visualViewport.addEventListener('resize',fixVbo);resize2();
-try{if('serviceWorker' in navigator&&/^https?:/.test(location.protocol)&&window.top===window)navigator.serviceWorker.register('sw.js').catch(()=>{})}catch(e){}
+try{if('serviceWorker' in navigator&&/^https?:/.test(location.protocol)&&window.top===window)navigator.serviceWorker.register('sw.js').then(reg=>{document.addEventListener('visibilitychange',()=>{if(!document.hidden)reg.update().catch(()=>{})});let had=!!navigator.serviceWorker.controller;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(!had){had=true;return}const busy=G&&!G.over&&!G.paused;if(!busy)location.reload();else window.__swPending=true})}).catch(()=>{})}catch(e){}
 let last=performance.now();const camT=new THREE.Vector3(),bubP=new THREE.Vector3();
 mode='idle';
 function frame(now){requestAnimationFrame(frame);let dt=Math.min(.05,(now-last)/1000);last=now;clock+=dt;
