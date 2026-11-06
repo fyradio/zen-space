@@ -605,6 +605,24 @@ const POSES={
   cast:{aLx:.42,aLz:-.12,fLx:.25,fLz:-1.5,aRx:-1.38,aRz:.16,fRx:-.3,lean:.04,fing:1,bootS:.08},
   fly:{aLx:.42,aLz:-.12,fLx:.25,fLz:-1.5,aRx:-1.12,aRz:.1,fRx:-.45,lean:.2,fing:1,bootS:.13}};
 const pose=Object.assign({},POSES.idle);
+/* ---------- 動作層：放招／受擊。時間的函數，蓋在 pose 上：0→a 起手(w)，a→b 爆發(h，前 35% 快速甩到位再停住)，b→1 收回 ---------- */
+// tw＝身體扭轉(弧度)、dy＝身體上下、spin＝爆發段轉一圈；手臂 z：左手 aLz 正值往外、右手 aRz 負值往外
+const ACTS={
+  thrust:{d:.42,a:.3,b:.62,w:{aRx:-.85,aRz:-.3,fRx:-1.3,aLx:.15,lean:-.06,tw:.4,bootS:-.04},h:{aRx:-1.62,aRz:.02,fRx:-.04,aLx:.8,fLx:.1,lean:.24,bootS:.2,tw:-.32,fing:1}},
+  slash:{d:.46,a:.32,b:.62,w:{aRx:-1.25,aRz:-1.15,fRx:-.5,aLx:.3,tw:.6,lean:.02},h:{aRx:-1.3,aRz:.75,fRx:-.12,aLx:.6,aLz:.5,tw:-.6,lean:.16,bootS:.14,fing:1}},
+  smash:{d:.52,a:.4,b:.66,w:{aRx:-2.85,aRz:-.05,fRx:-.25,aLx:-2.7,aLz:.05,fLx:-.25,fLz:-.2,lean:-.14,dy:.035},h:{aRx:-.85,fRx:-.08,aLx:-.8,fLx:-.08,fLz:-.2,lean:.34,dy:-.07,bootS:.16,fing:1}},
+  spin:{d:.55,a:.16,b:.78,spin:1,w:{aRx:-.4,aRz:-1.2,aLx:-.4,aLz:1.2,fLz:-.2,fRx:-.1,fLx:-.1,lean:.06,dy:-.02},h:{aRx:-.3,aRz:-1.45,aLx:-.3,aLz:1.45,fLz:-.1,fRx:0,fLx:0,lean:.1,dy:-.03}},
+  usky:{d:.95,a:.32,b:.74,w:{aRx:-1.15,aRz:-.1,fRx:-1.6,aLx:.4,lean:.12,dy:-.05,bootS:.05},h:{aRx:-3.05,aRz:.08,fRx:0,aLx:.5,aLz:.9,fLz:-.3,lean:-.16,dy:.06,fing:1}},
+  upush:{d:.85,a:.36,b:.72,w:{aRx:-.55,aLx:-.55,fRx:-1.7,fLx:-1.7,fLz:-.1,aRz:-.2,aLz:.2,lean:-.12,tw:.25,dy:-.04},h:{aRx:-1.58,aLx:-1.58,fRx:-.05,fLx:-.05,fLz:0,aRz:.12,aLz:-.12,lean:.3,bootS:.26,tw:0,dy:-.02}},
+  usword:{d:.9,a:.36,b:.7,w:{aRx:-1.05,fRx:-1.95,aRz:.25,aLx:-1.05,fLx:-1.7,fLz:-.7,lean:-.04,tw:.15},h:{aRx:-2.7,aRz:-.15,fRx:-.08,aLx:.65,aLz:.7,fLz:-.4,lean:-.12,dy:.05,tw:-.1,fing:1}},
+  ustomp:{d:.85,a:.42,b:.66,w:{dy:.07,lean:-.12,aRx:-1.9,aLx:-1.9,aRz:-.4,aLz:.4,fRx:-.6,fLx:-.6,fLz:-.2,bootS:-.08},h:{dy:-.11,lean:.32,aRx:-.25,aLx:-.25,aRz:-1.1,aLz:1.1,fRx:0,fLx:0,fLz:0,bootS:.3}},
+  hit:{d:.34,a:.04,b:.16,w:{lean:-.34,aRx:.45,aRz:-.35,fRx:-.7,aLx:.55,aLz:.35,fLz:-.6,dy:-.02,tw:.18},h:{lean:-.34,aRx:.45,aRz:-.35,fRx:-.7,aLx:.55,aLz:.35,fLz:-.6,dy:-.02,tw:.18}},
+  guard:{d:.42,a:.07,b:.3,w:{aRx:-1.45,aRz:.55,fRx:-1.55,aLx:-1.45,aLz:-.55,fLx:-1.55,fLz:0,lean:-.12,dy:-.02,fing:0},h:{aRx:-1.45,aRz:.55,fRx:-1.55,aLx:-1.45,aLz:-.55,fLx:-1.55,fLz:0,lean:-.12,dy:-.02,fing:0}}};
+let HACT=null;const PX={};
+function heroAct(k,hold){if(ACTS[k])HACT={k,t:hold===undefined?0:hold*ACTS[k].d,hold:hold!==undefined}}// hold＝定格在某個進度（截圖檢查用）
+// 受擊閃色：把衣服、皮膚材質的 emissive 暫時調成某色
+let hfMats=null,hfT=0,hfD=1;const hfCol=new THREE.Color();
+function heroFlash(col,dur=.22){if(!hfMats){hfMats=[];root.traverse(o=>{const m=o.material;if(m&&m.emissive&&!hfMats.some(q=>q.m===m))hfMats.push({m,e:m.emissive.clone()})})}hfCol.set(col);hfT=hfD=dur}
 let mode='idle',walkPh=0,pathA=0,swordVis=0,castVis=0;
 const lerp=(a,b,k)=>a+(b-a)*k;
 const angLerp=(a,b,k)=>{let d=((b-a+Math.PI)%(Math.PI*2)+Math.PI*2)%(Math.PI*2)-Math.PI;return a+d*k};
@@ -620,13 +638,20 @@ function animateHero(dt){
   // pose blend
   const P0=POSES[mode],kp=1-Math.exp(-dt*6);for(const k in P0)pose[k]=lerp(pose[k],P0[k],kp);
   const sw=mode==='walk'?Math.sin(walkPh):0;
-  armL.sh.rotation.set(pose.aLx+.36*sw,0,pose.aLz);armL.el.rotation.set(pose.fLx,0,pose.fLz);
-  armR.sh.rotation.set(pose.aRx-.36*sw,0,pose.aRz);armR.el.rotation.set(pose.fRx,0,0);
-  armR.fing.scale.y=Math.max(.001,pose.fing);armL.fing.scale.y=.001;
-  bootL.position.z=.03+.13*sw+pose.bootS;bootR.position.z=.03-.13*sw-pose.bootS;
+  let P=pose,aTw=0,aDy=0,asw=1;
+  if(HACT){if(!HACT.hold)HACT.t+=dt;const A=ACTS[HACT.k],u=HACT.t/A.d;if(u>=1)HACT=null;else{P=Object.assign(PX,pose);asw=0;const e=s=>{s=Math.min(1,Math.max(0,s));return s*s*(3-2*s)};
+      let a=null,b=A.w,k=e(u/A.a);if(u>=A.b){a=A.h;b=null;k=e((u-A.b)/(1-A.b))}else if(u>=A.a){a=A.w;b=A.h;k=e((u-A.a)/((A.b-A.a)*.35))}
+      const base=q=>q==='tw'||q==='dy'?0:pose[q];
+      for(const q of new Set([...Object.keys(A.w),...Object.keys(A.h)])){const va=a&&a[q]!==undefined?a[q]:base(q),vb=b&&b[q]!==undefined?b[q]:base(q),v=va+(vb-va)*k;if(q==='tw')aTw=v;else if(q==='dy')aDy=v;else P[q]=v}
+      if(A.spin)aTw-=Math.PI*2*e((u-A.a)/(A.b-A.a))}}
+  armL.sh.rotation.set(P.aLx+.36*sw*asw,0,P.aLz);armL.el.rotation.set(P.fLx,0,P.fLz);
+  armR.sh.rotation.set(P.aRx-.36*sw*asw,0,P.aRz);armR.el.rotation.set(P.fRx,0,0);
+  armR.fing.scale.y=Math.max(.001,P.fing);armL.fing.scale.y=.001;
+  bootL.position.z=.03+.13*sw+P.bootS;bootR.position.z=.03-.13*sw-P.bootS;
   const breath=Math.sin(clock*1.6);
-  body.position.y=(mode==='walk'?Math.abs(Math.cos(walkPh))*.022:0)+breath*.003;
-  body.rotation.x=pose.lean;
+  body.position.y=(mode==='walk'?Math.abs(Math.cos(walkPh))*.022:0)+breath*.003+aDy;
+  body.rotation.x=P.lean;body.rotation.y=aTw;
+  if(hfMats&&hfT>0){hfT=Math.max(0,hfT-dt);const f=hfT/hfD;for(const q of hfMats)q.m.emissive.copy(q.e).lerp(hfCol,f*.85)}
   const lx=HERO.vel.dot(HERO.right),lz=HERO.vel.dot(HERO.fwd);
   const toC=tmp.copy(root.position).negate().setY(0).normalize();
   body.rotation.z=lerp(body.rotation.z,mode==='fly'?-.2*toC.dot(HERO.right):mode==='walk'?.03*sw:0,1-Math.exp(-dt*3));

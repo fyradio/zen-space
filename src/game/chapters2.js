@@ -137,8 +137,8 @@ function riverCast(A){const lv=G.k.beamLv,L=SK.beam.range(),a0=Math.atan2(A.dir[
         for(const s of shards){const g=Math.min(1,Math.max(0,(L*k-s.userData.zz)/1.4+.05)),f=t>.6?Math.max(0,1-(t-.6)/.55):1;s.scale.set(g*f*.8,g*s.userData.h*f,g*f*.8);s.position.y=-.1*(1-g)}
         shM.opacity=.8*(t>.6?Math.max(0,1-(t-.6)/.55):1);shM2.opacity=.9*(t>.6?Math.max(0,1-(t-.6)/.55):1);
         if(!simming&&t<.5){const fr=L*k;for(let q=0;q<2;q++){const along=fr*Math.random(),sd=(Math.random()-.5)*W;fx({p:tmp.set(hx+dx*along+dz*sd,.3+Math.random()*.5,hz+dz*along-dx*sd),col:Math.random()<.5?0xdff6ff:0x9fe8ff,add:true,life:.7,s0:.35,s1:.08,op:.8,vy:.9})}}
-        const front=L*k;for(const e of enemies){if(e.dead||hit.has(e))continue;const px=e.x-hx,pz=e.z-hz,al=px*dx+pz*dz,pe=Math.abs(px*dz-pz*dx);if(al>0&&al<front&&pe<W/2+e.r){hit.add(e);e.slowT=3;if(lv>=2)e.stun=Math.max(e.stun||0,1.5);hurtEnemy(e,dmg,dx*.5,dz*.5,false,4)}}
-        if(boss.alive&&!hit.has(boss)){const px=boss.x-hx,pz=boss.z-hz,al=px*dx+pz*dz,pe=Math.abs(px*dz-pz*dx);if(al>0&&al<front&&pe<W/2+boss.r){hit.add(boss);hurtBoss(dmg)}}},
+        const front=L*k;HITK='ice';for(const e of enemies){if(e.dead||hit.has(e))continue;const px=e.x-hx,pz=e.z-hz,al=px*dx+pz*dz,pe=Math.abs(px*dz-pz*dx);if(al>0&&al<front&&pe<W/2+e.r){hit.add(e);e.slowT=3;if(lv>=2)e.stun=Math.max(e.stun||0,1.5);hurtEnemy(e,dmg,dx*.5,dz*.5,false,4)}}
+        if(boss.alive&&!hit.has(boss)){const px=boss.x-hx,pz=boss.z-hz,al=px*dx+pz*dz,pe=Math.abs(px*dz-pz*dx);if(al>0&&al<front&&pe<W/2+boss.r){hit.add(boss);hurtBoss(dmg)}}HITK='sword'},
       ()=>{scene.remove(m);m.material.dispose();scene.remove(shG);shM.dispose();shM2.dispose()})}}
 // 紫霄雷網: bolts rain on the nearest monsters and lightning links them into a net
 const NET_LV=['落雷更多，雷網：被劈到的妖之間連電','雷網麻痺 1.5 秒','雷暴：落雷再翻倍'];

@@ -310,6 +310,6 @@ const markWho=()=>$$('[data-who]').forEach(b=>b.setAttribute('aria-pressed',Stri
 $$('[data-who]').forEach(b=>b.addEventListener('click',()=>{if(+b.dataset.who!==who)switchChar(+b.dataset.who)}));markWho();
 $('#fedit').onclick=openEdit;$('#fdone').onclick=closeEdit;
 $$('[data-fyaw]').forEach(b=>b.addEventListener('click',()=>{want.yaw=+b.dataset.fyaw}));
-window.__hero={switchChar,setMode,setView,applyPal,setYaw:y=>{want.yaw=y},openEdit,closeEdit,F,applyAllFace,setTab:i=>{curTab=i;renderTabs();renderList();editCam()}};
+window.__hero={heroAct,switchChar,setMode,setView,applyPal,setYaw:y=>{want.yaw=y},openEdit,closeEdit,F,applyAllFace,setTab:i=>{curTab=i;renderTabs();renderList();editCam()}};
 })();
 </script>
