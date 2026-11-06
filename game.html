@@ -252,6 +252,7 @@ h2{margin:0;font-size:22px;font-weight:400;letter-spacing:.2em}
 .ttlmenu{display:grid;gap:12px;width:min(34vw,200px);animation:ttlIn 2.2s .6s ease-out both}
 .ttlmenu .btn{min-height:46px;background:rgba(6,14,14,.55)}.ttlmenu .btn:disabled{opacity:.35;cursor:default}
 @keyframes ttlIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.updbar{position:fixed;left:50%;top:max(8px,env(safe-area-inset-top));transform:translateX(-50%);z-index:90;display:none;padding:9px 16px;border-radius:20px;background:rgba(20,32,30,.94);border:1px solid #7fe3c6;color:#eafff8;font-size:14px;box-shadow:0 4px 14px rgba(0,0,0,.5);cursor:pointer;white-space:nowrap}.updbar.on{display:block}
 .ov.md{z-index:60}.ov.md>.box{box-sizing:border-box;max-width:calc(100vw - 24px)}.hlptabs{flex-wrap:wrap}.ov.md>.box{width:min(100%,460px);background:rgba(6,14,14,.92);border:1px solid var(--line);border-radius:16px;padding:16px}
 .mdt{margin:0;font-size:15px;line-height:1.7}.mdh{margin:0;font-weight:400;letter-spacing:.2em}
 .mdbtns{display:flex;gap:8px;width:100%;flex-wrap:wrap}.mdbtns .btn{flex:1;min-width:30%;min-height:42px;font-size:15px}
@@ -267,7 +268,7 @@ h2{margin:0;font-size:22px;font-weight:400;letter-spacing:.2em}
 
 <canvas id="c" aria-label="白石村的夜晚，拖曳畫面移動"></canvas>
 <div class="vig"></div>
-<div class="hurt" id="hurt"></div><div class="lowhp" id="lowhp"></div>
+<div class="updbar" id="updbar"></div><div class="hurt" id="hurt"></div><div class="lowhp" id="lowhp"></div>
 <div id="edges"></div>
 <div id="nums"></div>
 
@@ -300,7 +301,7 @@ h2{margin:0;font-size:22px;font-weight:400;letter-spacing:.2em}
     <h1 class="ttlh">午夜來<span class="zhan">斬</span>妖<small>提燈・斬妖・修仙</small></h1>
     <div class="ttlmenu"><button class="btn go" id="tNew">重新開始</button><button class="btn" id="tLoad">載入遊戲</button><button class="btn" id="tHelp">遊戲說明</button><button class="btn" id="tAdd">加入主畫面</button></div>
   </div>
-  <div class="ttlver">v78</div>
+  <div class="ttlver">v79</div>
 </div>
 <div class="ov md" id="mdOv"><div class="box" id="mdBox"></div></div>
 
@@ -5040,6 +5041,14 @@ function tryLandscape(){try{if(isTouch&&window.top===window&&/Android/i.test(nav
 function fixVbo(){try{scrollTo(0,0);const vv=window.visualViewport,lh=document.documentElement.clientHeight;const o=vv?Math.max(0,Math.round(lh-(vv.height+vv.offsetTop))):0;document.documentElement.style.setProperty('--vbo',(o>2&&o<200?o:0)+'px')}catch(e){}}
 const resize2=()=>{resize();fixVbo()};
 addEventListener('resize',resize2);addEventListener('orientationchange',()=>{for(const d of [60,250,600,1200])setTimeout(resize2,d)});if(window.visualViewport)visualViewport.addEventListener('resize',fixVbo);resize2();
+// 更新提醒：開啟 2.5 秒後、回到前景（距上次 >60 秒）時抓伺服器上的 index.html 比版號，較新就在上方顯示提醒（戰鬥中不顯示，打完再出現）
+const UPD={cur:parseInt('v79'.slice(1))||0,at:0,ver:0,
+  check(){if(!/^https?:/.test(location.protocol)||window.top!==window)return;const now=Date.now();if(now-this.at<60000)return;this.at=now;
+    fetch('./index.html?c='+now,{cache:'no-store'}).then(r=>r.text()).then(s=>{const m=s.match(/class="ttlver">v(\d+)</);if(m&&+m[1]>this.cur){this.ver=+m[1];this.show()}}).catch(()=>{})},
+  show(){if(!this.ver)return;const el=$('#updbar');if(G&&!G.over&&!G.paused){el.classList.remove('on');setTimeout(()=>this.show(),5000);return}el.textContent='有新版本 v'+this.ver+'，點這裡更新';el.classList.add('on')},
+  async go(){const el=$('#updbar');el.textContent='更新中…';try{if(navigator.serviceWorker){const rs=await navigator.serviceWorker.getRegistrations();await Promise.all(rs.map(r=>r.unregister()))}if(window.caches){const ks=await caches.keys();await Promise.all(ks.map(k=>caches.delete(k)))}}catch(e){}
+    location.replace(location.pathname+'?u='+Date.now()+location.hash)}};
+$('#updbar').onclick=()=>UPD.go();setTimeout(()=>UPD.check(),2500);document.addEventListener('visibilitychange',()=>{if(!document.hidden)UPD.check()});
 try{if('serviceWorker' in navigator&&/^https?:/.test(location.protocol)&&window.top===window)navigator.serviceWorker.register('sw.js').then(reg=>{document.addEventListener('visibilitychange',()=>{if(!document.hidden)reg.update().catch(()=>{})});let had=!!navigator.serviceWorker.controller;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(!had){had=true;return}const busy=G&&!G.over&&!G.paused;if(!busy)location.reload();else window.__swPending=true})}).catch(()=>{})}catch(e){}
 let last=performance.now();const camT=new THREE.Vector3(),bubP=new THREE.Vector3();
 mode='idle';
