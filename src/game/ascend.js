@@ -14,15 +14,15 @@ const ASC=(()=>{let on=null;const FULL=13,SHORT_T0={zhuji:5.0,jiedan:4.6,yuanyin
   const ov=document.createElement('div');ov.id='ascOv';ov.innerHTML='<div class="ascSky"></div><div class="ascFlash"></div><div class="ascBar t"></div><div class="ascBar b"><span class="ascCap"></span></div><div class="ascT"><b></b><i></i><small></small></div><div class="ascSkip">點一下跳過</div>';document.body.appendChild(ov);
   const st=document.createElement('style');st.textContent=`body.ascOn #bubble,body.ascOn #talk,body.ascOn .banner{display:none!important}#ascOv{position:fixed;inset:0;z-index:38;display:none;cursor:pointer;overflow:hidden}#ascOv.on{display:block}
     #ascOv .ascBar{position:absolute;left:0;right:0;height:11vh;background:#000;transition:transform .7s cubic-bezier(.3,.9,.3,1)}#ascOv .ascBar.t{top:0;transform:translateY(-100%)}#ascOv .ascBar.b{bottom:0;transform:translateY(100%);display:grid;place-items:center}
-    #ascOv.bars .ascBar{transform:none}#ascOv .ascCap{font-size:14px;letter-spacing:.35em;color:#e8dcc0}
+    #ascOv.bars .ascBar{transform:none}#ascOv .ascCap{font-size:calc(14px*var(--fs));letter-spacing:.35em;color:#e8dcc0}
     #ascOv .ascSky{position:absolute;inset:0;opacity:0;pointer-events:none}#ascOv .ascFlash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none}
     #ascOv .ascT{position:absolute;left:0;right:0;top:15vh;display:flex;justify-content:center;align-items:center;gap:14px;opacity:0;transition:opacity .4s}#ascOv.show .ascT{opacity:1}
     #ascOv .ascT b{font-family:var(--f-ui);font-weight:700;font-size:min(16vh,78px);letter-spacing:.18em;color:#fff3cf;text-shadow:0 0 22px rgba(242,199,92,.85),0 4px 0 #2a1a04;clip-path:inset(0 100% 0 0);transition:clip-path 1.1s cubic-bezier(.5,0,.3,1)}
     #ascOv.show .ascT b{clip-path:inset(0 0 0 0)}
     #ascOv .ascT i{font-style:normal;display:grid;place-items:center;width:min(11vh,54px);height:min(11vh,54px);border:3px solid #c8221c;border-radius:6px;color:#c8221c;font-family:var(--f-ui);font-weight:700;font-size:min(8vh,38px);background:rgba(255,236,220,.85);opacity:0;transform:scale(2.6) rotate(-14deg);transition:transform .25s cubic-bezier(.4,1.6,.5,1),opacity .2s}
     #ascOv.stamp .ascT i{opacity:1;transform:scale(1) rotate(-6deg)}
-    #ascOv .ascT small{position:absolute;top:100%;left:0;right:0;text-align:center;margin-top:6px;font-size:14px;letter-spacing:.4em;color:#f2d79a;text-shadow:0 1px 4px #000}
-    #ascOv .ascSkip{position:absolute;right:calc(env(safe-area-inset-right,0px) + 16px);bottom:2vh;font-size:11px;color:rgba(255,255,255,.45);letter-spacing:.2em;z-index:2}`;document.head.appendChild(st);
+    #ascOv .ascT small{position:absolute;top:100%;left:0;right:0;text-align:center;margin-top:6px;font-size:calc(14px*var(--fs));letter-spacing:.4em;color:#f2d79a;text-shadow:0 1px 4px #000}
+    #ascOv .ascSkip{position:absolute;right:calc(env(safe-area-inset-right,0px) + 16px);bottom:2vh;font-size:calc(11px*var(--fs));color:rgba(255,255,255,.45);letter-spacing:.2em;z-index:2}`;document.head.appendChild(st);
   // ---------- 花紋貼圖（第一次用到才畫，畫好留著）----------
   const TX={};const cvs=(n,f)=>{const c=document.createElement('canvas');c.width=c.height=n;const x=c.getContext('2d');x.translate(n/2,n/2);f(x,n/2);const t=new THREE.CanvasTexture(c);t.anisotropy=4;return t};
   // 陣圖：雙外圈＋刻度、24 格符文、八卦、雲紋捲草、內圈蓮瓣、中心八芒星（全部白線，靠材質上色）

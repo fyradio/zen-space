@@ -25,17 +25,17 @@ const DUEL=(()=>{let st=null,ov=null;const BOSSKEYS=['yinshi','xuanbing','jinjia
     document.body.appendChild(ov);
     const st2=document.createElement('style');st2.textContent=`#duel2{position:fixed;inset:0;z-index:40;display:none;pointer-events:none;font-family:var(--f-ui)}
       .d2bar{position:absolute;top:calc(env(safe-area-inset-top,0px) + 8px);width:min(36vw,260px);display:grid;gap:3px}.d2bar.l{left:calc(env(safe-area-inset-left,0px) + 12px)}.d2bar.r{right:calc(env(safe-area-inset-right,0px) + 12px);text-align:right}
-      .d2bar b{font-weight:400;font-size:13px;color:#fff;text-shadow:0 1px 3px #000}.d2bar i{display:block;height:6px;border-radius:9px;background:#fff2;overflow:hidden}.d2bar i u{display:block;height:100%;width:100%}
+      .d2bar b{font-weight:400;font-size:calc(13px*var(--fs));color:#fff;text-shadow:0 1px 3px #000}.d2bar i{display:block;height:6px;border-radius:9px;background:#fff2;overflow:hidden}.d2bar i u{display:block;height:100%;width:100%}
       .d2bar .sh u{background:#7fe0ff}.d2bar .hp u{background:#ff6a5a}.d2bar .so u{background:#ffd65a}.d2bar.r i u{margin-left:auto}
       .d2zone{position:absolute;bottom:0;top:30%;width:44%;pointer-events:auto;touch-action:none}.d2zone.l{left:0}.d2zone.r{right:0}
       .d2joy{position:absolute;width:110px;height:110px;margin:-55px 0 0 -55px;border-radius:50%;border:2px solid #fff4;background:#0003;display:none}.d2joy i{position:absolute;left:35px;top:35px;width:40px;height:40px;border-radius:50%;background:#fff6}
-      .d2b{all:unset;position:absolute;pointer-events:auto;width:58px;height:58px;border-radius:50%;display:grid;place-items:center;font-size:15px;color:#fff;border:2px solid;background:#0a141399;touch-action:none}
+      .d2b{all:unset;position:absolute;pointer-events:auto;width:58px;height:58px;border-radius:50%;display:grid;place-items:center;font-size:calc(15px*var(--fs));color:#fff;border:2px solid;background:#0a141399;touch-action:none}
       .d2b.a{bottom:calc(env(safe-area-inset-bottom,0px) + 18px)}.d2b.b{bottom:calc(env(safe-area-inset-bottom,0px) + 88px);width:50px;height:50px}
       .d2b.l.a{left:calc(44% - 74px)}.d2b.l.b{left:calc(44% - 62px)}.d2b.r.a{right:calc(44% - 74px)}.d2b.r.b{right:calc(44% - 62px)}
       .d2b.l{border-color:#7fe3c6}.d2b.r{border-color:#ff8a7a}.d2b.b{border-color:#b46cff}.d2b[disabled]{opacity:.35}
-      #d2x{all:unset;position:absolute;left:50%;top:calc(env(safe-area-inset-top,0px) + 8px);transform:translateX(-50%);pointer-events:auto;padding:5px 14px;border-radius:9px;border:1px solid #fff5;background:#0008;color:#fff;font-size:13px}
-      #d2msg{position:absolute;left:0;right:0;top:32%;text-align:center;color:#ffe9a0;font:400 30px/1.4 var(--f-title);text-shadow:0 0 12px #e8a830,0 2px 4px #000}
-      #d2end{position:absolute;inset:0;display:none;place-items:center;align-content:center;gap:14px;background:#000a;pointer-events:auto;color:#fff;font-size:22px}#d2end .row{display:flex;gap:12px}#d2end .btn{width:auto;padding:0 18px}`;document.head.appendChild(st2);
+      #d2x{all:unset;position:absolute;left:50%;top:calc(env(safe-area-inset-top,0px) + 8px);transform:translateX(-50%);pointer-events:auto;padding:5px 14px;border-radius:9px;border:1px solid #fff5;background:#0008;color:#fff;font-size:calc(13px*var(--fs))}
+      #d2msg{position:absolute;left:0;right:0;top:32%;text-align:center;color:#ffe9a0;font:400 calc(30px*var(--fs))/1.4 var(--f-title);text-shadow:0 0 12px #e8a830,0 2px 4px #000}
+      #d2end{position:absolute;inset:0;display:none;place-items:center;align-content:center;gap:14px;background:#000a;pointer-events:auto;color:#fff;font-size:calc(22px*var(--fs))}#d2end .row{display:flex;gap:12px}#d2end .btn{width:auto;padding:0 18px}`;document.head.appendChild(st2);
     // 搖桿：在自己那半邊按下的位置當中心
     ov.querySelectorAll('.d2zone').forEach(z=>{const p=+z.dataset.p,j=z.querySelector('.d2joy'),k=j.querySelector('i');let id=null,ox=0,oy=0;
       z.addEventListener('pointerdown',e=>{if(!st||id!==null)return;id=e.pointerId;try{z.setPointerCapture(id)}catch(_){}const r=z.getBoundingClientRect();ox=e.clientX;oy=e.clientY;j.style.left=(ox-r.left)+'px';j.style.top=(oy-r.top)+'px';j.style.display='block'});

@@ -122,8 +122,8 @@ Object.defineProperty(CUTS.ch10[3],'t',{get(){return `「師……${(typeof who!
 /* ---------- 夜間對話：開夜、魔王出場、魔王狂暴、斬了魔王；每章三夜各不同；重玩只講第一句 ---------- */
 const TALK=(()=>{const el=document.createElement('div');el.id='talk';el.innerHTML='<b></b><span></span>';document.body.appendChild(el);
   const st=document.createElement('style');st.textContent=`#talk{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 10px);transform:translate(-50%,8px);max-width:min(46vw,420px);z-index:12;pointer-events:none;
-    display:flex;gap:8px;align-items:baseline;padding:6px 12px;border-radius:10px;background:rgba(8,10,12,.62);border:1px solid rgba(232,210,160,.25);opacity:0;transition:opacity .25s,transform .25s;font-size:13.5px;line-height:1.45;color:#f2ead8}
-    #talk.on{opacity:1;transform:translate(-50%,0)}#talk b{flex:none;font-weight:400;color:#f2c75c;font-size:12.5px;letter-spacing:.1em}`;document.head.appendChild(st);
+    display:flex;gap:8px;align-items:baseline;padding:6px 12px;border-radius:10px;background:rgba(8,10,12,.62);border:1px solid rgba(232,210,160,.25);opacity:0;transition:opacity .25s,transform .25s;font-size:calc(13.5px*var(--fs));line-height:1.45;color:#f2ead8}
+    #talk.on{opacity:1;transform:translate(-50%,0)}#talk b{flex:none;font-weight:400;color:#f2c75c;font-size:calc(12.5px*var(--fs));letter-spacing:.1em}`;document.head.appendChild(st);
   const D='燈燈',M='師父',B='沈寒',Y='你';
   // L[ch]={open:[夜一,夜二,夜三],boss:[...],rage:[...],kill:[...]}；每格是 [說話人, 話]… 的陣列
   const L={
