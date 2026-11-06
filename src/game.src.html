@@ -996,7 +996,7 @@ function spawnTick(dt){const m=minute(),rate=1.25*(1+1.1*m+.18*m*m)*G.mod.spawn*
 
 /* ================= 戰鬥 ================= */
 // 打擊感參數（真機調整用）：閃白秒數、受擊壓扁量、火花數、飛劍擊退倍率、頓幀秒數與冷卻、暴擊震動
-const FEEL={flash:.15,squash:0,spark:2,kb:1.7,stop:.04,stopCd:.4,heavyCd:.7,critShake:.12};
+const FEEL={enemy:false,flash:.1,squash:0,spark:2,kb:1,stop:.04,stopCd:.4,heavyCd:.7,critShake:.12};
 let HITK='sword',sparkAt=-1;const slashPool=[];
 const slashTex=(()=>{const c=document.createElement('canvas');c.width=128;c.height=128;const x=c.getContext('2d'),g=x.createLinearGradient(0,64,128,64);g.addColorStop(0,'rgba(255,255,255,0)');g.addColorStop(.5,'rgba(255,255,255,1)');g.addColorStop(1,'rgba(255,255,255,0)');
   x.fillStyle=g;x.beginPath();x.moveTo(4,64);x.quadraticCurveTo(64,56,124,64);x.quadraticCurveTo(64,70,4,64);x.fill();return new THREE.CanvasTexture(c)})();
@@ -1004,7 +1004,7 @@ function slashMark(x,y,z,col){let s=slashPool.find(q=>!q.on);if(!s){if(slashPool
   s.on=true;const sp=s.sp;sp.visible=true;sp.position.set(x,y,z);sp.material.color.set(col);sp.material.rotation=(Math.random()-.5)*1.6+(Math.random()<.5?0:Math.PI);
   act(.18,t=>{const k=t/.18;sp.scale.set(.6+k*1.6,.6+k*1.6,1);sp.material.opacity=1-k*k},()=>{sp.visible=false;s.on=false})}
 // 命中回饋：聲音、火花、暴擊斬痕、重擊頓幀。heavy：1＝精英／魔王
-function hitFeel(x,y,z,crit,heavy){if(simming)return;const K=HITK;SFX.play(crit?'crit':K==='zap'?'hitZap':K==='ice'?'hitIce':K==='fire'?'hitFire':'hit');
+function hitFeel(x,y,z,crit,heavy){if(simming||!FEEL.enemy)return;const K=HITK;SFX.play(crit?'crit':K==='zap'?'hitZap':K==='ice'?'hitIce':K==='fire'?'hitFire':'hit');
   const c=K==='zap'?0xc8a0ff:K==='ice'?0xcff4ff:K==='fire'?0xffa040:crit?0xffe6a0:0xeafff6;
   if(crit||G.t-sparkAt>.035){sparkAt=G.t;fx({p:tmp.set(x,y,z),col:c,add:true,life:.12,s0:crit?1.2:.6,s1:.1,op:1,vy:0});
     const n=crit?4:FEEL.spark;for(let i=0;i<n;i++)fx({p:tmp.set(x+(Math.random()-.5)*.5,y+(Math.random()-.4)*.4,z+(Math.random()-.5)*.5),col:c,add:true,life:.2+Math.random()*.15,s0:.2,s1:.03,op:1,vy:1.2+Math.random()*2.6})}
@@ -1014,7 +1014,7 @@ function hurtEnemy(e,dmg,kx=0,kz=0,crit=false,fly=0){if(e.hp<=0)return;if(e.mark
 function killEnemy(e,kx=0,kz=0,fly=0){if(e.t.revive&&!e.revived&&!fly){e.revived=true;e.hp=e.max*.4;e.stun=2.2;e.down=2.2;if(!simming)fx({p:tmp.set(e.x,.4,e.z),col:0xe8e2d0,life:.4,s0:.5,s1:1.4,op:.7,vy:.3});return}
   G.kills++;e.dead=true;SFX.play('kill');if(G.kills%670===0&&(G.n67||0)<10){G.n67=(G.n67||0)+1;G.extra67=(G.extra67||0)+1;if(!simming)show67(G.n67)}if(G.ult<G.k.ultNeed)G.ult++;if(G.kills%250===0&&G.kills<=1250&&!simming){banner('殺氣凝劍','飛劍 +1');SFX.play('gold')}dashLine(e,false);if(G.kills>=G.nextPill&&!(G.endless&&G.t-(G.pillT??-99)<15)){G.nextPill+=100;G.pillT=G.t;dropPill(e.x,e.z)}
   if(fly&&!simming)launch(e,kx,kz,fly);else fx({p:tmp.set(e.x,.6,e.z),col:0x0a0d0e,life:.7,s0:.5,s1:1.6,op:.75,vy:.9});fx({p:tmp.set(e.x,.6,e.z),col:0x6fffd0,add:true,life:.35,s0:.8,s1:.2,op:.9,vy:0});
-  dropSoul(e.x,e.z,e.t.soul);if(e.elite){G.eliteKilled=true;if(!simming){G.stop=.09;G.stopCd=FEEL.stopCd;shake=Math.max(shake,.35);buzz(25)}for(let i=0;i<14;i++)dropSoul(e.x+(Math.random()-.5)*2,e.z+(Math.random()-.5)*2,1);banner(e.mid?e.t.n+'伏誅':'精英伏誅','殺氣大漲・仙緣頓悟');SFX.play('boss');setTimeout(()=>openCards(true),700)}
+  dropSoul(e.x,e.z,e.t.soul);if(e.elite){G.eliteKilled=true;if(!simming&&FEEL.enemy){G.stop=.09;G.stopCd=FEEL.stopCd;shake=Math.max(shake,.35);buzz(25)}for(let i=0;i<14;i++)dropSoul(e.x+(Math.random()-.5)*2,e.z+(Math.random()-.5)*2,1);banner(e.mid?e.t.n+'伏誅':'精英伏誅','殺氣大漲・仙緣頓悟');SFX.play('boss');setTimeout(()=>openCards(true),700)}
   $('#power').classList.add('pop')}
 function dropSoul(x,z,v){if(souls.length>=SOULCAP){souls[0].v+=v;return}
   const r=Math.hypot(x,z),R=ARENA-.6;if(r>R&&arenaOn()){x*=R/r;z*=R/r}// 鬥法場才有邊界
