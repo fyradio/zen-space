@@ -61,7 +61,7 @@ const HELP=[
 function showHelp(i=0){const close=modal(`<div class="hlp"><div class="hlptabs">${HELP.map((h,j)=>`<button data-h="${j}" aria-pressed="${i===j}">${h[0]}</button>`).join('')}</div><div class="hlpbody">${HELP[i][1]}</div>
   <div class="mdbtns">${i>0?'<button class="btn" data-p>上一頁</button>':''}${i<HELP.length-1?'<button class="btn go" data-n>下一頁</button>':''}<button class="btn" data-x>關閉</button></div></div>`,ov=>{
   ov.querySelectorAll('[data-h]').forEach(b=>b.onclick=()=>{close();showHelp(+b.dataset.h)});const p=ov.querySelector('[data-p]'),n=ov.querySelector('[data-n]');if(p)p.onclick=()=>{close();showHelp(i-1)};if(n)n.onclick=()=>{close();showHelp(i+1)};ov.querySelector('[data-x]').onclick=()=>close()})}
-$('#tNew').onclick=()=>{SFX.resume();newGame()};$('#tLoad').onclick=()=>{SFX.resume();slotPicker('load')};$('#tHelp').onclick=()=>{SFX.resume();showHelp(0)};$('#rotAdd').onclick=()=>showHelp(HELP.findIndex(h=>h[0]==='加入主畫面'));$('#tAdd').onclick=()=>{SFX.resume();showHelp(HELP.findIndex(h=>h[0]==='加入主畫面'))};
+$('#tNew').textContent=autoSave()?'重新開始':'開始遊戲';$('#tNew').onclick=()=>{SFX.resume();newGame()};$('#tLoad').onclick=()=>{SFX.resume();slotPicker('load')};$('#tHelp').onclick=()=>{SFX.resume();showHelp(0)};$('#rotAdd').onclick=()=>showHelp(HELP.findIndex(h=>h[0]==='加入主畫面'));$('#tAdd').onclick=()=>{SFX.resume();showHelp(HELP.findIndex(h=>h[0]==='加入主畫面'))};
 // 開機：#home＝直接進洞府，#new＝新的一局（直接播序章開頭），其他＝標題
 {let h='';try{h=location.hash.slice(1);if(h)history.replaceState(null,'',location.pathname+location.search)}catch(e){}
   if(h==='home'){DF.render()}else if(h==='new'){$('#startOv').classList.add('on');DF.render();setTimeout(()=>DF.go(0,0),300)}else TITLE.show()}

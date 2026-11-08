@@ -31,7 +31,9 @@ const DF=(()=>{let tab='go',libTab='sweep',tick=0,lookTab=0,lt=0,ld={g:0,x:0,b:0
   const TABS=[['go','出戰'],['med','靜室'],['garden','藥園'],['alch','丹房'],['look','造型'],['lib','藏經閣'],['shop','坊市'],['duel','鬥法台'],['save','存檔'],['title','回標題']];
   const el=$('#dfBody');
   function head(){$('#dfRealm').textContent=REALMS[save.realm];$('#dfStone').textContent=`靈石 ${fmt(save.inv.stone)}・妖丹 ${save.inv.yaodan}`}
-  function tabs(){$('#dfTabs').innerHTML=TABS.map(([k,n])=>`<button data-tab="${k}" aria-pressed="${k===tab}"${k==='save'||k==='title'?' class="act"':''}>${n}${k==='med'&&canBreak(false)?'<i class="dot"></i>':''}${k==='garden'&&save.garden.some(p=>p&&ripe(p))?'<i class="dot"></i>':''}</button>`).join('');
+  // 新手先只看到出戰／靜室／造型／存檔，其他分頁隨進度出現（勝場、章節）
+  const tabOpen=k=>{const w=save.st.wins||0,c=reqVal('chap');return k==='lib'?w>=1||save.ults.length>1:k==='garden'||k==='shop'?w>=2||c>=1:k==='alch'?w>=3||c>=1||Object.values(save.inv.herb||{}).some(n=>n>0):k==='duel'?c>=2:true};
+  function tabs(){if(!tabOpen(tab))tab='go';$('#dfTabs').innerHTML=TABS.filter(([k])=>tabOpen(k)).map(([k,n])=>`<button data-tab="${k}" aria-pressed="${k===tab}"${k==='save'||k==='title'?' class="act"':''}>${n}${k==='med'&&canBreak(false)?'<i class="dot"></i>':''}${k==='garden'&&save.garden.some(p=>p&&ripe(p))?'<i class="dot"></i>':''}</button>`).join('');
     $$('#dfTabs [data-tab]').forEach(b=>b.onclick=()=>{const k=b.dataset.tab;SFX.play('soul');if(k==='save'){slotPicker('save');return}if(k==='title'){TITLE.show();return}tab=k;render()})}
   const ripe=p=>Date.now()-p.t0>=HERBS[p.h].min*60000;
   const left=p=>{const m=Math.max(0,HERBS[p.h].min*60000-(Date.now()-p.t0))/60000;return m>=60?`${Math.floor(m/60)} 小時 ${Math.ceil(m%60)} 分`:`${Math.ceil(m)} 分`};
