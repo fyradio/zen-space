@@ -302,7 +302,7 @@ h2{margin:0;font-size:calc(22px*var(--fs));font-weight:400;letter-spacing:.2em}
     <h1 class="ttlh">午夜來<span class="zhan">斬</span>妖<small>提燈・斬妖・修仙</small></h1>
     <div class="ttlmenu"><button class="btn go" id="tNew">開始遊戲</button><button class="btn" id="tLoad">載入遊戲</button><button class="btn" id="tHelp">遊戲說明</button><button class="btn" id="tAdd">加入主畫面</button></div>
   </div>
-  <div class="ttlver">v80</div>
+  <div class="ttlver">v81</div>
 </div>
 <div class="ov md" id="mdOv"><div class="box" id="mdBox"></div></div>
 
@@ -5049,7 +5049,7 @@ function fixVbo(){try{scrollTo(0,0);const vv=window.visualViewport,lh=document.d
 const resize2=()=>{resize();fixVbo()};
 addEventListener('resize',resize2);addEventListener('orientationchange',()=>{for(const d of [60,250,600,1200])setTimeout(resize2,d)});if(window.visualViewport)visualViewport.addEventListener('resize',fixVbo);resize2();
 // 更新提醒：開啟 2.5 秒後、回到前景（距上次 >60 秒）時抓伺服器上的 index.html 比版號，較新就在上方顯示提醒（戰鬥中不顯示，打完再出現）
-const UPD={cur:parseInt('v80'.slice(1))||0,at:0,ver:0,
+const UPD={cur:parseInt('v81'.slice(1))||0,at:0,ver:0,
   check(){if(!/^https?:/.test(location.protocol)||window.top!==window)return;const now=Date.now();if(now-this.at<60000)return;this.at=now;
     fetch('./index.html?c='+now,{cache:'no-store'}).then(r=>r.text()).then(s=>{const m=s.match(/class="ttlver">v(\d+)</);if(m&&+m[1]>this.cur){this.ver=+m[1];this.show()}}).catch(()=>{})},
   show(){if(!this.ver)return;const el=$('#updbar');if(G&&!G.over&&!G.paused){el.classList.remove('on');setTimeout(()=>this.show(),5000);return}el.textContent='有新版本 v'+this.ver+'，點這裡更新';el.classList.add('on')},
