@@ -4902,7 +4902,7 @@ function startElite(){G.eliteDone=true;const a=Math.random()*Math.PI*2,k=(curC()
 // 第十章中魔王（自創角色，見 midboss.js）：沈寒、血河老祖兩夜＝大魔王出場前先打三隻；渡劫那夜＝一邊渡雷劫一邊打三隻
 const midOn=(g,dk)=>g.ch===10&&!!dk.duel;
 // 斬妖數節奏（第 0～8 章）：達標斬妖數＝天亮；精英在 1/5、2/5、3/5，魔王在 2/3；時間只當保底（太慢時照時間出場，時間到仍算撐到天亮）
-const KMODE={k:.68,elite:[.2,.4,.6],eliteT:[.17,.33,.5],boss:2/3,bossT:.7,after:.1,surge:1.8};
+const KMODE={k:.68,elite:[.06,.16,.33],eliteT:[.17,.33,.5],boss:2/3,bossT:.7,after:.1,surge:1.8};
 const midDone=(g,dk)=>!midOn(g,dk)||((g.midN||0)>=3&&(!g.midE||g.midE.dead));
 function midStep(g,dt){if(g.midE&&!g.midE.dead)return false;if((g.midN||0)>=3)return true;g.midT=(g.midT??0)-dt;if(g.midT<=0){g.midE=startMid(g.midN=(g.midN||0)+1);g.midT=1.5}return false}
 const MID_TAUNT={bellgen:'鈴響一聲，收你一魂！',banmonk:'施主留步……貧僧超度你。',judge:'生死簿上，你的名字，早畫過了。',guard:'主上要的人，輪不到你逃！',thbat:'天雷是我兄弟，一起劈你！',inkroc:'雲低三尺，你便是我的墨。',kitegen:'線斷了……線斷了……來陪我放風箏吧。'};
@@ -5142,7 +5142,7 @@ function stepGame(dt){const g=G;TALK.step(dt);
   g.dps=swordDmg()*g.s.count*g.s.rate/.62*(1+(g.s.orbit||0)*.35+(g.s.talis||0)*.5+(g.s.lamp||0)*.4+(g.s.thunder||0)*.3);
   const pw=swordDmg()*g.s.count*g.s.rate*(1+(g.s.orbit||0)*.35+(g.s.talis||0)*.5+(g.s.lamp||0)*.4+(g.s.thunder||0)*.3+(g.s.bell?.3:0))*100;g.peak=Math.max(g.peak||0,pw);
   const pe=HUDC['#power']?HUDC['#power'].el:$('#power');hudT('#power',fmt(pw));if(pe.classList.contains('pop'))setTimeout(()=>pe.classList.remove('pop'),60);
-  hudT('#kills',g.showClear?`${g.kills} / ${g.clearK}`:String(g.kills));hudW('#hp',100*g.hp/g.maxhp);{const lo=g.hp>0&&g.hp<g.maxhp*.3&&!g.over,c=HUDC.low||(HUDC.low={el:$('#lowhp'),v:false});if(lo!==c.v){c.v=lo;c.el.classList.toggle('on',lo)}}hudW('#wu',100*Math.min(1,g.wu/g.wuNeed));
+  hudT('#kills',g.showClear?`${g.kmode?Math.min(g.kills,g.clearK):g.kills} / ${g.clearK}`:String(g.kills));hudW('#hp',100*g.hp/g.maxhp);{const lo=g.hp>0&&g.hp<g.maxhp*.3&&!g.over,c=HUDC.low||(HUDC.low={el:$('#lowhp'),v:false});if(lo!==c.v){c.v=lo;c.el.classList.toggle('on',lo)}}hudW('#wu',100*Math.min(1,g.wu/g.wuNeed));
   updSkillUI();if((g.brkT=(g.brkT||0)+dt)>.5){g.brkT=0;checkBreak()}hudW('#nightBar',g.endless?0:100*p);hudT('#clock',g.endless?'撐過 '+elapsedText():'雞啼 '+clockText())}
 // 67 彩蛋：每斬 670 隻跳出大大的「6 7」，再送一次頓悟
 const ov67=(()=>{const d=document.createElement('div');d.id='ov67';d.innerHTML='<div class="d67"><b class="s6">6</b><b class="s7">7</b></div><small></small>';document.body.appendChild(d);
