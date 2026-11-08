@@ -1095,7 +1095,7 @@ function startElite(){G.eliteDone=true;const a=Math.random()*Math.PI*2,k=(curC()
 // 第十章中魔王（自創角色，見 midboss.js）：沈寒、血河老祖兩夜＝大魔王出場前先打三隻；渡劫那夜＝一邊渡雷劫一邊打三隻
 const midOn=(g,dk)=>g.ch===10&&!!dk.duel;
 // 斬妖數節奏（第 0～8 章）：達標斬妖數＝天亮；精英在 1/5、2/5、3/5，魔王在 2/3；時間只當保底（太慢時照時間出場，時間到仍算撐到天亮）
-const KMODE={k:.85,elite:[.2,.4,.6],eliteT:[.12,.27,.42],boss:2/3,bossT:.6,after:.1,surge:1.8};
+const KMODE={k:.68,elite:[.2,.4,.6],eliteT:[.17,.33,.5],boss:2/3,bossT:.7,after:.1,surge:1.8};
 const midDone=(g,dk)=>!midOn(g,dk)||((g.midN||0)>=3&&(!g.midE||g.midE.dead));
 function midStep(g,dt){if(g.midE&&!g.midE.dead)return false;if((g.midN||0)>=3)return true;g.midT=(g.midT??0)-dt;if(g.midT<=0){g.midE=startMid(g.midN=(g.midN||0)+1);g.midT=1.5}return false}
 const MID_TAUNT={bellgen:'鈴響一聲，收你一魂！',banmonk:'施主留步……貧僧超度你。',judge:'生死簿上，你的名字，早畫過了。',guard:'主上要的人，輪不到你逃！',thbat:'天雷是我兄弟，一起劈你！',inkroc:'雲低三尺，你便是我的墨。',kitegen:'線斷了……線斷了……來陪我放風箏吧。'};
